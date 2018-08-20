@@ -10,3 +10,6 @@ Taking pictures of each item is available for the control card report.
 For the drawing and datasheet, you can add some marks to indicate that something has been phisycaly checked and that it's ok / according to the specifications.
 
 When the checkings are done, its possible to export the final reports in .pdf and .xls file formats, along with all the pictures that corresponds to the checked items.
+
+Programing language: Java
+IDE: Android Studio
