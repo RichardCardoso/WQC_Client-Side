@@ -1,6 +1,5 @@
 package com.richard.weger.wegerqualitycontrol.util;
 
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 
 import com.richard.weger.wegerqualitycontrol.domain.Configurations;
@@ -11,23 +10,23 @@ import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
-public class SambaHandler extends AsyncTask<String, Void, SmbFile[]>{
+public class AsyncSmbFilesList extends AsyncTask<String, Void, SmbFile[]>{
 
     String entryData;
     Configurations conf;
 
-    public interface AsyncResponse {
-        void processFinish(SmbFile[] output, String input);
+    public interface AsyncSmbFilesListResponse {
+        void AsyncSmbFilesListResponseCallback(SmbFile[] output, String input);
     }
 
-    public AsyncResponse delegate;
+    public AsyncSmbFilesListResponse delegate;
 
     @Override
     protected void onPostExecute(SmbFile[] result) {
-        delegate.processFinish(result, entryData);
+        delegate.AsyncSmbFilesListResponseCallback(result, entryData);
     }
 
-    public SambaHandler(AsyncResponse delegate, Configurations conf){
+    public AsyncSmbFilesList(AsyncSmbFilesListResponse delegate, Configurations conf){
         jcifs.Config.setProperty("resolveOrder", "DNS");
         this.delegate = delegate;
         this.conf = conf;

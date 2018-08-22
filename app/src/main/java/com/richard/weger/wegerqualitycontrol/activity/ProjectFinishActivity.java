@@ -130,8 +130,9 @@ public class ProjectFinishActivity extends Activity {
         file = new File(getExternalFilesDir(null), CONTROLCARDREPORT_FILENAME);
         try {
             workbook = Workbook.getWorkbook(file, ws);
-            finalWorkbook = Workbook.createWorkbook(new File(getExternalFilesDir(null),
-                    finalFileName), workbook);
+
+            File fWork = new File(StringHandler.generateProjectFolderName(getExternalFilesDir(null),project),finalFileName);
+            finalWorkbook = Workbook.createWorkbook(fWork, workbook);
             writableSheet = finalWorkbook.getSheet(0);
             writeData(writableSheet, report);
             try {
@@ -145,10 +146,12 @@ public class ProjectFinishActivity extends Activity {
         } catch (IOException | BiffException | WriteException e) {
             e.printStackTrace();
         }
+        file.delete();
 
-        String inputPath = WQCDocumentHandler.getFilePath(CONSTRUCTION_PATH_KEY,
-                ConfigurationsManager.loadConfig(this),
-                mapValues);
+        String inputPath = project.getDrawingList().get(0).getOriginalFileLocalPath();
+//                WQCDocumentHandler.getFilePath(CONSTRUCTION_PATH_KEY,
+//                ConfigurationsManager.loadConfig(this),
+//                mapValues);
         WQCDocumentHandler.bitmap2Pdf(inputPath,
                 StringHandler.generateProjectFolderName(getExternalFilesDir(null), project)
                         + ConfigurationsManager.loadConfig(this).getDrawingCode() + "-" +
@@ -156,9 +159,10 @@ public class ProjectFinishActivity extends Activity {
                 ConfigurationsManager.loadConfig(this).getDrawingCode(),
                 project.getDrawingList().get(0).getHashPoints(), getResources());
 
-        inputPath = WQCDocumentHandler.getFilePath(TECHNICAL_PATH_KEY,
-                ConfigurationsManager.loadConfig(this),
-                mapValues);
+        inputPath = project.getDrawingList().get(0).getDatasheet().getOriginalFileLocalPath();
+//                WQCDocumentHandler.getFilePath(TECHNICAL_PATH_KEY,
+//                ConfigurationsManager.loadConfig(this),
+//                mapValues);
         WQCDocumentHandler.bitmap2Pdf(inputPath,
                 StringHandler.generateProjectFolderName(getExternalFilesDir(null), project)
                         + ConfigurationsManager.loadConfig(this).getDatasheetCode() + "-" +

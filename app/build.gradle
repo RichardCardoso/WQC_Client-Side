@@ -3,6 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 26
     defaultConfig {
+        multiDexEnabled false
         applicationId "com.richard.weger.wegerqualitycontrol"
         minSdkVersion 24
         targetSdkVersion 26
@@ -31,4 +32,6 @@ dependencies {
     implementation files('libs/library-1.2.1.jar')
     implementation files('libs/jxl.jar')
     implementation 'com.itextpdf:itextg:5.5.10'
+    implementation 'com.android.support:support-v4:'
+    implementation 'org.apache.directory.studio:org.apache.commons.io:2.4'
 }

@@ -39,15 +39,15 @@ public abstract class WQCDocumentHandler {
         return null;
     }
 
-    public static String getFilePath(String documentKey, Configurations conf, Map<String, String> mapValues){
-        String filePath;
-        File file, filesList[];
-        filePath = Environment.getExternalStorageDirectory().getPath() + "/Documents/" + conf.getRootPath() + mapValues.get(documentKey);
-        file = new File(filePath);
-        filesList = file.listFiles();
-        filePath = handleFileList(filesList, documentKey, conf);
-        return filePath;
-    }
+//    public static String getFilePath(String documentKey, Configurations conf, Map<String, String> mapValues){
+//        String filePath;
+//        File file, filesList[];
+//        filePath = Environment.getExternalStorageDirectory().getPath() + "/Documents/" + conf.getRootPath() + mapValues.get(documentKey);
+//        file = new File(filePath);
+//        filesList = file.listFiles();
+//        filePath = handleFileList(filesList, documentKey, conf);
+//        return filePath;
+//    }
 
     public static void bitmap2Pdf(String inputFilePath, String outputFilePath, Project project, String documentCode, Map<Integer, List<WQCPointF>> hashPoints, Resources resources){
         PdfDocument document = new PdfDocument();
@@ -75,7 +75,7 @@ public abstract class WQCDocumentHandler {
         String outputFolder = outputFilePath.substring(0, outputFilePath.lastIndexOf("/"));
         File folderPath = new File(outputFolder);
         if(!folderPath.exists()){
-            folderPath.mkdir();
+            folderPath.mkdirs();
         }
         File filePath = new File(outputFilePath);
         if(filePath.exists()){

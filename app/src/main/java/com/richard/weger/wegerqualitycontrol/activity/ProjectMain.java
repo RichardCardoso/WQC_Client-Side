@@ -4,11 +4,9 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.graphics.PointF;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
@@ -23,14 +21,14 @@ import com.richard.weger.wegerqualitycontrol.domain.Item;
 import com.richard.weger.wegerqualitycontrol.domain.Project;
 import com.richard.weger.wegerqualitycontrol.domain.Report;
 import com.richard.weger.wegerqualitycontrol.util.AppConstants;
+import com.richard.weger.wegerqualitycontrol.util.AsyncFromServerToLocalFile;
 import com.richard.weger.wegerqualitycontrol.util.ConfigurationsManager;
 import com.richard.weger.wegerqualitycontrol.util.FileHandler;
 import com.richard.weger.wegerqualitycontrol.util.PermissionsManager;
 import com.richard.weger.wegerqualitycontrol.util.QrTextHandler;
-import com.richard.weger.wegerqualitycontrol.util.SambaHandler;
+import com.richard.weger.wegerqualitycontrol.util.AsyncSmbFilesList;
 import com.richard.weger.wegerqualitycontrol.util.StringHandler;
 import com.richard.weger.wegerqualitycontrol.util.JsonHandler;
-import com.richard.weger.wegerqualitycontrol.util.WQCDocumentHandler;
 import com.richard.weger.wegerqualitycontrol.util.WQCPointF;
 
 import java.io.File;
@@ -43,7 +41,10 @@ import jcifs.smb.SmbFile;
 
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.*;
 
-public class ProjectMain extends Activity implements SambaHandler.AsyncResponse{
+public class ProjectMain
+        extends Activity
+        implements AsyncSmbFilesList.AsyncSmbFilesListResponse,
+                    AsyncFromServerToLocalFile.AsyncSmbInStreamResponse {
 
     SharedPreferences mPrefs;
     Configurations conf = new Configurations();
@@ -166,9 +167,9 @@ public class ProjectMain extends Activity implements SambaHandler.AsyncResponse{
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                documentCheck(CONSTRUCTION_PATH_KEY);
-                /*
-                if(!foundConstructionPath) {
+//                documentCheck(CONSTRUCTION_PATH_KEY);
+                if(!foundConstructionPath &&
+                        project.getDrawingList().get(0).getOriginalFileLocalPath().equals("")) {
                     handlePaths(CONSTRUCTION_PATH_KEY);
                     findViewById(R.id.btnDrawingCheck).setEnabled(false);
                     Toast.makeText(
@@ -176,11 +177,9 @@ public class ProjectMain extends Activity implements SambaHandler.AsyncResponse{
                             R.string.beginServerConnectionMessage,
                             Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(ProjectMain.this,
-                            R.string.sucessfulServerConnectionMessage,
-                            Toast.LENGTH_LONG).show();
+                    documentCheck(CONSTRUCTION_PATH_KEY,
+                            project.getDrawingList().get(0).getOriginalFileLocalPath());
                 }
-                */
             }
         });
 
@@ -188,9 +187,9 @@ public class ProjectMain extends Activity implements SambaHandler.AsyncResponse{
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                documentCheck(TECHNICAL_PATH_KEY);
-                /*
-                if(!foundDatasheetPath){
+//                documentCheck(TECHNICAL_PATH_KEY);
+                if(!foundDatasheetPath &&
+                        project.getDrawingList().get(0).getDatasheet().getOriginalFileLocalPath().equals("")){
                     handlePaths(TECHNICAL_PATH_KEY);
                     findViewById(R.id.btnDatasheetCheck).setEnabled(false);
                     Toast.makeText(
@@ -198,11 +197,9 @@ public class ProjectMain extends Activity implements SambaHandler.AsyncResponse{
                             R.string.beginServerConnectionMessage,
                             Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(ProjectMain.this,
-                            R.string.sucessfulServerConnectionMessage,
-                            Toast.LENGTH_LONG).show();
+                    documentCheck(TECHNICAL_PATH_KEY,
+                            project.getDrawingList().get(0).getDatasheet().getOriginalFileLocalPath());
                 }
-                */
             }
         });
     }
@@ -286,7 +283,7 @@ public class ProjectMain extends Activity implements SambaHandler.AsyncResponse{
             }
             case SOURCE_CODE_CONTINUE: {
                 fileName = b.getString(CONTINUE_CODE_KEY);
-                if (!loadFile(fileName)){
+                if (!loadSavedFile(fileName)){
                     startSourceSelection();
                     return;
                 }
@@ -310,20 +307,20 @@ public class ProjectMain extends Activity implements SambaHandler.AsyncResponse{
     }
 
     private void handlePaths(String documentKey){
-        SambaHandler smbHandler = new SambaHandler(this, conf);
+        AsyncSmbFilesList asyncSmbFilesList = new AsyncSmbFilesList(this, conf);
         switch(documentKey){
             case CONSTRUCTION_PATH_KEY: {
-                smbHandler.execute(mapValues.get(CONSTRUCTION_PATH_KEY), CONSTRUCTION_PATH_KEY);
+                asyncSmbFilesList.execute(mapValues.get(CONSTRUCTION_PATH_KEY), CONSTRUCTION_PATH_KEY);
                 break;
             }
             case TECHNICAL_PATH_KEY: {
-                smbHandler.execute(mapValues.get(AppConstants.TECHNICAL_PATH_KEY), TECHNICAL_PATH_KEY);
+                asyncSmbFilesList.execute(mapValues.get(AppConstants.TECHNICAL_PATH_KEY), TECHNICAL_PATH_KEY);
                 break;
             }
         }
     }
 
-    private boolean loadFile(String fileName){
+    private boolean loadSavedFile(String fileName){
         project = (new JsonHandler()).jsonProjectLoad(this, fileName);
         if(project == null) {
             Toast.makeText(this,R.string.dataRecoverError,
@@ -364,14 +361,7 @@ public class ProjectMain extends Activity implements SambaHandler.AsyncResponse{
         }
     }
 
-    @Override
-    public void processFinish(SmbFile[] fileList, String entryData) {
-        handleFileList(fileList, entryData);
-    }
-
     private void handleFileList(SmbFile[] fileList, String entryData){
-        findViewById(R.id.btnDrawingCheck).setEnabled(true);
-        findViewById(R.id.btnDatasheetCheck).setEnabled(true);
         if(fileList == null){
             Toast.makeText(this, R.string.smbConnectError, Toast.LENGTH_LONG).show();
             //startSourceSelection();
@@ -383,7 +373,15 @@ public class ProjectMain extends Activity implements SambaHandler.AsyncResponse{
             String fCode = fName.substring(0, 4);
             String fExtension = fName.substring(fName.length() - 4, fName.length());
             if(FileHandler.fileNameMatches(entryData, conf, fCode, fExtension)){
-                Toast.makeText(this, R.string.sucessfulServerConnectionMessage, Toast.LENGTH_SHORT).show();
+                String localPath = StringHandler.generateProjectFolderName(getExternalFilesDir(null), project).concat("Originals/");
+                File localFolder, localFile;
+                localFolder = new File(localPath);
+                if(!localFolder.exists()){
+                    localFolder.mkdirs();
+                }
+                localFile = new File(localPath.concat(f.getName()));
+                AsyncFromServerToLocalFile asyncFromServerToLocalFile = new AsyncFromServerToLocalFile(this, conf);
+                asyncFromServerToLocalFile.execute(f, entryData, localFile);
             }
         }
     }
@@ -406,10 +404,9 @@ public class ProjectMain extends Activity implements SambaHandler.AsyncResponse{
         return totalPendingItems;
     }
 
-    private void documentCheck(String documentKey){
-        String filePath;
+    private void documentCheck(String documentKey, String filePath){
         Intent intent;
-        filePath = WQCDocumentHandler.getFilePath(documentKey, conf, mapValues);
+//        filePath = WQCDocumentHandler.getFilePath(documentKey, conf, mapValues);
         if(filePath == null){
             Toast.makeText(this, R.string.invalidDocumentCodesMessage, Toast.LENGTH_LONG).show();
             return;
@@ -422,5 +419,39 @@ public class ProjectMain extends Activity implements SambaHandler.AsyncResponse{
             intent.putExtra(DOCUMENT_HASH_POINTS_KEY, (HashMap) project.getDrawingList().get(0).getDatasheet().getHashPoints());
         intent.putExtra(DOCUMENT_TYPE_KEY, documentKey);
         startActivityForResult(intent, DOCUMENT_MARK_SCREEN);
+    }
+
+
+    @Override
+    public void AsyncSmbFilesListResponseCallback(SmbFile[] fileList, String entryData) {
+        handleFileList(fileList, entryData);
+    }
+
+    @Override
+    public void AsyncSmbInStreamCallback(boolean bResult, String entryData, String localFilePath) {
+        if(bResult){
+            switch(entryData){
+                case CONSTRUCTION_PATH_KEY:
+                    project.getDrawingList().get(0).setOriginalFileLocalPath(localFilePath);
+                    foundConstructionPath = true;
+                    break;
+                case TECHNICAL_PATH_KEY:
+                    project.getDrawingList().get(0).getDatasheet().setOriginalFileLocalPath(localFilePath);
+                    foundDatasheetPath = true;
+                    break;
+            }
+            documentCheck(entryData, localFilePath);
+        }
+        else{
+            Toast.makeText(this, R.string.smbConnectError, Toast.LENGTH_SHORT).show();
+        }
+        switch(entryData){
+            case CONSTRUCTION_PATH_KEY:
+                findViewById(R.id.btnDrawingCheck).setEnabled(true);
+                break;
+            case TECHNICAL_PATH_KEY:
+                findViewById(R.id.btnDatasheetCheck).setEnabled(true);
+                break;
+        }
     }
 }

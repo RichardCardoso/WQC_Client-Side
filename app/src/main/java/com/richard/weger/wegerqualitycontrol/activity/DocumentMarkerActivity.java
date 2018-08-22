@@ -131,6 +131,7 @@ public class DocumentMarkerActivity extends Activity implements TouchImageView.C
             pointFList.remove(pointFList.size() - 1);
             updatePointsDrawing();
             updateButtonState();
+            toggleMarkAdd(false);
         }
     }
 
@@ -183,7 +184,7 @@ public class DocumentMarkerActivity extends Activity implements TouchImageView.C
 
     private void nextPage(){
         if(currentPage < pageCount - 1) {
-            originalBitmap = WQCDocumentHandler.pageLoad(currentPage++, filePath, getResources());
+            originalBitmap = WQCDocumentHandler.pageLoad(++currentPage, filePath, getResources());
             currentBitmap = WQCDocumentHandler.bitmapCopy(originalBitmap);
             updatePointsDrawing();
         }
@@ -192,7 +193,7 @@ public class DocumentMarkerActivity extends Activity implements TouchImageView.C
 
     private void previousPage(){
         if(currentPage > 0) {
-            originalBitmap = WQCDocumentHandler.pageLoad(currentPage--, filePath, getResources());
+            originalBitmap = WQCDocumentHandler.pageLoad(--currentPage, filePath, getResources());
             if(originalBitmap != null){
                 updateImageView(currentBitmap);
                 currentBitmap = WQCDocumentHandler.bitmapCopy(originalBitmap);
@@ -231,9 +232,14 @@ public class DocumentMarkerActivity extends Activity implements TouchImageView.C
 
     private void addPoint(float[] touchPoint){
         List<WQCPointF> lstPoints = hashPoints.get(currentPage);
+        if(lstPoints == null){
+            hashPoints.put(currentPage, new ArrayList<WQCPointF>());
+            lstPoints = hashPoints.get(currentPage);
+        }
         lstPoints.add(new WQCPointF(touchPoint[0], touchPoint[1]));
         updatePointsDrawing();
         toggleMarkAdd(false);
+        updateButtonState();
     }
 
     private void updatePointsDrawing(){

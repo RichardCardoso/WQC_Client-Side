@@ -16,9 +16,6 @@ import android.widget.Toast;
 import com.richard.weger.wegerqualitycontrol.R;
 import com.richard.weger.wegerqualitycontrol.domain.Item;
 import com.richard.weger.wegerqualitycontrol.domain.Project;
-import com.richard.weger.wegerqualitycontrol.util.CameraHandler;
-import com.richard.weger.wegerqualitycontrol.util.ItemAdapter;
-import com.richard.weger.wegerqualitycontrol.util.ProxyBitmap;
 import com.richard.weger.wegerqualitycontrol.util.StringHandler;
 
 import java.io.File;
@@ -29,7 +26,6 @@ import uk.co.senab.photoview.PhotoViewAttacher;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.ITEM_ID_KEY;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.ITEM_KEY;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.PICTURES_AUTHORITY;
-import static com.richard.weger.wegerqualitycontrol.util.AppConstants.PICTURE_VIEWER_SCREEN_ID;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.PROJECT_KEY;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.REQUEST_IMAGE_CAPTURE_ACTION;
 
@@ -121,9 +117,10 @@ public class PictureViewerActivity extends Activity{
         String imageFileName = item.getPicture().getFilePath();
         String folderPath = StringHandler.generateProjectFolderName(
                 getExternalFilesDir(null), project).concat("Pictures/");
-        File storageDir = new File(folderPath); //getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File storageDir = new File(folderPath);
+//        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         if(!storageDir.exists()){
-            storageDir.mkdir();
+            storageDir.mkdirs();
         }
 
         File image;

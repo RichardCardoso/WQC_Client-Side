@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.Map;
 
 public class WQCDocument implements Serializable {
+
     private Map<Integer, List<WQCPointF>> hashPoints = new HashMap<>();
+    private String originalFileLocalPath = "";
 
     public int getMarksCount(){
         int cnt = 0;
@@ -30,5 +32,13 @@ public class WQCDocument implements Serializable {
 
     public void setHashPoints(Map<Integer, List<WQCPointF>> hashPoints) {
         this.hashPoints = hashPoints;
+    }
+
+    public String getOriginalFileLocalPath() {
+        return originalFileLocalPath;
+    }
+
+    public void setOriginalFileLocalPath(String originalFileLocalPath) {
+        this.originalFileLocalPath = originalFileLocalPath;
     }
 }
