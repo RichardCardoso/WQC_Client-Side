@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Weger Quality Control</string>
+    <string name="app_name">WQC</string>
     <string name="qrWelcome">Welcome to Weger Quality Control\'s App!</string>
     <string name="qrScanButton">Scan QR Code</string>
     <string name="title_activity_project_main">ProjectMain</string>
@@ -8,7 +8,7 @@
     <string name="controlCardReportButton">Control Card</string>
     <string name="factoryTestReportButton">Factory Test</string>
     <string name="automationComponentsButton">Automation Components</string>
-    <string name="electricalReportButton">Eletrical Report</string>
+    <string name="electricalReportButton">Electrical Report</string>
     <string name="cancelButton">Cancel</string>
     <string name="projectFinishButton">Finish</string>
     <string name="reportButtonWidth">200dp</string>
@@ -17,9 +17,9 @@
     <string name="partNumberPrefix">Part number:</string>
     <string name="smbConnectError">Unable to connect to the server. Please check your network connection and / or try again later.</string>
     <string name="rdNotChecked">Not checked</string>
-    <string name="rdAproved">Aproved</string>
-    <string name="rdNotAproved">Not Aproved</string>
-    <string name="rdNotAplicable">Not Aplicable</string>
+    <string name="rdAproved">Approved</string>
+    <string name="rdNotAproved">Not Approved</string>
+    <string name="rdNotAplicable">Not Applicable</string>
     <string name="editCommentsHint">Comments here...</string>
     <string name="btnTakePicture">Take picture</string>
     <string name="btnErasePicture">Erase picture</string>
@@ -32,24 +32,24 @@
     <string name="yesTAG">Yes</string>
     <string name="noTag">No</string>
     <string name="beginServerConnectionMessage">Trying to contact the server. Please wait for a while.</string>
-    <string name="sucessfulServerConnectionMessage">Connection to the server estabilished successful!</string>
+    <string name="sucessfulServerConnectionMessage">Connection to the server established successful!</string>
     <string name="fileSelectMessage">Select a project from the list</string>
     <string name="projectLabel">Project</string>
     <string name="drawingLabel">Drawing</string>
     <string name="partLabel">Part</string>
     <string name="exitButton">Exit</string>
     <string name="configButton">Config</string>
-    <string name="unableToProcced">Unable to procced</string>
+    <string name="unableToProcced">Unable to proceed</string>
     <string name="unfinishedReportsMessage">There are still some unfinished reports</string>
     <string name="okTag">Ok</string>
     <string name="reportComentsHint">General comments here...</string>
     <string name="tvClientText">Client</string>
-    <string name="tvComissionText">Comission</string>
+    <string name="tvComissionText">Commission</string>
     <string name="tvReportCommentsText">General comments</string>
-    <string name="tvGeneralCommentsHint">General coments about the inspection</string>
+    <string name="tvGeneralCommentsHint">General comments about the inspection</string>
     <string name="tvTestedBy">Tested by</string>
     <string name="btnReportSubmit">Submit reports</string>
-    <string name="emptyFieldsError">Unable to proced when there are empty fields</string>
+    <string name="emptyFieldsError">Unable to proceed when there are empty fields</string>
     <string name="projectFinishTitle">Project finish</string>
     <string name="tvConstructionDrawingPath">Drawing folder</string>
     <string name="tvTechnicDatasheetPath">Datasheet folder</string>
@@ -69,7 +69,7 @@
     <string name="passwordProtectedTitle">Please enter the password</string>
     <string name="invalidPasswordMessage">Invalid password!</string>
     <string name="invalidQrCodeString">The given qr code format is invalid</string>
-    <string name="closeMessage">Do you wish do close the app?</string>
+    <string name="closeMessage">Do you wish to close the app?</string>
     <string name="confirmationNeeded">Please confirm your action</string>
     <string name="btnAddMark">Add mark</string>
     <string name="btnUndo">Undo</string>
@@ -77,4 +77,8 @@
     <string name="btnPreviousText">"&lt;"</string>
     <string name="btnNextText">"&gt;"</string>
     <string name="invalidDocumentCodesMessage">Unable to proceed. Please check the app parameters (Drawing code + extension and Datasheet code + extension</string>
+    <string name="successfulServerUploadMessage">Project uploaded successfully!</string>
+    <string name="invalidServerFileMessage">The file in the server is invalid / corrupted. Please replace it with a valid one and try again.</string>
+    <string name="projectUploadMessage">Do you wish to upload the report files? When it\'s done you\'ll need to do a new report (if you need to change something) !!!</string>
+    <string name="tryAgainMessage">Wanna try again?</string>
 </resources>

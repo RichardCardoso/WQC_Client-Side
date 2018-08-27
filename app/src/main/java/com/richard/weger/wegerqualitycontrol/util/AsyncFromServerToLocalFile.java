@@ -4,8 +4,9 @@ import android.os.AsyncTask;
 
 import com.richard.weger.wegerqualitycontrol.domain.Configurations;
 
-import org.apache.commons.io.IOUtils;
+//import org.apache.commons.io.IOUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -17,14 +18,14 @@ import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbFileInputStream;
 
-public class AsyncFromServerToLocalFile extends AsyncTask<Object, Void, Boolean> {
+public class AsyncFromServerToLocalfile extends AsyncTask<Object, Void, Boolean> {
 
     String entryData;
     Configurations conf;
     File localFile;
-    public AsyncFromServerToLocalFile.AsyncSmbInStreamResponse delegate;
+    public AsyncFromServerToLocalfileResponse delegate;
 
-    public AsyncFromServerToLocalFile(AsyncFromServerToLocalFile.AsyncSmbInStreamResponse delegate, Configurations conf){
+    public AsyncFromServerToLocalfile(AsyncFromServerToLocalfileResponse delegate, Configurations conf){
         jcifs.Config.setProperty("resolveOrder", "DNS");
         this.delegate = delegate;
         this.conf = conf;
@@ -35,17 +36,23 @@ public class AsyncFromServerToLocalFile extends AsyncTask<Object, Void, Boolean>
         SmbFile serverFile = (SmbFile) objects[0];
         entryData = (String) objects[1];
         localFile = (File) objects[2];
-        return sendFileToServer(serverFile, localFile);
+        return getFileFromServer(localFile, serverFile);
     }
 
-    public interface AsyncSmbInStreamResponse {
-        void AsyncSmbInStreamCallback(boolean bResult, String entryData, String localPath);
+    public interface AsyncFromServerToLocalfileResponse {
+        void AsyncFileFromServerCallback(boolean bResult, String entryData, String localPath);
     }
 
-    private boolean sendFileToServer(SmbFile serverFile, File localFile){
+    private boolean getFileFromServer(File localFile, SmbFile serverFile){
+        SmbFileInputStream in = null;
+        FileOutputStream fos = null;
 
-        FileOutputStream fos;
-        SmbFileInputStream in;
+        try {
+            in = new SmbFileInputStream(serverFile);
+        } catch (UnknownHostException | SmbException | MalformedURLException e) {
+            e.printStackTrace();
+            return false;
+        }
 
         try {
             fos = new FileOutputStream(localFile);
@@ -55,15 +62,9 @@ public class AsyncFromServerToLocalFile extends AsyncTask<Object, Void, Boolean>
         }
 
         try {
-            in = new SmbFileInputStream(serverFile);
-        } catch (SmbException | MalformedURLException | UnknownHostException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        try {
-            fos.write(IOUtils.toByteArray(in));
-        } catch (IOException e) {
+            fos.write(FileBytesHandler.execute(in));
+            //fos.write(IOUtils.toByteArray(in));
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
@@ -74,11 +75,12 @@ public class AsyncFromServerToLocalFile extends AsyncTask<Object, Void, Boolean>
             e.printStackTrace();
             return false;
         }
+
         return true;
     }
 
     @Override
     protected void onPostExecute(Boolean bResult) {
-        delegate.AsyncSmbInStreamCallback(bResult, entryData, localFile.getPath());
+        delegate.AsyncFileFromServerCallback(bResult, entryData, localFile.getPath());
     }
 }

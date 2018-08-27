@@ -11,17 +11,20 @@ import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.richard.weger.wegerqualitycontrol.R;
 import com.richard.weger.wegerqualitycontrol.domain.Configurations;
 import com.richard.weger.wegerqualitycontrol.domain.ControlCardReport;
+import com.richard.weger.wegerqualitycontrol.domain.Datasheet;
+import com.richard.weger.wegerqualitycontrol.domain.Drawing;
 import com.richard.weger.wegerqualitycontrol.domain.Item;
 import com.richard.weger.wegerqualitycontrol.domain.Project;
 import com.richard.weger.wegerqualitycontrol.domain.Report;
 import com.richard.weger.wegerqualitycontrol.util.AppConstants;
-import com.richard.weger.wegerqualitycontrol.util.AsyncFromServerToLocalFile;
+import com.richard.weger.wegerqualitycontrol.util.AsyncFromServerToLocalfile;
 import com.richard.weger.wegerqualitycontrol.util.ConfigurationsManager;
 import com.richard.weger.wegerqualitycontrol.util.FileHandler;
 import com.richard.weger.wegerqualitycontrol.util.PermissionsManager;
@@ -40,20 +43,20 @@ import java.util.Map;
 import jcifs.smb.SmbFile;
 
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.*;
+import static com.richard.weger.wegerqualitycontrol.util.FileHandler.isValidFile;
 
 public class ProjectMain
         extends Activity
         implements AsyncSmbFilesList.AsyncSmbFilesListResponse,
-                    AsyncFromServerToLocalFile.AsyncSmbInStreamResponse {
+        AsyncFromServerToLocalfile.AsyncFromServerToLocalfileResponse {
 
     SharedPreferences mPrefs;
     Configurations conf = new Configurations();
     Project project = new Project();
     Locale locale ;
     private Map<String, CheckBox> checkBoxMap = new HashMap<>();
-    private boolean foundConstructionPath = false;
-    private boolean foundDatasheetPath = false;
     private Map<String, String> mapValues;
+    ProgressBar progressBar;
 
     @Override
     public void onPause(){
@@ -101,10 +104,15 @@ public class ProjectMain
         if(!permissionsManager.checkPermission(EXTERNAL_DIR_PERMISSION, this, false)){
             permissionsManager.askPermission(EXTERNAL_DIR_PERMISSION, this);
         }
+
+        progressBar = findViewById(R.id.progressBarProjectMain);
+        toggleWaitingState(false);
     }
 
     private void fillCheckBoxMap(){
         checkBoxMap.put(ControlCardReport.class.getName(), (CheckBox) findViewById(R.id.chkControlCardReport));
+        checkBoxMap.put(Datasheet.class.getName(), (CheckBox) findViewById(R.id.chkDatasheetCheck));
+        checkBoxMap.put(Drawing.class.getName(), (CheckBox) findViewById(R.id.chkDrawingCheck));
     }
 
     private void setListeners(){
@@ -167,11 +175,9 @@ public class ProjectMain
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                documentCheck(CONSTRUCTION_PATH_KEY);
-                if(!foundConstructionPath &&
-                        project.getDrawingList().get(0).getOriginalFileLocalPath().equals("")) {
+                String filePath = project.getDrawingList().get(0).getOriginalFileLocalPath();
+                if(!isValidFile(filePath)){
                     handlePaths(CONSTRUCTION_PATH_KEY);
-                    findViewById(R.id.btnDrawingCheck).setEnabled(false);
                     Toast.makeText(
                             ProjectMain.this,
                             R.string.beginServerConnectionMessage,
@@ -187,11 +193,9 @@ public class ProjectMain
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                documentCheck(TECHNICAL_PATH_KEY);
-                if(!foundDatasheetPath &&
-                        project.getDrawingList().get(0).getDatasheet().getOriginalFileLocalPath().equals("")){
+                String filePath = project.getDrawingList().get(0).getDatasheet().getOriginalFileLocalPath();
+                if(!isValidFile(filePath)){
                     handlePaths(TECHNICAL_PATH_KEY);
-                    findViewById(R.id.btnDatasheetCheck).setEnabled(false);
                     Toast.makeText(
                             ProjectMain.this,
                             R.string.beginServerConnectionMessage,
@@ -306,8 +310,26 @@ public class ProjectMain
         }
     }
 
+    private void toggleWaitingState(boolean status){
+        if(status){
+            progressBar.setVisibility(View.VISIBLE);
+            findViewById(R.id.btnDatasheetCheck).setEnabled(false);
+            findViewById(R.id.btnDrawingCheck).setEnabled(false);
+            findViewById(R.id.btnControlCardReport).setEnabled(false);
+            findViewById(R.id.btnProjectFinish).setEnabled(false);
+        }
+        else{
+            progressBar.setVisibility(View.GONE);
+            findViewById(R.id.btnDatasheetCheck).setEnabled(true);
+            findViewById(R.id.btnDrawingCheck).setEnabled(true);
+            findViewById(R.id.btnControlCardReport).setEnabled(true);
+            findViewById(R.id.btnProjectFinish).setEnabled(true);
+        }
+    }
+
     private void handlePaths(String documentKey){
         AsyncSmbFilesList asyncSmbFilesList = new AsyncSmbFilesList(this, conf);
+        toggleWaitingState(true);
         switch(documentKey){
             case CONSTRUCTION_PATH_KEY: {
                 asyncSmbFilesList.execute(mapValues.get(CONSTRUCTION_PATH_KEY), CONSTRUCTION_PATH_KEY);
@@ -364,6 +386,7 @@ public class ProjectMain
     private void handleFileList(SmbFile[] fileList, String entryData){
         if(fileList == null){
             Toast.makeText(this, R.string.smbConnectError, Toast.LENGTH_LONG).show();
+            toggleWaitingState(false);
             //startSourceSelection();
             return;
         }
@@ -380,25 +403,43 @@ public class ProjectMain
                     localFolder.mkdirs();
                 }
                 localFile = new File(localPath.concat(f.getName()));
-                AsyncFromServerToLocalFile asyncFromServerToLocalFile = new AsyncFromServerToLocalFile(this, conf);
-                asyncFromServerToLocalFile.execute(f, entryData, localFile);
+                AsyncFromServerToLocalfile asyncFromServerToLocalfile = new AsyncFromServerToLocalfile(this, conf);
+                asyncFromServerToLocalfile.execute(f, entryData, localFile);
             }
         }
     }
 
     private int updatePendingItemsInfo(){
+        CheckBox checkBox;
         int pendingItems, totalPendingItems = 0;
         if(project != null) {
             if (project.getReportList() != null) {
                 for (Report r : project.getReportList()) {
                     if (r instanceof ControlCardReport) {
-                        CheckBox checkBox = checkBoxMap.get(r.getClass().getName());
+                        checkBox = checkBoxMap.get(r.getClass().getName());
                         pendingItems = r.getPendingItemsCount();
                         totalPendingItems += pendingItems;
                         checkBox.setChecked(pendingItems == 0);
-                        findViewById(R.id.btnProjectFinish).setEnabled(pendingItems == 0);
                     }
                 }
+                checkBox = checkBoxMap.get(Drawing.class.getName());
+                if( !project.getDrawingList().get(0).isDocumentReady()){
+                    checkBox.setChecked(false);
+                    totalPendingItems += 1;
+                }
+                else
+                {
+                    checkBox.setChecked(true);
+                }
+                checkBox = checkBoxMap.get(Datasheet.class.getName());
+                if( !project.getDrawingList().get(0).getDatasheet().isDocumentReady()){
+                    checkBox.setChecked(false);
+                    totalPendingItems += 1;
+                }
+                else{
+                    checkBox.setChecked(true);
+                }
+                findViewById(R.id.btnProjectFinish).setEnabled(totalPendingItems == 0);
             }
         }
         return totalPendingItems;
@@ -428,30 +469,25 @@ public class ProjectMain
     }
 
     @Override
-    public void AsyncSmbInStreamCallback(boolean bResult, String entryData, String localFilePath) {
+    public void AsyncFileFromServerCallback(boolean bResult, String entryData, String localFilePath) {
+        toggleWaitingState(false);
         if(bResult){
+            if(!isValidFile(localFilePath)){
+                Toast.makeText(this, R.string.invalidServerFileMessage, Toast.LENGTH_LONG).show();
+                return;
+            }
             switch(entryData){
                 case CONSTRUCTION_PATH_KEY:
                     project.getDrawingList().get(0).setOriginalFileLocalPath(localFilePath);
-                    foundConstructionPath = true;
                     break;
                 case TECHNICAL_PATH_KEY:
                     project.getDrawingList().get(0).getDatasheet().setOriginalFileLocalPath(localFilePath);
-                    foundDatasheetPath = true;
                     break;
             }
             documentCheck(entryData, localFilePath);
         }
         else{
             Toast.makeText(this, R.string.smbConnectError, Toast.LENGTH_SHORT).show();
-        }
-        switch(entryData){
-            case CONSTRUCTION_PATH_KEY:
-                findViewById(R.id.btnDrawingCheck).setEnabled(true);
-                break;
-            case TECHNICAL_PATH_KEY:
-                findViewById(R.id.btnDatasheetCheck).setEnabled(true);
-                break;
         }
     }
 }

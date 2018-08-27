@@ -3,11 +3,12 @@ package com.richard.weger.wegerqualitycontrol.util;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.Nullable;
 
 import com.richard.weger.wegerqualitycontrol.domain.Configurations;
 
-import org.apache.commons.io.IOUtils;
+//import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,6 +29,16 @@ import static com.richard.weger.wegerqualitycontrol.util.AppConstants.CONSTRUCTI
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.TECHNICAL_PATH_KEY;
 
 public class FileHandler{
+
+    public static boolean fileDelete(String fileName){
+        File file = new File(fileName);
+        try {
+            file.delete();
+            return true;
+        } catch (Exception e){
+            return false;
+        }
+    }
 
     public static boolean fileNameMatches(String entryData, Configurations conf, String fCode, String fExtension){
         String constCode = "";
@@ -113,7 +124,8 @@ public class FileHandler{
         }
 
         try {
-            out.write(IOUtils.toByteArray(fis));
+            out.write(fis.read());
+            //out.write(IOUtils.toByteArray(fis));
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -125,5 +137,11 @@ public class FileHandler{
             return false;
         }
         return true;
+    }
+
+    public static boolean isValidFile(String filePath){
+        String path = Uri.parse(filePath).getPath();
+        File file = new File(path);
+        return (file.exists() && !(file.length() == 0));
     }
 }

@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jxl.common.log.LoggerName;
+
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.*;
 
 public class DocumentMarkerActivity extends Activity implements TouchImageView.ChangeListener{
@@ -34,6 +36,11 @@ public class DocumentMarkerActivity extends Activity implements TouchImageView.C
     int mode = 0;
     // mode 0 = default
     // mode 1 = add mark
+
+    @Override
+    public void onBackPressed(){
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +62,11 @@ public class DocumentMarkerActivity extends Activity implements TouchImageView.C
         imageView.setTag(mode);
 
         pageCount = PdfHandler.getPageCount(filePath);
+        if(pageCount == 0){
+            // Toast.makeText(this, R.string.dataRecoverError, Toast.LENGTH_LONG).show();
+            setResult(RESULT_CANCELED);
+            finish();
+        }
         originalBitmap = WQCDocumentHandler.pageLoad(currentPage, filePath, getResources());
         if(originalBitmap != null)
             currentBitmap = WQCDocumentHandler.bitmapCopy(originalBitmap);

@@ -15,7 +15,6 @@ import android.widget.Toast;
 import com.google.zxing.Result;
 import com.richard.weger.wegerqualitycontrol.R;
 import com.richard.weger.wegerqualitycontrol.domain.Configurations;
-import com.richard.weger.wegerqualitycontrol.util.AppConstants;
 import com.richard.weger.wegerqualitycontrol.util.ConfigurationsManager;
 import com.richard.weger.wegerqualitycontrol.util.PermissionsManager;
 

@@ -169,7 +169,7 @@ public class ConfigurationsActivity extends Activity {
             {
                 if (method.getName().toLowerCase().endsWith(field.getName().toLowerCase()))
                 {
-                    // MZ: Method found, run it
+                    // MZ: Method found, export it
                     try
                     {
                         return method.invoke(o);

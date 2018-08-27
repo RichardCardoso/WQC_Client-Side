@@ -2,6 +2,8 @@ package com.richard.weger.wegerqualitycontrol.domain;
 
 import android.graphics.PointF;
 
+import com.richard.weger.wegerqualitycontrol.util.FileHandler;
+import com.richard.weger.wegerqualitycontrol.util.PdfHandler;
 import com.richard.weger.wegerqualitycontrol.util.WQCPointF;
 
 import java.io.Serializable;
@@ -40,5 +42,17 @@ public class WQCDocument implements Serializable {
 
     public void setOriginalFileLocalPath(String originalFileLocalPath) {
         this.originalFileLocalPath = originalFileLocalPath;
+    }
+
+    public int getPageCount(){
+        return PdfHandler.getPageCount(getOriginalFileLocalPath());
+    }
+
+    public boolean isDocumentReady(){
+        if(FileHandler.isValidFile(getOriginalFileLocalPath()) &&
+                getPageCount() > 0 && getMarksCount() > 0){
+            return true;
+        }
+        return false;
     }
 }

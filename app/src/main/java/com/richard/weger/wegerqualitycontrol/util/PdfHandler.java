@@ -26,6 +26,7 @@ public abstract class PdfHandler {
             mPdfRenderer = new PdfRenderer(mFileDescriptor);
         } catch (IOException e){
             e.printStackTrace();
+            FileHandler.fileDelete(filePath);
             return null;
         }
 
@@ -46,6 +47,9 @@ public abstract class PdfHandler {
     }
 
     public static int getPageCount(String filePath){
+        if(!FileHandler.isValidFile(filePath))
+            return 0;
+
         File file = new File(filePath);
 
         ParcelFileDescriptor mFileDescriptor = null;
@@ -53,6 +57,7 @@ public abstract class PdfHandler {
             mFileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
         } catch (FileNotFoundException e){
             e.printStackTrace();
+            return 0;
         }
 
         PdfRenderer mPdfRenderer = null;
@@ -60,6 +65,7 @@ public abstract class PdfHandler {
             mPdfRenderer = new PdfRenderer(mFileDescriptor);
         } catch (IOException e){
             e.printStackTrace();
+            return 0;
         }
 
         return mPdfRenderer.getPageCount();

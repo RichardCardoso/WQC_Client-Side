@@ -28,16 +28,6 @@ public class StringHandler {
         return sb.toString();
     }
 
-    public static String generateFileName(Project project){
-        String string = createQrText(project);
-        return string.substring(1, string.length()).concat(".").concat(FILE_EXTENSION);
-    }
-
-    public static String generateFileName(Project project, String extension){
-        String string = createQrText(project);
-        return string.substring(1, string.length()).concat(".").concat(extension);
-    }
-
     public static String generatePictureName(Project project, Item item, Report report){
         String string = createQrText(project);
         StringBuilder sb = new StringBuilder();
@@ -50,8 +40,20 @@ public class StringHandler {
         return sb.toString();
     }
 
-    public static String generateProjectFolderName(File externalDir, Project project){
+    public static String getProjectName(Project project){
         String qrText = createQrText(project);
-        return externalDir.getPath() + "/" + qrText.substring(1, qrText.length()) + "/";
+        return qrText.substring(1, qrText.length());
+    }
+
+    public static String generateFileName(Project project){
+        return getProjectName(project).concat(".").concat(FILE_EXTENSION);
+    }
+
+    public static String generateFileName(Project project, String extension){
+        return getProjectName(project).concat(".").concat(extension);
+    }
+
+    public static String generateProjectFolderName(File externalDir, Project project){
+        return externalDir.getPath() + "/" + getProjectName(project) + "/";
     }
 }
