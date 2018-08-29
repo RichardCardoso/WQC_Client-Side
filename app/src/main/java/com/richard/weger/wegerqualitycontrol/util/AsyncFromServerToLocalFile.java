@@ -6,7 +6,6 @@ import com.richard.weger.wegerqualitycontrol.domain.Configurations;
 
 //import org.apache.commons.io.IOUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -18,14 +17,14 @@ import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbFileInputStream;
 
-public class AsyncFromServerToLocalfile extends AsyncTask<Object, Void, Boolean> {
+public class AsyncFromServerToLocalFile extends AsyncTask<Object, Void, Boolean> {
 
     String entryData;
     Configurations conf;
     File localFile;
-    public AsyncFromServerToLocalfileResponse delegate;
+    public AsyncFromServerToLocalFileResponse delegate;
 
-    public AsyncFromServerToLocalfile(AsyncFromServerToLocalfileResponse delegate, Configurations conf){
+    public AsyncFromServerToLocalFile(AsyncFromServerToLocalFileResponse delegate, Configurations conf){
         jcifs.Config.setProperty("resolveOrder", "DNS");
         this.delegate = delegate;
         this.conf = conf;
@@ -39,7 +38,7 @@ public class AsyncFromServerToLocalfile extends AsyncTask<Object, Void, Boolean>
         return getFileFromServer(localFile, serverFile);
     }
 
-    public interface AsyncFromServerToLocalfileResponse {
+    public interface AsyncFromServerToLocalFileResponse {
         void AsyncFileFromServerCallback(boolean bResult, String entryData, String localPath);
     }
 

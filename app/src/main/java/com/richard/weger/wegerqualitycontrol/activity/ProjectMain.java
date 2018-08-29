@@ -24,7 +24,7 @@ import com.richard.weger.wegerqualitycontrol.domain.Item;
 import com.richard.weger.wegerqualitycontrol.domain.Project;
 import com.richard.weger.wegerqualitycontrol.domain.Report;
 import com.richard.weger.wegerqualitycontrol.util.AppConstants;
-import com.richard.weger.wegerqualitycontrol.util.AsyncFromServerToLocalfile;
+import com.richard.weger.wegerqualitycontrol.util.AsyncFromServerToLocalFile;
 import com.richard.weger.wegerqualitycontrol.util.ConfigurationsManager;
 import com.richard.weger.wegerqualitycontrol.util.FileHandler;
 import com.richard.weger.wegerqualitycontrol.util.PermissionsManager;
@@ -48,7 +48,7 @@ import static com.richard.weger.wegerqualitycontrol.util.FileHandler.isValidFile
 public class ProjectMain
         extends Activity
         implements AsyncSmbFilesList.AsyncSmbFilesListResponse,
-        AsyncFromServerToLocalfile.AsyncFromServerToLocalfileResponse {
+        AsyncFromServerToLocalFile.AsyncFromServerToLocalFileResponse {
 
     SharedPreferences mPrefs;
     Configurations conf = new Configurations();
@@ -403,7 +403,7 @@ public class ProjectMain
                     localFolder.mkdirs();
                 }
                 localFile = new File(localPath.concat(f.getName()));
-                AsyncFromServerToLocalfile asyncFromServerToLocalfile = new AsyncFromServerToLocalfile(this, conf);
+                AsyncFromServerToLocalFile asyncFromServerToLocalfile = new AsyncFromServerToLocalFile(this, conf);
                 asyncFromServerToLocalfile.execute(f, entryData, localFile);
             }
         }
