@@ -24,7 +24,7 @@
     <string name="editCommentsHint">Kommentare hier ...</string>
     <string name="btnTakePicture">Ein Bild machen</string>
     <string name="btnErasePicture">Bild löschen</string>
-    <string name="saveButton">sparen</string>
+    <string name="saveButton">Speichern</string>
     <string name="dataRecoverError">Die angeforderten Daten konnten nicht wiederhergestellt werden. Bitte versuche es später erneut.</string>
     <string name="pendingItems">Gegenstände in Bearbeitung</string>
     <string name="btnContinueProject">Bestehendes Projekt fortsetzen</string>
