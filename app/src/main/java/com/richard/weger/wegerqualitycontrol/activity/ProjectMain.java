@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -27,6 +28,7 @@ import com.richard.weger.wegerqualitycontrol.util.AppConstants;
 import com.richard.weger.wegerqualitycontrol.util.AsyncFromServerToLocalFile;
 import com.richard.weger.wegerqualitycontrol.util.ConfigurationsManager;
 import com.richard.weger.wegerqualitycontrol.util.FileHandler;
+import static com.richard.weger.wegerqualitycontrol.util.LogHandler.*;
 import com.richard.weger.wegerqualitycontrol.util.PermissionsManager;
 import com.richard.weger.wegerqualitycontrol.util.QrTextHandler;
 import com.richard.weger.wegerqualitycontrol.util.AsyncSmbFilesList;
@@ -52,11 +54,19 @@ public class ProjectMain
 
     SharedPreferences mPrefs;
     Configurations conf = new Configurations();
-    Project project = new Project();
+    Project project;
     Locale locale ;
     private Map<String, CheckBox> checkBoxMap = new HashMap<>();
     private Map<String, String> mapValues;
     ProgressBar progressBar;
+    PermissionsManager permissionsManager = new PermissionsManager();
+    String[] permissions = new String[]{
+            CAMERA_PERMISSION,
+            EXTERNAL_DIR_PERMISSION
+    };
+
+    @Override
+    public void onBackPressed(){}
 
     @Override
     public void onPause(){
@@ -67,12 +77,14 @@ public class ProjectMain
     @Override
     public void onResume(){
         super.onResume();
-        updatePendingItemsInfo();
-        save();
+        if(project != null && !project.getNumber().equals("")) {
+            updatePendingItemsInfo();
+            save();
+        }
     }
 
     private void save(){
-        if(project != null) {
+        if(project != null && !project.getNumber().equals("")) {
             if (!project.getNumber().equals(""))
                 JsonHandler.jsonProjectSave(this, StringHandler.generateFileName(project), project);
         }
@@ -81,18 +93,40 @@ public class ProjectMain
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_project_main);
-        if(project.getNumber().equals("")) {
-            startSourceSelection();
+        writeData("Starting permissions handler", getExternalFilesDir(null));
+        if(handlePermissions()){
+            gotPermissions();
         }
+    }
+
+    private void gotPermissions(){
+        writeData("Permissions successfully granted", getExternalFilesDir(null));
+        if(project == null){
+            project = new Project();
+        }
+        if(project.getNumber().equals("")) {
+            writeData("Started source selection activity to get a result", getExternalFilesDir(null));
+            startSourceSelection();
+        } else {
+            writeData("Started activity's layout inflation.", getExternalFilesDir(null));
+            inflateActivityLayout();
+        }
+    }
+
+    private void inflateActivityLayout(){
+        setContentView(R.layout.activity_project_main);
         setListeners();
         locale = getResources().getConfiguration().locale;
         fillCheckBoxMap();
         init();
     }
 
+    private boolean handlePermissions(){
+        return permissionsManager.checkPermission(permissions, this, true);
+    }
+
     private void init(){
-        PermissionsManager permissionsManager = new PermissionsManager();
+        writeData("Started saved configs load", getExternalFilesDir(null));
         Configurations configurations = ConfigurationsManager.loadConfig(this);
         if(configurations == null){
             ConfigurationsManager.saveConfig(conf, this);
@@ -101,12 +135,10 @@ public class ProjectMain
             conf = ConfigurationsManager.loadConfig(this);
         }
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if(!permissionsManager.checkPermission(EXTERNAL_DIR_PERMISSION, this, false)){
-            permissionsManager.askPermission(EXTERNAL_DIR_PERMISSION, this);
-        }
 
         progressBar = findViewById(R.id.progressBarProjectMain);
         toggleWaitingState(false);
+        writeData("Finished saved configs load", getExternalFilesDir(null));
     }
 
     private void fillCheckBoxMap(){
@@ -126,6 +158,7 @@ public class ProjectMain
                 intent.putExtra(PROJECT_KEY, project);
                 intent.putExtra(REPORT_KEY, project.getReportList().get(CONTROL_CARD_REPORT_ID));
                 startActivityForResult(intent, CONTROL_CARD_REPORT_EDIT_SCREEN_KEY);
+                writeData("Starting control card report activity", getExternalFilesDir(null));
             }
         });
 
@@ -140,6 +173,7 @@ public class ProjectMain
                     builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            writeData("Starting project finish activity", getExternalFilesDir(null));
                             Intent intent = new Intent(ProjectMain.this, ProjectFinishActivity.class);
                             intent.putExtra(CONTROL_CARD_REPORT_FILE_KEY,
                                     StringHandler.generateFileName(project, "xls"));
@@ -206,6 +240,30 @@ public class ProjectMain
                 }
             }
         });
+
+        button = findViewById(R.id.btnExit);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(ProjectMain.this);
+                builder.setTitle(R.string.confirmationNeeded);
+                builder.setMessage(R.string.closeMessage);
+                builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        finish();
+                    }
+                });
+                builder.setNegativeButton(R.string.noTag, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                    }
+                });
+                builder.show();
+            }
+        });
+
     }
 
     private void startSourceSelection(){
@@ -234,6 +292,7 @@ public class ProjectMain
                         String sourceCode;
                         sourceCode = b.getString(SOURCE_CODE_KEY);
                         if (sourceCode != null) {
+                            inflateActivityLayout();
                             handleSourceString(b.getString(SOURCE_CODE_KEY), b);
                         }
                         break;
@@ -328,6 +387,7 @@ public class ProjectMain
     }
 
     private void handlePaths(String documentKey){
+        writeData("Started trial to get the document's folders (datasheet/drawing) files list.", getExternalFilesDir(null));
         AsyncSmbFilesList asyncSmbFilesList = new AsyncSmbFilesList(this, conf);
         toggleWaitingState(true);
         switch(documentKey){
@@ -353,6 +413,7 @@ public class ProjectMain
     }
 
     private void setFields(Map<String, String> mapValues){
+        writeData("Started trial to set the Project main activity's fields values.", getExternalFilesDir(null));
         String projectNumber = mapValues.get(PROJECT_NUMBER_KEY);
         String drawingNumber = mapValues.get(DRAWING_NUMBER_KEY);
         String partNumber = mapValues.get(PART_NUMBER_KEY);
@@ -381,6 +442,7 @@ public class ProjectMain
                 }
             }
         }
+        writeData("Finished trial to set the Project main activity's fields values.", getExternalFilesDir(null));
     }
 
     private void handleFileList(SmbFile[] fileList, String entryData){
@@ -390,7 +452,7 @@ public class ProjectMain
             //startSourceSelection();
             return;
         }
-
+        writeData("Started trial to get the document's from the server.", getExternalFilesDir(null));
         for (SmbFile f : fileList) {
             String fName = f.getName();
             String fCode = fName.substring(0, 4);
@@ -407,9 +469,11 @@ public class ProjectMain
                 asyncFromServerToLocalfile.execute(f, entryData, localFile);
             }
         }
+        writeData("Started waiting for response of the operation 'get the document's from the server.'", getExternalFilesDir(null));
     }
 
     private int updatePendingItemsInfo(){
+        writeData("Started the trial to update the pending item's count.", getExternalFilesDir(null));
         CheckBox checkBox;
         int pendingItems, totalPendingItems = 0;
         if(project != null) {
@@ -442,10 +506,12 @@ public class ProjectMain
                 findViewById(R.id.btnProjectFinish).setEnabled(totalPendingItems == 0);
             }
         }
+        writeData("Finished the trial to update the pending item's count.", getExternalFilesDir(null));
         return totalPendingItems;
     }
 
     private void documentCheck(String documentKey, String filePath){
+        writeData("Started trial to open the document's check activity.", getExternalFilesDir(null));
         Intent intent;
 //        filePath = WQCDocumentHandler.getFilePath(documentKey, conf, mapValues);
         if(filePath == null){
@@ -465,11 +531,13 @@ public class ProjectMain
 
     @Override
     public void AsyncSmbFilesListResponseCallback(SmbFile[] fileList, String entryData) {
+        writeData("Got response from the ListFiles asynchronous method", getExternalFilesDir(null));
         handleFileList(fileList, entryData);
     }
 
     @Override
     public void AsyncFileFromServerCallback(boolean bResult, String entryData, String localFilePath) {
+        writeData("Got response from the CopyFileFromServer asynchronous method", getExternalFilesDir(null));
         toggleWaitingState(false);
         if(bResult){
             if(!isValidFile(localFilePath)){
@@ -488,6 +556,27 @@ public class ProjectMain
         }
         else{
             Toast.makeText(this, R.string.smbConnectError, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(!permissionsManager.checkPermission(permissions, this, false)){
+            writeData("Didn't got all the needed permissions", getExternalFilesDir(null));
+            AlertDialog.Builder builder = new AlertDialog.Builder(ProjectMain.this);
+            builder.setTitle(R.string.noPermissionsGrantedTitle);
+            builder.setMessage(R.string.permissionsNeededMessage);
+            builder.setPositiveButton(R.string.okTag, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    finish();
+                }
+            });
+            builder.show();
+        } else {
+            gotPermissions();
         }
     }
 }

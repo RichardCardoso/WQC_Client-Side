@@ -81,4 +81,6 @@
     <string name="invalidServerFileMessage">The file in the server is invalid / corrupted. Please replace it with a valid one and try again.</string>
     <string name="projectUploadMessage">Do you wish to upload the report files? When it\'s done you\'ll need to do a new report (if you need to change something) !!!</string>
     <string name="tryAgainMessage">Wanna try again?</string>
+    <string name="permissionsNeededMessage">Not all needed permissions were granted to the app. Without them, it\'s impossible to continue. The app will be closed now.</string>
+    <string name="noPermissionsGrantedTitle">Permissions missing</string>
 </resources>

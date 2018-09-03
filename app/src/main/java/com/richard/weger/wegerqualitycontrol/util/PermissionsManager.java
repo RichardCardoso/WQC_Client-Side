@@ -5,21 +5,29 @@ import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
-import static com.richard.weger.wegerqualitycontrol.util.AppConstants.CAMERA_PERMISSION_CODE;
+import static com.richard.weger.wegerqualitycontrol.util.AppConstants.INTRINSIC_PERMISSIONS_CODE;
 
 public class PermissionsManager extends ActivityCompat {
 
-    public boolean checkPermission(String permission, Activity activity, Boolean askIfDontHave) {
-        if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
-            if(!askIfDontHave) return false;
-            else askPermission(permission, activity);
+    public boolean checkPermission(String[] permissions, Activity activity, Boolean askIfDontHave) {
+        boolean needToAsk = false;
+        for(String s:permissions){
+            if((ContextCompat.checkSelfPermission(activity, s) != PackageManager.PERMISSION_GRANTED)){
+                needToAsk = true;
+                break;
+            }
         }
-        return true;
+        if (needToAsk) {
+            if(!askIfDontHave) return false;
+            else askPermission(permissions, activity);
+            return false;
+        } else {
+            return true;
+        }
     }
 
-    public void askPermission(String permission, Activity activity){
-        String[] permissions = new String[]{permission};
-        ActivityCompat.requestPermissions(activity, permissions, CAMERA_PERMISSION_CODE);
+    public void askPermission(String[] permissions, Activity activity){
+        ActivityCompat.requestPermissions(activity, permissions, INTRINSIC_PERMISSIONS_CODE);
     }
 
 }

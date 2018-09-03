@@ -105,40 +105,6 @@ public class FileHandler{
         }
     }
 
-    public static boolean fileToServer(SmbFile remoteFile, File localFile){
-        SmbFileOutputStream out;
-        FileInputStream fis;
-
-        try {
-            out = new SmbFileOutputStream(remoteFile);
-        } catch (SmbException | MalformedURLException | UnknownHostException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        try {
-            fis = new FileInputStream(localFile);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        try {
-            out.write(fis.read());
-            //out.write(IOUtils.toByteArray(fis));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        try {
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-    }
-
     public static boolean isValidFile(String filePath){
         String path = Uri.parse(filePath).getPath();
         File file = new File(path);

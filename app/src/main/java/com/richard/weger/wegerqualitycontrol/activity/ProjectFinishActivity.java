@@ -16,6 +16,7 @@ import com.richard.weger.wegerqualitycontrol.domain.Project;
 import com.richard.weger.wegerqualitycontrol.domain.Report;
 import com.richard.weger.wegerqualitycontrol.util.AsyncFromLocalfileToServer;
 import com.richard.weger.wegerqualitycontrol.util.ConfigurationsManager;
+import com.richard.weger.wegerqualitycontrol.util.LogHandler;
 import com.richard.weger.wegerqualitycontrol.util.ProjectHandler;
 import com.richard.weger.wegerqualitycontrol.util.StringHandler;
 
@@ -86,8 +87,19 @@ public class ProjectFinishActivity extends Activity implements AsyncFromLocalfil
         report.setComments(editComments.getText().toString());
         report.setDate(Calendar.getInstance().getTime());
 
-        ProjectHandler projectHandlerResponse = new ProjectHandler(getResources(), b,getExternalFilesDir(null), conf,project,this);
-        projectHandlerResponse.run();
+        final ProjectHandler projectHandlerResponse = new ProjectHandler(getResources(), b,getExternalFilesDir(null), conf,project,this);
+        Thread thread = new Thread(){
+            @Override
+            public void run(){
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                projectHandlerResponse.run();
+            }
+        };
+        thread.run();
     }
 
     private void confirmUpload(){
@@ -123,14 +135,16 @@ public class ProjectFinishActivity extends Activity implements AsyncFromLocalfil
     }
 
     @Override
-    public void AsyncFromLocalfileToServerCallback(boolean bResult, String entryData, String localPath) {
+    public void AsyncFromLocalfileToServerCallback(String sResult, String entryData, String localPath) {
         AlertDialog.Builder builder = new AlertDialog.Builder(ProjectFinishActivity.this);
 
         progressUpdate(false);
 
         builder.setTitle(R.string.confirmationNeeded);
         builder.setMessage(R.string.projectUploadMessage);
-        if(bResult){
+        if(sResult == null){
+            LogHandler.writeData(getResources().getString(R.string.successfulServerUploadMessage),
+                    getExternalFilesDir(null));
             builder.setMessage(R.string.successfulServerUploadMessage);
             builder.setPositiveButton(R.string.okTag, new DialogInterface.OnClickListener() {
                 @Override
@@ -140,6 +154,7 @@ public class ProjectFinishActivity extends Activity implements AsyncFromLocalfil
             });
         }
         else{
+            LogHandler.writeData(sResult, getExternalFilesDir(null));
             builder.setMessage(getResources().getString(R.string.smbConnectError)
                     .concat(" ")
                     .concat(getResources().getString(R.string.tryAgainMessage)));
@@ -166,6 +181,7 @@ public class ProjectFinishActivity extends Activity implements AsyncFromLocalfil
                 .concat(conf.getRootPath())
                 .concat(mapValues.get(COMMON_PATH_KEY).
                         concat("/QualityControl/"));
+        LogHandler.writeData("Starting project's upload routine", getExternalFilesDir(null));
         (new AsyncFromLocalfileToServer(this, conf)).execute(serverPath.concat(StringHandler.getProjectName(project)).concat(".zip"), "", inputPath.concat(".zip"));
     }
 }

@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -19,7 +22,10 @@ import com.richard.weger.wegerqualitycontrol.domain.Project;
 import com.richard.weger.wegerqualitycontrol.util.StringHandler;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Calendar;
 
 import uk.co.senab.photoview.PhotoViewAttacher;
 
@@ -28,6 +34,7 @@ import static com.richard.weger.wegerqualitycontrol.util.AppConstants.ITEM_KEY;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.PICTURES_AUTHORITY;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.PROJECT_KEY;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.REQUEST_IMAGE_CAPTURE_ACTION;
+import static com.richard.weger.wegerqualitycontrol.util.AppConstants.SDF;
 
 public class PictureViewerActivity extends Activity{
 
@@ -184,11 +191,42 @@ public class PictureViewerActivity extends Activity{
         // Bitmap bitmap = CameraHandler.handleTakePictureIntentResponse(requestCode, resultCode, data);
         Intent intent = new Intent();
         // item.getPicture().setProxyBitmap(new ProxyBitmap(bitmap));
-        if(resultCode == RESULT_OK)
+        if(resultCode == RESULT_OK) {
+            putTimeStamp();
             item.getPicture().setFilePath(futurePath);
+        }
         intent.putExtra(ITEM_ID_KEY, position);
         intent.putExtra(ITEM_KEY, item);
         setResult(RESULT_OK, intent);
         finish();
+    }
+
+    private void putTimeStamp(){
+        Bitmap src = BitmapFactory.decodeFile(futurePath);
+        Bitmap dest = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
+        String dateTime = SDF.format(Calendar.getInstance().getTime());
+        String projectLabel, drawingLabel, partLabel;
+        projectLabel = getResources().getString(R.string.projectLabel);
+        drawingLabel = getResources().getString(R.string.drawingLabel);
+        partLabel = getResources().getString(R.string.partLabel);
+        String projectInfo = projectLabel
+                .concat(": ").concat(project.getNumber())
+                .concat("\n").concat(drawingLabel).concat(": ").concat(String.valueOf(project.getDrawingList().get(0).getNumber()))
+                .concat("\n").concat(partLabel).concat(": ").concat(String.valueOf(project.getDrawingList().get(0).getPart().get(0).getNumber()))
+                .concat("\n");
+
+        Canvas cs = new Canvas(dest);
+        Paint tPaint = new Paint();
+        tPaint.setTextSize(85);
+        tPaint.setColor(Color.YELLOW);
+        tPaint.setStyle(Paint.Style.FILL);
+        float height = tPaint.measureText("yY");
+        cs.drawBitmap(src, 0f, 0f, null);
+        cs.drawText(projectInfo.concat(" - ").concat(dateTime),20f, height + 15f, tPaint);
+        try {
+            dest.compress(Bitmap.CompressFormat.JPEG, 100, new FileOutputStream(new File(futurePath)));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }

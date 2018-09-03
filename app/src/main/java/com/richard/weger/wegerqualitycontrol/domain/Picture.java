@@ -10,6 +10,7 @@ public class Picture implements Serializable{
     }
     private transient ProxyBitmap proxyBitmap;
     private String filePath;
+    private String caption;
 
     public ProxyBitmap getProxyBitmap() {
         return proxyBitmap;
@@ -25,5 +26,13 @@ public class Picture implements Serializable{
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public String getCaption() {
+        return caption;
+    }
+
+    public void setCaption(String caption) {
+        this.caption = caption;
     }
 }

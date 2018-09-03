@@ -1,6 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'key0'
+            keyPassword 'wegerbr2017@keystore'
+            storeFile file('C:/Users/vendas1/Google Drive/Richard/Profissional/Ti/Programacao/AndroidStudioProjects/WegerQualityControl/WQC_KeyStore.jks')
+            storePassword 'wegerbr2017@keystore'
+        }
+    }
     compileSdkVersion 26
     defaultConfig {
         multiDexEnabled false

@@ -27,7 +27,6 @@ import static com.richard.weger.wegerqualitycontrol.util.AppConstants.*;
 public class SourceSelectionActivity extends Activity implements ZXingScannerView.ResultHandler {
 
     private ZXingScannerView mScannerView;
-    PermissionsManager permissionsManager = new PermissionsManager();
     File rootPath;
 
     @Override
@@ -38,47 +37,11 @@ public class SourceSelectionActivity extends Activity implements ZXingScannerVie
     }
 
     @Override
-    public void onBackPressed(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.confirmationNeeded);
-        builder.setMessage(R.string.closeMessage);
-        builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                Intent intent = new Intent();
-                intent.putExtra(CLOSE_REASON, CLOSE_REASON_USER_FINISH);
-                setResult(RESULT_CANCELED, intent);
-                finish();
-            }
-        });
-        builder.setNegativeButton(R.string.noTag, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                setResult(RESULT_CANCELED);
-                finish();
-            }
-        });
-        builder.show();
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_source_selection);
-
-        if(!permissionsManager.checkPermission(CAMERA_PERMISSION, this, false)){
-            permissionsManager.askPermission(CAMERA_PERMISSION, this);
-        }
         rootPath  = this.getFilesDir();
         setListeners();
-    }
-
-
-    public void QrScan(){
-        mScannerView = new ZXingScannerView(this);
-        setContentView(mScannerView);
-        mScannerView.setResultHandler(this);
-        mScannerView.startCamera();
     }
 
     private void autenticate(){
@@ -110,8 +73,22 @@ public class SourceSelectionActivity extends Activity implements ZXingScannerVie
         builder.show();
     }
 
-    private void setListeners(){
+    @Override
+    public void onBackPressed(){
+        if(mScannerView != null) {
+            setResult(RESULT_CANCELED);
+            finish();
+        }
+    }
 
+    public void QrScan(){
+        mScannerView = new ZXingScannerView(this);
+        setContentView(mScannerView);
+        mScannerView.setResultHandler(this);
+        mScannerView.startCamera();
+    }
+
+    private void setListeners(){
         Button button = findViewById(R.id.btnConfig);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -125,6 +102,7 @@ public class SourceSelectionActivity extends Activity implements ZXingScannerVie
             public void onClick(View v) {
                 QrScan();
             }
+
         });
         findViewById(R.id.btnContinueProject).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -132,6 +110,33 @@ public class SourceSelectionActivity extends Activity implements ZXingScannerVie
                 Intent intent = new Intent(SourceSelectionActivity.this,
                         FileSelectActivity.class);
                 startActivityForResult(intent, CONTINUE_PROJECT_SCREEN_KEY);
+            }
+        });
+
+        button = findViewById(R.id.btnExit);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(SourceSelectionActivity.this);
+                builder.setTitle(R.string.confirmationNeeded);
+                builder.setMessage(R.string.closeMessage);
+                builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Intent intent = new Intent();
+                        intent.putExtra(CLOSE_REASON, CLOSE_REASON_USER_FINISH);
+                        setResult(RESULT_CANCELED, intent);
+                        finish();
+                    }
+                });
+                builder.setNegativeButton(R.string.noTag, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+//                    setResult(RESULT_CANCELED);
+//                    finish();
+                    }
+                });
+                builder.show();
             }
         });
     }
@@ -144,15 +149,6 @@ public class SourceSelectionActivity extends Activity implements ZXingScannerVie
         mScannerView.stopCamera();
         setResult(RESULT_OK, intent);
         finish();
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(!permissionsManager.checkPermission(CAMERA_PERMISSION, this, false)){
-            finish();
-        }
     }
 
     @Override
@@ -170,6 +166,5 @@ public class SourceSelectionActivity extends Activity implements ZXingScannerVie
                 }
             }
         }
-
     }
 }

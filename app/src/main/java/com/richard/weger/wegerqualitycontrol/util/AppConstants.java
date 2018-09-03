@@ -1,5 +1,6 @@
 package com.richard.weger.wegerqualitycontrol.util;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,7 +66,7 @@ public class AppConstants {
     public final static int PICTURE_VIEWER_SCREEN_ID = 5;
     public final static int PROJECT_FINISH_SCREEN_ID = 6;
     public final static int SOURCE_SELECTION_SCREEN_KEY = 7;
-    public final static int CAMERA_PERMISSION_CODE = 8;
+    public final static int INTRINSIC_PERMISSIONS_CODE = 8;
     public final static int CONTROL_CARD_REPORT_EDIT_SCREEN_KEY = 9;
     public final static int CONTINUE_PROJECT_SCREEN_KEY = 10;
     public final static int CONFIG_SCREEN_KEY = 11;
@@ -81,6 +82,7 @@ public class AppConstants {
     public final static String QR_CODE_KEY = "qr_code_text";
     public final static String CONTINUE_CODE_KEY = "continue_code_text";
 
+    public final static SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     
 
     // 0 - not started

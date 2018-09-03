@@ -82,4 +82,6 @@
     <string name="invalidServerFileMessage">Il file nel server non è valido / corrotto. Si prega di sostituirlo con uno valido e riprovare.</string>
     <string name="projectUploadMessage">Vuoi caricare i file del rapporto? Quando ha finito devi fare un nuovo rapporto (se devi cambiare qualcosa) !!!</string>
     <string name="tryAgainMessage">Vuoi riprovare?</string>
+    <string name="permissionsNeededMessage">Non tutte le autorizzazioni necessarie sono state concesse all\'app. Senza di loro, è impossibile continuare. L\'app sarà chiusa ora.</string>
+    <string name="noPermissionsGrantedTitle">Autorizzazioni mancanti</string>
 </resources>
