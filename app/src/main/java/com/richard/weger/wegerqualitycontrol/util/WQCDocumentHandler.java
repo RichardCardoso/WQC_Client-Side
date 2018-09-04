@@ -14,6 +14,7 @@ import android.os.Environment;
 import com.richard.weger.wegerqualitycontrol.R;
 import com.richard.weger.wegerqualitycontrol.domain.Configurations;
 import com.richard.weger.wegerqualitycontrol.domain.Project;
+import com.richard.weger.wegerqualitycontrol.domain.WQCDocumentMark;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -49,12 +50,12 @@ public abstract class WQCDocumentHandler {
 //        return filePath;
 //    }
 
-    public static void bitmap2Pdf(String inputFilePath, String outputFilePath, Project project, String documentCode, Map<Integer, List<WQCPointF>> hashPoints, Resources resources){
+    public static void bitmap2Pdf(String inputFilePath, String outputFilePath, Project project, String documentCode, Map<Integer, List<WQCDocumentMark>> markList, Resources resources){
         PdfDocument document = new PdfDocument();
-        for(int i = 0; i < hashPoints.size(); i++) {
+        for(int i = 0; i < markList.size(); i++) {
             Bitmap bitmap;
             bitmap = WQCDocumentHandler.pageLoad(i, inputFilePath, resources);
-            bitmap = WQCDocumentHandler.updatePointsDrawing(hashPoints.get(i), bitmap, resources);
+            bitmap = WQCDocumentHandler.updatePointsDrawing(markList.get(i), bitmap, resources);
 
             PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(bitmap.getWidth(), bitmap.getHeight(), i + 1).create();
             PdfDocument.Page page = document.startPage(pageInfo);
@@ -99,8 +100,8 @@ public abstract class WQCDocumentHandler {
         return originalBitmap.copy(originalBitmap.getConfig(), true);
     }
 
-    public static Bitmap updatePointsDrawing(List<WQCPointF> lstPoints, Bitmap originalBitmap, Resources resources) {
-        if (lstPoints != null) {
+    public static Bitmap updatePointsDrawing(List<WQCDocumentMark> markList, Bitmap originalBitmap, Resources resources) {
+        if (markList != null) {
             Canvas canvas;
 
             Bitmap currentBitmap = bitmapCopy(originalBitmap);
@@ -113,22 +114,33 @@ public abstract class WQCDocumentHandler {
             paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)); // Text over picture
 
             canvas.drawBitmap(originalBitmap, 0, 0, paint);
-            for (WQCPointF p : lstPoints) {
-                Float x = p.getX(),
-                        y = p.getY();
-                drawMark(new float[]{x, y}, canvas, paint, resources);
+            for (WQCDocumentMark mark : markList) {
+                Float x = mark.getPointF().getX(),
+                        y = mark.getPointF().getY();
+                drawMark(mark, canvas, paint, resources);
             }
             return currentBitmap;
         }
         return null;
     }
 
-    private static void drawMark(float[] touchPoint, Canvas canvas, Paint paint, Resources resources) {
+    private static void drawMark(WQCDocumentMark mark, Canvas canvas, Paint paint, Resources resources) {
+        float[] touchPoint = new float[]{mark.getPointF().getX(), mark.getPointF().getY()};
         int radius = 18;
         Paint circlePaint = new Paint();
         circlePaint.setColor(Color.RED);
         circlePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)); // Text over picture
         canvas.drawCircle(touchPoint[0] + radius / 2, touchPoint[1] - radius / 2 + 4, radius, circlePaint);
-        canvas.drawText(resources.getString(R.string.okTag), touchPoint[0], touchPoint[1], paint);
+        switch(mark.getType()){
+            case 0:
+                canvas.drawText(resources.getString(R.string.okTag), touchPoint[0], touchPoint[1], paint);
+                break;
+            case 1:
+                canvas.drawText(resources.getString(R.string.elTag), touchPoint[0], touchPoint[1], paint);
+                break;
+            case 2:
+                canvas.drawText(resources.getString(R.string.magTag), touchPoint[0], touchPoint[1], paint);
+                break;
+        }
     }
 }

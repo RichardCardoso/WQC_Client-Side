@@ -80,8 +80,11 @@
     <string name="invalidDocumentCodesMessage">Impossibile procedere. Controlla i parametri dell\'app (codice di disegno + estensione e codice del foglio dati + estensione</string>
     <string name="successfulServerUploadMessage">Progetto caricato con successo!</string>
     <string name="invalidServerFileMessage">Il file nel server non è valido / corrotto. Si prega di sostituirlo con uno valido e riprovare.</string>
-    <string name="projectUploadMessage">Vuoi caricare i file del rapporto? Quando ha finito devi fare un nuovo rapporto (se devi cambiare qualcosa) !!!</string>
+    <string name="projectUploadMessage">Vuoi caricare i file del rapporto? </string>
     <string name="tryAgainMessage">Vuoi riprovare?</string>
     <string name="permissionsNeededMessage">Non tutte le autorizzazioni necessarie sono state concesse all\'app. Senza di loro, è impossibile continuare. L\'app sarà chiusa ora.</string>
     <string name="noPermissionsGrantedTitle">Autorizzazioni mancanti</string>
+    <string name="elTag">EL</string>
+    <string name="magTag">MG</string>
+    <string name="itemTag">articolo</string>
 </resources>

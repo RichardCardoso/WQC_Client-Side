@@ -50,7 +50,7 @@ public class ProjectHandler implements Runnable{
                         + conf.getDrawingCode() + "-" +
                         StringHandler.generateFileName(project, "pdf"), project,
                 conf.getDrawingCode(),
-                project.getDrawingList().get(0).getHashPoints(), res);
+                project.getDrawingList().get(0).getDocumentMarks(), res);
 
         inputPath = project.getDrawingList().get(0).getDatasheet().getOriginalFileLocalPath();
         WQCDocumentHandler.bitmap2Pdf(inputPath,
@@ -58,7 +58,7 @@ public class ProjectHandler implements Runnable{
                         + conf.getDatasheetCode() + "-" +
                         StringHandler.generateFileName(project, "pdf"), project,
                 conf.getDatasheetCode(),
-                project.getDrawingList().get(0).getDatasheet().getHashPoints(), res);
+                project.getDrawingList().get(0).getDatasheet().getDocumentMarks(), res);
 
         inputPath = StringHandler.generateProjectFolderName(externalFilesDir, project);
         if(inputPath.charAt(inputPath.length() - 1) == '/' || inputPath.charAt(inputPath.length() - 1) == '\\'){

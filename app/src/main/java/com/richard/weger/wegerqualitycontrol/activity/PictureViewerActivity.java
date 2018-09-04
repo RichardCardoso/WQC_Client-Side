@@ -19,6 +19,7 @@ import android.widget.Toast;
 import com.richard.weger.wegerqualitycontrol.R;
 import com.richard.weger.wegerqualitycontrol.domain.Item;
 import com.richard.weger.wegerqualitycontrol.domain.Project;
+import com.richard.weger.wegerqualitycontrol.domain.Report;
 import com.richard.weger.wegerqualitycontrol.util.StringHandler;
 
 import java.io.File;
@@ -33,6 +34,7 @@ import static com.richard.weger.wegerqualitycontrol.util.AppConstants.ITEM_ID_KE
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.ITEM_KEY;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.PICTURES_AUTHORITY;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.PROJECT_KEY;
+import static com.richard.weger.wegerqualitycontrol.util.AppConstants.REPORT_KEY;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.REQUEST_IMAGE_CAPTURE_ACTION;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.SDF;
 
@@ -44,6 +46,12 @@ public class PictureViewerActivity extends Activity{
     ImageView imageView;
     String futurePath = "";
     Project project;
+    Report report;
+
+    @Override
+    public void onBackPressed(){
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +65,7 @@ public class PictureViewerActivity extends Activity{
             item = (Item) intent.getSerializableExtra(ITEM_KEY);
             position = intent.getIntExtra(ITEM_ID_KEY, -1);
             project = (Project) intent.getSerializableExtra(PROJECT_KEY);
+            report = (Report) intent.getSerializableExtra(REPORT_KEY);
             if(position == -1){
                 Toast.makeText(this, R.string.dataRecoverError, Toast.LENGTH_LONG).show();
                 resultCanceled();
@@ -194,11 +203,11 @@ public class PictureViewerActivity extends Activity{
         if(resultCode == RESULT_OK) {
             putTimeStamp();
             item.getPicture().setFilePath(futurePath);
+            intent.putExtra(ITEM_ID_KEY, position);
+            intent.putExtra(ITEM_KEY, item);
+            setResult(RESULT_OK, intent);
+            finish();
         }
-        intent.putExtra(ITEM_ID_KEY, position);
-        intent.putExtra(ITEM_KEY, item);
-        setResult(RESULT_OK, intent);
-        finish();
     }
 
     private void putTimeStamp(){
@@ -214,6 +223,8 @@ public class PictureViewerActivity extends Activity{
                 .concat("\n").concat(drawingLabel).concat(": ").concat(String.valueOf(project.getDrawingList().get(0).getNumber()))
                 .concat("\n").concat(partLabel).concat(": ").concat(String.valueOf(project.getDrawingList().get(0).getPart().get(0).getNumber()))
                 .concat("\n");
+        String itemInfo = report.toString().concat(", ").concat(getResources().getString(R.string.itemTag))
+                .concat(": ").concat(String.valueOf(item.getId()));
 
         Canvas cs = new Canvas(dest);
         Paint tPaint = new Paint();
@@ -223,6 +234,8 @@ public class PictureViewerActivity extends Activity{
         float height = tPaint.measureText("yY");
         cs.drawBitmap(src, 0f, 0f, null);
         cs.drawText(projectInfo.concat(" - ").concat(dateTime),20f, height + 15f, tPaint);
+        cs.drawText(itemInfo,20f, 2*height + 15f, tPaint);
+
         try {
             dest.compress(Bitmap.CompressFormat.JPEG, 100, new FileOutputStream(new File(futurePath)));
         } catch (FileNotFoundException e) {

@@ -52,10 +52,22 @@ public class AsyncFromLocalfileToServer extends AsyncTask<Object, Void, String> 
         SmbFileOutputStream fos=null;
         FileInputStream in=null;
 
-        serverPath = "smb://".concat(serverPath);
-        // lPath = "smb://".concat(lPath);
+        String serverFolder;
+        SmbFile folder;
 
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(null, conf.getServerUsername(), conf.getServerPassword());
+
+        serverPath = "smb://".concat(serverPath);
+        serverFolder = serverPath.substring(0, serverPath.lastIndexOf("/"));
+
+        try {
+            folder = new SmbFile(serverFolder, auth);
+            if(!folder.exists()){
+                folder.mkdirs();
+            }
+        } catch (MalformedURLException | SmbException e) {
+            e.printStackTrace();
+        }
 
         try {
             outputFile  = new SmbFile(serverPath, auth);

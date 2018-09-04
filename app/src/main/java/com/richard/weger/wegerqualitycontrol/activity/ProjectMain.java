@@ -24,6 +24,7 @@ import com.richard.weger.wegerqualitycontrol.domain.Drawing;
 import com.richard.weger.wegerqualitycontrol.domain.Item;
 import com.richard.weger.wegerqualitycontrol.domain.Project;
 import com.richard.weger.wegerqualitycontrol.domain.Report;
+import com.richard.weger.wegerqualitycontrol.domain.WQCDocumentMark;
 import com.richard.weger.wegerqualitycontrol.util.AppConstants;
 import com.richard.weger.wegerqualitycontrol.util.AsyncFromServerToLocalFile;
 import com.richard.weger.wegerqualitycontrol.util.ConfigurationsManager;
@@ -308,13 +309,13 @@ public class ProjectMain
                         conf = ConfigurationsManager.loadConfig(this);
                     }
                     case DOCUMENT_MARK_SCREEN: {
-                        Map<Integer, List<WQCPointF>> hashPoints = (HashMap) b.getSerializable(DOCUMENT_HASH_POINTS_KEY);
+                        Map<Integer, List<WQCDocumentMark>> markList = (HashMap) b.getSerializable(DOCUMENT_HASH_POINTS_KEY);
                         String documentType = b.getString(DOCUMENT_TYPE_KEY);
 
                         if(documentType.equals(CONSTRUCTION_PATH_KEY))
-                            project.getDrawingList().get(0).setHashPoints(hashPoints);
+                            project.getDrawingList().get(0).setDocumentMarks(markList);
                         else if(documentType.equals(TECHNICAL_PATH_KEY))
-                            project.getDrawingList().get(0).getDatasheet().setHashPoints(hashPoints);
+                            project.getDrawingList().get(0).getDatasheet().setDocumentMarks(markList);
                     }
                 }
             }
@@ -521,9 +522,9 @@ public class ProjectMain
         intent = new Intent(ProjectMain.this, DocumentMarkerActivity.class);
         intent.putExtra(FILE_PATH_KEY, filePath);
         if(documentKey.equals(CONSTRUCTION_PATH_KEY))
-            intent.putExtra(DOCUMENT_HASH_POINTS_KEY, (HashMap) project.getDrawingList().get(0).getHashPoints());
+            intent.putExtra(DOCUMENT_HASH_POINTS_KEY, (HashMap) project.getDrawingList().get(0).getDocumentMarks());
         else
-            intent.putExtra(DOCUMENT_HASH_POINTS_KEY, (HashMap) project.getDrawingList().get(0).getDatasheet().getHashPoints());
+            intent.putExtra(DOCUMENT_HASH_POINTS_KEY, (HashMap) project.getDrawingList().get(0).getDatasheet().getDocumentMarks());
         intent.putExtra(DOCUMENT_TYPE_KEY, documentKey);
         startActivityForResult(intent, DOCUMENT_MARK_SCREEN);
     }

@@ -26,7 +26,7 @@ public abstract class LogHandler {
         if(file.exists()){
             try {
                 out = new BufferedWriter(new FileWriter(file,true), 1024);
-                out.write(SDF.format(currentTime).concat(": ").concat(data).concat("\n"));
+                out.write(SDF.format(currentTime).concat(": ").concat(data).concat("\n\n"));
                 out.close();
                 return true;
             } catch (IOException e) {

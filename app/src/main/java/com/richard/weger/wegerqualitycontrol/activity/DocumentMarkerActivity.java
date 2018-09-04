@@ -3,13 +3,16 @@ package com.richard.weger.wegerqualitycontrol.activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.PointF;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.richard.weger.wegerqualitycontrol.R;
+import com.richard.weger.wegerqualitycontrol.domain.WQCDocumentMark;
 import com.richard.weger.wegerqualitycontrol.util.PdfHandler;
 import com.richard.weger.wegerqualitycontrol.util.TouchImageView;
 import com.richard.weger.wegerqualitycontrol.util.WQCDocumentHandler;
@@ -20,21 +23,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jxl.common.log.LoggerName;
-
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.*;
 
 public class DocumentMarkerActivity extends Activity implements TouchImageView.ChangeListener{
 
     Bitmap originalBitmap = null,
             currentBitmap = null;
-    Map<Integer, List<WQCPointF>> hashPoints = null;
+    Map<Integer, List<WQCDocumentMark>> documentMarks = null;
     int currentPage = 0,
         pageCount = 0;
     TouchImageView imageView = null;
     String filePath, documentKey;
-    int mode = 0;
-    // mode 0 = default
+    int mode = 0,
+    markType = 0;
+    // mode 0 = zoom / pan
     // mode 1 = add mark
 
     @Override
@@ -54,7 +56,7 @@ public class DocumentMarkerActivity extends Activity implements TouchImageView.C
             setResult(RESULT_CANCELED);
             finish();
         }
-        hashPoints = (HashMap) intent.getSerializableExtra(DOCUMENT_HASH_POINTS_KEY);
+        documentMarks = (HashMap) intent.getSerializableExtra(DOCUMENT_HASH_POINTS_KEY);
 
         imageView = findViewById(R.id.ivDocument);
         imageView.setMaxZoom(12f);
@@ -81,9 +83,10 @@ public class DocumentMarkerActivity extends Activity implements TouchImageView.C
     }
 
     private void init(){
-        if(hashPoints == null || hashPoints.size() == 0 || hashPoints.get(0) == null) {
+        if(documentMarks == null || documentMarks.size() == 0 || documentMarks.get(0) == null) {
             fillPointsMap();
         }
+        fillSpinnerValues();
         updateButtonState();
     }
 
@@ -135,12 +138,36 @@ public class DocumentMarkerActivity extends Activity implements TouchImageView.C
                 cancel();
             }
         });
+
+        Spinner spinner = findViewById(R.id.SpinnerMarkType);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String item = (String) parent.getItemAtPosition(position);
+                markTypeChanged(item);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                markTypeChanged(String.valueOf(0));
+            }
+        });
+    }
+
+    private void markTypeChanged(String item){
+        if(item.equals(getResources().getString(R.string.okTag))){
+            markType = 0;
+        } else if (item.equals(getResources().getString(R.string.elTag))){
+            markType = 1;
+        } else if (item.equals(getResources().getString(R.string.magTag))){
+            markType = 2;
+        }
     }
 
     private void undo(){
-        List<WQCPointF> pointFList = hashPoints.get(currentPage);
-        if(pointFList != null && pointFList.size() > 0){
-            pointFList.remove(pointFList.size() - 1);
+        List<WQCDocumentMark> markList = documentMarks.get(currentPage);
+        if(markList != null && markList.size() > 0){
+            markList.remove(markList.size() - 1);
             updatePointsDrawing();
             updateButtonState();
             toggleMarkAdd(false);
@@ -149,8 +176,23 @@ public class DocumentMarkerActivity extends Activity implements TouchImageView.C
 
     private void fillPointsMap(){
         for(int i = 0; i < pageCount; i++){
-            hashPoints.put(currentPage, new ArrayList<WQCPointF>());
+            documentMarks.put(currentPage, new ArrayList<WQCDocumentMark>());
         }
+    }
+
+    private void fillSpinnerValues(){
+        Spinner spinner;
+        ArrayAdapter adapter;
+
+        String[] array_spinner = new String[3];
+        array_spinner[0] = getResources().getString(R.string.okTag);
+        array_spinner[1] = getResources().getString(R.string.elTag);
+        array_spinner[2] = getResources().getString(R.string.magTag);
+
+        spinner = findViewById(R.id.SpinnerMarkType);
+        adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item,
+                array_spinner);
+        spinner.setAdapter(adapter);
     }
 
     private void toggleMarkAdd(){
@@ -182,7 +224,7 @@ public class DocumentMarkerActivity extends Activity implements TouchImageView.C
     private void save(){
         Intent intent = new Intent();
         Bundle b = new Bundle();
-        b.putSerializable(DOCUMENT_HASH_POINTS_KEY, (HashMap) hashPoints);
+        b.putSerializable(DOCUMENT_HASH_POINTS_KEY, (HashMap) documentMarks);
         b.putString(DOCUMENT_TYPE_KEY, documentKey);
         intent.putExtras(b);
         setResult(RESULT_OK, intent);
@@ -218,69 +260,32 @@ public class DocumentMarkerActivity extends Activity implements TouchImageView.C
     private void updateButtonState(){
         findViewById(R.id.btnNext).setEnabled(!(currentPage == pageCount - 1));
         findViewById(R.id.btnPrevious).setEnabled(!(currentPage == 0));
-        findViewById(R.id.btnUndo).setEnabled(hashPoints != null &&
-                hashPoints.get(currentPage) != null &&
-                hashPoints.get(currentPage).size() > 0);
+        findViewById(R.id.btnUndo).setEnabled(documentMarks != null &&
+                documentMarks.get(currentPage) != null &&
+                documentMarks.get(currentPage).size() > 0);
     }
 
     private void updateImageView(Bitmap bitmap){
         imageView.setImageBitmap(bitmap);
     }
 
-    /*
-    private void bitmapCopy(){
-        currentBitmap = originalBitmap.copy(originalBitmap.getConfig(), true);
-    }
-
-    private void drawMark(float[] touchPoint, Canvas canvas, Paint paint){
-        int radius = 18;
-        Paint circlePaint = new Paint();
-        circlePaint.setColor(Color.RED);
-        circlePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)); // Text over picture
-        canvas.drawCircle(touchPoint[0] + radius / 2, touchPoint[1] - radius / 2 + 4, radius, circlePaint);
-        canvas.drawText(getResources().getString(R.string.okTag), touchPoint[0], touchPoint[1], paint);
-    }
-    */
-
-    private void addPoint(float[] touchPoint){
-        List<WQCPointF> lstPoints = hashPoints.get(currentPage);
-        if(lstPoints == null){
-            hashPoints.put(currentPage, new ArrayList<WQCPointF>());
-            lstPoints = hashPoints.get(currentPage);
+    private void addMark(float[] touchPoint){
+        List<WQCDocumentMark> markList = documentMarks.get(currentPage);
+        if(markList == null){
+            documentMarks.put(currentPage, new ArrayList<WQCDocumentMark>());
+            markList = documentMarks.get(currentPage);
         }
-        lstPoints.add(new WQCPointF(touchPoint[0], touchPoint[1]));
+        markList.add(new WQCDocumentMark(new WQCPointF(touchPoint[0], touchPoint[1]), markType));
         updatePointsDrawing();
         toggleMarkAdd(false);
         updateButtonState();
     }
 
     private void updatePointsDrawing(){
-        List<WQCPointF> lstPoints = hashPoints.get(currentPage);
-        if(lstPoints != null) {
-            currentBitmap = WQCDocumentHandler.updatePointsDrawing(lstPoints, originalBitmap, getResources());
+        List<WQCDocumentMark> markList = documentMarks.get(currentPage);
+        if(markList != null) {
+            currentBitmap = WQCDocumentHandler.updatePointsDrawing(markList, originalBitmap, getResources());
             updateImageView(currentBitmap);
-            /*
-            Canvas canvas;
-
-            bitmapCopy();
-            canvas = new Canvas(currentBitmap);
-
-            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            paint.setColor(Color.YELLOW);
-            paint.setTextSize(16);
-            paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD)); // Bold text
-            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)); // Text over picture
-
-            canvas.drawBitmap(originalBitmap, 0, 0, paint);
-            for (PointF p : lstPoints) {
-                Float x = p.x,
-                        y = p.y;
-                drawMark(new float[]{x, y}, canvas, paint);
-            }
-            updateImageView(currentBitmap);
-            toggleMarkAdd(false);
-            updateButtonState();
-            */
         }
         else{
             updateImageView(originalBitmap);
@@ -289,6 +294,6 @@ public class DocumentMarkerActivity extends Activity implements TouchImageView.C
 
     @Override
     public void onChangeHappened(float[] touchPoint) {
-        addPoint(touchPoint);
+        addMark(touchPoint);
     }
 }

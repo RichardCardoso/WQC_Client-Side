@@ -20,6 +20,7 @@ import com.richard.weger.wegerqualitycontrol.R;
 import com.richard.weger.wegerqualitycontrol.domain.Item;
 import com.richard.weger.wegerqualitycontrol.domain.Project;
 import com.richard.weger.wegerqualitycontrol.domain.Report;
+import com.richard.weger.wegerqualitycontrol.util.FileHandler;
 import com.richard.weger.wegerqualitycontrol.util.ItemAdapter;
 import com.richard.weger.wegerqualitycontrol.util.ProxyBitmap;
 
@@ -29,12 +30,15 @@ import static com.richard.weger.wegerqualitycontrol.util.AppConstants.PICTURES_A
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.PICTURE_VIEWER_SCREEN_ID;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.PROJECT_KEY;
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.REPORT_KEY;
+import static com.richard.weger.wegerqualitycontrol.util.LogHandler.writeData;
 
 public class ReportEditActivity extends ListActivity implements ItemAdapter.ChangeListener{
 
     Report report;
     Project project;
     ItemAdapter itemAdapter;
+    String oldItemPicturePath;
+    int lastItemId = -1;
 
     @Override
     public void onBackPressed() {
@@ -66,6 +70,7 @@ public class ReportEditActivity extends ListActivity implements ItemAdapter.Chan
         setListeners();
         setTextViews();
         updatePictures();
+        (findViewById(R.id.btnSave)).requestFocus();
     }
 
     private void updatePictures(){
@@ -121,6 +126,10 @@ public class ReportEditActivity extends ListActivity implements ItemAdapter.Chan
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(oldItemPicturePath != null
+                        && !report.getItemList().get(lastItemId).getPicture().getFilePath().equals(oldItemPicturePath)){
+                    FileHandler.fileDelete(report.getItemList().get(lastItemId).getPicture().getFilePath());
+                }
                 setResult(RESULT_CANCELED);
                 finish();
             }
@@ -131,6 +140,15 @@ public class ReportEditActivity extends ListActivity implements ItemAdapter.Chan
             public void onClick(View v) {
                 Intent intent = new Intent();
                 intent.putExtra(REPORT_KEY, report);
+
+                writeData("Trying to replace an old report item's picture", getExternalFilesDir(null));
+                if(oldItemPicturePath != null) {
+                    if (FileHandler.fileDelete(oldItemPicturePath))
+                        writeData("Replace successful", getExternalFilesDir(null));
+                    else
+                        writeData("Replace failed", getExternalFilesDir(null));
+                }
+
                 setResult(RESULT_OK, intent);
                 finish();
             }
@@ -141,10 +159,17 @@ public class ReportEditActivity extends ListActivity implements ItemAdapter.Chan
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(resultCode == RESULT_OK){
             if(requestCode == PICTURE_VIEWER_SCREEN_ID){
-                Item i = (Item) data.getSerializableExtra(ITEM_KEY);
+                Item newItem = (Item) data.getSerializableExtra(ITEM_KEY);
                 int itemId = data.getIntExtra(ITEM_ID_KEY, -1);
                 if(itemId > -1) {
-                    report.getItemList().set(itemId, i);
+                    if(oldItemPicturePath == null) {
+                        oldItemPicturePath = report.getItemList().get(itemId).getPicture().getFilePath();
+                    } else {
+                        writeData("Trying to replace an old report item's picture", getExternalFilesDir(null));
+                        FileHandler.fileDelete(report.getItemList().get(itemId).getPicture().getFilePath());
+                    }
+                    lastItemId = itemId;
+                    report.getItemList().set(itemId, newItem);
                 }
                 updatePictures();
                 itemAdapter.notifyDataSetChanged();
@@ -184,6 +209,7 @@ public class ReportEditActivity extends ListActivity implements ItemAdapter.Chan
         Intent intent = new Intent(ReportEditActivity.this, PictureViewerActivity.class);
         intent.putExtra(ITEM_KEY, item);
         intent.putExtra(ITEM_ID_KEY, position);
+        intent.putExtra(REPORT_KEY, report);
         intent.putExtra(PROJECT_KEY, project);
         startActivityForResult(intent, PICTURE_VIEWER_SCREEN_ID);
     }

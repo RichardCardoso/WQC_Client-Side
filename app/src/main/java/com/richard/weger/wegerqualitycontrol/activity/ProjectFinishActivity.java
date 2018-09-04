@@ -20,6 +20,7 @@ import com.richard.weger.wegerqualitycontrol.util.LogHandler;
 import com.richard.weger.wegerqualitycontrol.util.ProjectHandler;
 import com.richard.weger.wegerqualitycontrol.util.StringHandler;
 
+import java.io.File;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -180,7 +181,7 @@ public class ProjectFinishActivity extends Activity implements AsyncFromLocalfil
         String serverPath = conf.getServerPath()
                 .concat(conf.getRootPath())
                 .concat(mapValues.get(COMMON_PATH_KEY).
-                        concat("/QualityControl/"));
+                        concat("QualityControl/"));
         LogHandler.writeData("Starting project's upload routine", getExternalFilesDir(null));
         (new AsyncFromLocalfileToServer(this, conf)).execute(serverPath.concat(StringHandler.getProjectName(project)).concat(".zip"), "", inputPath.concat(".zip"));
     }
