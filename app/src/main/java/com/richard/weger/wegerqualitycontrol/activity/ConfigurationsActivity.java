@@ -16,6 +16,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
+import static com.richard.weger.wegerqualitycontrol.util.LogHandler.writeData;
+
 public class ConfigurationsActivity extends Activity {
 
     @Override
@@ -31,6 +33,7 @@ public class ConfigurationsActivity extends Activity {
         TextView textView;
         Configurations conf = ConfigurationsManager.loadConfig(this);
 
+        writeData("Started filling configurations activity fields", getExternalFilesDir(null));
         textView = findViewById(R.id.editConstructionDrawingPath);
         textView.setText(conf.getConstructionDrawingPath());
 
@@ -66,11 +69,13 @@ public class ConfigurationsActivity extends Activity {
 
         textView = findViewById(R.id.editAppPassword);
         textView.setText(conf.getAppPassword());
+        writeData("Finished filling configurations activity fields", getExternalFilesDir(null));
     }
 
     private void setListeners(){
         Button btn;
 
+        writeData("Started setting configurations activity listeners", getExternalFilesDir(null));
         btn = findViewById(R.id.btnSave);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -87,6 +92,7 @@ public class ConfigurationsActivity extends Activity {
                 finish();
             }
         });
+        writeData("Finished setting configurations activity listeners", getExternalFilesDir(null));
     }
 
     private void saveConfig(){
@@ -94,6 +100,7 @@ public class ConfigurationsActivity extends Activity {
         TextView textView;
         int i = 0;
 
+        writeData("Retrieving configurations activity fields values", getExternalFilesDir(null));
         textView = findViewById(R.id.editConstructionDrawingPath);
         conf.setConstructionDrawingPath(textView.getText().toString());
 
@@ -129,8 +136,9 @@ public class ConfigurationsActivity extends Activity {
 
         textView = findViewById(R.id.editAppPassword);
         conf.setAppPassword(textView.getText().toString());
+        writeData("Finished retrieving configurations activity fields values", getExternalFilesDir(null));
 
-
+        writeData("Validating configurations activity fields values", getExternalFilesDir(null));
         for(Field f:conf.getClass().getDeclaredFields()){
             f.setAccessible(true);
             String fieldValue = (String)runGetter(f, new Configurations());
@@ -146,10 +154,12 @@ public class ConfigurationsActivity extends Activity {
                 }
             }
         }
-        Toast.makeText(this, R.string.valuesSavedMessage, Toast.LENGTH_LONG).show();
+        writeData("Finished validating configurations activity fields values", getExternalFilesDir(null));
 
         if(i == 0) {
+            writeData("Requesting project's json export", getExternalFilesDir(null));
             ConfigurationsManager.saveConfig(conf, this);
+            Toast.makeText(this, R.string.valuesSavedMessage, Toast.LENGTH_LONG).show();
         }
         else{
             Toast.makeText(this, R.string.emptyFieldsError, Toast.LENGTH_LONG).show();

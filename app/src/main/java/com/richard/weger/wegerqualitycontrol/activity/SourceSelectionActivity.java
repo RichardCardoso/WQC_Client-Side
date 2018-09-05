@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
@@ -16,13 +15,13 @@ import com.google.zxing.Result;
 import com.richard.weger.wegerqualitycontrol.R;
 import com.richard.weger.wegerqualitycontrol.domain.Configurations;
 import com.richard.weger.wegerqualitycontrol.util.ConfigurationsManager;
-import com.richard.weger.wegerqualitycontrol.util.PermissionsManager;
 
 import java.io.File;
 
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
 import static com.richard.weger.wegerqualitycontrol.util.AppConstants.*;
+import static com.richard.weger.wegerqualitycontrol.util.LogHandler.writeData;
 
 public class SourceSelectionActivity extends Activity implements ZXingScannerView.ResultHandler {
 
@@ -44,7 +43,7 @@ public class SourceSelectionActivity extends Activity implements ZXingScannerVie
         setListeners();
     }
 
-    private void autenticate(){
+    private void authenticate(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(getResources().getString(R.string.passwordProtectedTitle));
         final EditText input = new EditText(this);
@@ -93,7 +92,7 @@ public class SourceSelectionActivity extends Activity implements ZXingScannerVie
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                autenticate();
+                authenticate();
             }
         });
 
@@ -107,6 +106,7 @@ public class SourceSelectionActivity extends Activity implements ZXingScannerVie
         findViewById(R.id.btnContinueProject).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                writeData("Starting config activity", getExternalFilesDir(null));
                 Intent intent = new Intent(SourceSelectionActivity.this,
                         FileSelectActivity.class);
                 startActivityForResult(intent, CONTINUE_PROJECT_SCREEN_KEY);
@@ -153,6 +153,7 @@ public class SourceSelectionActivity extends Activity implements ZXingScannerVie
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        writeData("Started handling received result (SourceSelectionActivity)", getExternalFilesDir(null));
         if(resultCode == RESULT_OK){
             if(requestCode == CONTINUE_PROJECT_SCREEN_KEY){
                 String fileName;
@@ -166,5 +167,6 @@ public class SourceSelectionActivity extends Activity implements ZXingScannerVie
                 }
             }
         }
+        writeData("Finished handling received result (SourceSelectionActivity)", getExternalFilesDir(null));
     }
 }
