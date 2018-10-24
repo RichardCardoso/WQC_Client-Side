@@ -87,4 +87,19 @@
     <string name="elTag">EL</string>
     <string name="magTag">MG</string>
     <string name="itemTag">Artikel</string>
+    <string name="operationProgressLabel">Betriebsfortschritt:</string>
+    <string name="overallProgressLabel">Gesamtfortschritt:</string>
+    <string name="constructionDrawingLabel">Konstruktionszeichnung</string>
+    <string name="electricDrawingLabel">Elektrische Zeichnung</string>
+    <string name="datasheetLabel">Datenblatt</string>
+    <string name="controlCardLabel">Kontrollkarte</string>
+    <string name="cancelTag">Abbrechen</string>
+    <string name="serverPathRequestMessage">Bitte geben Sie den Serverpfad ein</string>
+    <string name="serverConnectErrorMessage">Es konnte keine Verbindung zum Server hergestellt werden. Bitte überprüfen Sie die Adresse und versuchen Sie es erneut.</string>
+    <string name="deviceNotAuthorizedMessage">Für Ihr Gerät wurde keine Autorisierung gefunden. Bitte zeigen Sie diesen Bildschirm dem Systemadministrator.</string>
+    <string name="closeTag">Schließen</string>
+    <string name="drawingLockedMessage">Die Dateien dieser Zeichnung werden von jemand anderem bearbeitet. Sie müssen warten, bis die Zeit vorbei ist.</string>
+    <string name="tryAgainTag">Wieder</string>
+    <string name="notImplementedMessage">Noch nicht implementiert!</string>
+    <string name="unknownDeviceMessage">Unbekanntes Gerät</string>
 </resources>

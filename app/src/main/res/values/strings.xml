@@ -80,10 +80,25 @@
     <string name="successfulServerUploadMessage">Project uploaded successfully!</string>
     <string name="invalidServerFileMessage">The file in the server is invalid / corrupted. Please replace it with a valid one and try again.</string>
     <string name="projectUploadMessage">Do you wish to upload the report files?</string>
-    <string name="tryAgainMessage">Wanna try again?</string>
+    <string name="tryAgainMessage">Do you want to try again?</string>
     <string name="permissionsNeededMessage">Not all needed permissions were granted to the app. Without them, it\'s impossible to continue. The app will be closed now.</string>
     <string name="noPermissionsGrantedTitle">Permissions missing</string>
     <string name="elTag">EL</string>
     <string name="magTag">MG</string>
     <string name="itemTag">Item</string>
+    <string name="overallProgressLabel">Overall progress:</string>
+    <string name="operationProgressLabel">"Operation progress: "</string>
+    <string name="constructionDrawingLabel">Construction drawing</string>
+    <string name="electricDrawingLabel">Electric drawing</string>
+    <string name="datasheetLabel">Datasheet</string>
+    <string name="controlCardLabel">Control card</string>
+    <string name="cancelTag">Cancel</string>
+    <string name="serverPathRequestMessage">Please enter the server path</string>
+    <string name="serverConnectErrorMessage">Unable to connect to the server. Please check it\'s address and try again.</string>
+    <string name="deviceNotAuthorizedMessage">No authorization found for your device. Please show this screen to the system\'s administrator.</string>
+    <string name="closeTag">Close</string>
+    <string name="drawingLockedMessage">This drawing\'s files are being edited by someone else. You have to wait until it\'s time is over.</string>
+    <string name="tryAgainTag">Try again</string>
+    <string name="notImplementedMessage">Not implemented yet!</string>
+    <string name="unknownDeviceMessage">Unknown device</string>
 </resources>

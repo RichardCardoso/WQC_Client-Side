@@ -1,35 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.richard.weger.wegerqualitycontrol">
+    package="com.richard.weger.wqc">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
+        android:name="com.richard.weger.wqc.util.App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activity.SourceSelectionActivity" />
-        <activity
-            android:name=".activity.ProjectMain"
-            android:label="@string/app_name">
+        <activity android:name=".activity.WelcomeActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activity.ReportEditActivity" />
+        <activity
+            android:name=".activity.ProjectEditActivity"
+            android:label="@string/app_name">
+        </activity>
+        <activity android:name=".activity.ItemReportEditActivity" />
         <activity android:name=".activity.PictureViewerActivity" />
         <activity android:name=".activity.FileSelectActivity" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="com.richard.weger.wegerqualitycontrol.fileprovider"
+            android:authorities="com.richard.weger.wqc.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -39,7 +41,7 @@
 
         <activity android:name=".activity.ProjectFinishActivity" />
         <activity android:name=".activity.ConfigurationsActivity" />
-        <activity android:name=".activity.DocumentMarkerActivity"></activity>
+        <activity android:name=".activity.CheckReportEditActivity"></activity>
         <service
             android:name=".util.FileHandler"
             android:exported="false"/>
