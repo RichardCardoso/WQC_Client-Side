@@ -19,8 +19,9 @@ import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
-import com.richard.weger.wqc.util.FileHandler;
-import com.richard.weger.wqc.util.StringHandler;
+import com.richard.weger.wqc.helper.FileHelper;
+import com.richard.weger.wqc.helper.ImageHelper;
+import com.richard.weger.wqc.helper.StringHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -30,13 +31,13 @@ import java.util.Calendar;
 
 import uk.co.senab.photoview.PhotoViewAttacher;
 
-import static com.richard.weger.wqc.util.AppConstants.ITEM_ID_KEY;
-import static com.richard.weger.wqc.util.AppConstants.ITEM_KEY;
-import static com.richard.weger.wqc.util.AppConstants.PICTURES_AUTHORITY;
-import static com.richard.weger.wqc.util.AppConstants.PROJECT_KEY;
-import static com.richard.weger.wqc.util.AppConstants.REPORT_KEY;
-import static com.richard.weger.wqc.util.AppConstants.REQUEST_IMAGE_CAPTURE_ACTION;
-import static com.richard.weger.wqc.util.AppConstants.SDF;
+import static com.richard.weger.wqc.constants.AppConstants.ITEM_ID_KEY;
+import static com.richard.weger.wqc.constants.AppConstants.ITEM_KEY;
+import static com.richard.weger.wqc.constants.AppConstants.PICTURES_AUTHORITY;
+import static com.richard.weger.wqc.constants.AppConstants.PROJECT_KEY;
+import static com.richard.weger.wqc.constants.AppConstants.REPORT_KEY;
+import static com.richard.weger.wqc.constants.AppConstants.REQUEST_IMAGE_CAPTURE_ACTION;
+import static com.richard.weger.wqc.constants.AppConstants.SDF;
 
 public class PictureViewerActivity extends Activity{
 
@@ -72,9 +73,9 @@ public class PictureViewerActivity extends Activity{
             }
         }
         if(item != null){
-            if (item.getPicture() != null && item.getPicture().getFilePath() != null){
-                File file = new File(item.getPicture().getFilePath());
-                if(file.exists() && FileHandler.isValidFile(file.getPath())){
+            if (item.getPicture() != null && item.getPicture().getFileName() != null){
+                File file = new File(StringHelper.getPicturesFolderPath(project).concat(item.getPicture().getFileName()));
+                if(file.exists() && FileHelper.isValidFile(file.getPath())){
                     Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
                     if(bitmap != null) {
                         imageView.setImageBitmap(bitmap);
@@ -127,23 +128,28 @@ public class PictureViewerActivity extends Activity{
     private File createImageFile(){
         // Create an image file name
         // String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = item.getPicture().getFilePath();
-        String folderPath = StringHandler.generateProjectFolderName(
-                getExternalFilesDir(null), project).concat("Pictures/");
+        String imageFileName = item.getPicture().getFileName();
+        String folderPath = StringHelper.getProjectFolderPath(project).concat("Pictures/");
         File storageDir = new File(folderPath);
 //        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         if(!storageDir.exists()){
             storageDir.mkdirs();
         }
 
+        if(!imageFileName.contains(folderPath)){
+            imageFileName = folderPath.concat(imageFileName);
+        }
+
         File image;
         try {
-            image = File.createTempFile(
-                    imageFileName,  /* prefix */
-                    ".jpg",         /* suffix */
-                    storageDir      /* directory */
-            );
-        } catch (IOException e) {
+            image = new File(imageFileName.replace(".jpg","_new.jpg"));
+            if(image.exists()){
+                image.delete();
+            }
+//            FileWriter fileWriter = new FileWriter(image.getAbsolutePath(), false);
+            image.createNewFile();
+//            image = File.createTempFile(imageFileName,".jpg", storageDir);
+        } catch (Exception e) {
             try{
                 imageFileName = imageFileName.substring(
                         imageFileName.lastIndexOf('/') + 1,
@@ -176,7 +182,7 @@ public class PictureViewerActivity extends Activity{
 //        // Get the dimensions of the bitmap
 //        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
 //        bmOptions.inJustDecodeBounds = true;
-//        BitmapFactory.decodeFile(item.getPicture().getFilePath(), bmOptions);
+//        BitmapFactory.decodeFile(item.getPicture().getFileName(), bmOptions);
 //        int photoW = bmOptions.outWidth;
 //        int photoH = bmOptions.outHeight;
 //
@@ -188,22 +194,44 @@ public class PictureViewerActivity extends Activity{
 //        bmOptions.inSampleSize = scaleFactor;
 //        bmOptions.inPurgeable = true;
 //
-//        Bitmap bitmap = BitmapFactory.decodeFile(item.getPicture().getFilePath(), bmOptions);
+//        Bitmap bitmap = BitmapFactory.decodeFile(item.getPicture().getFileName(), bmOptions);
 //        mImageView.setImageBitmap(bitmap);
 //    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Bitmap bitmap = CameraHandler.handleTakePictureIntentResponse(requestCode, resultCode, data);
+        // Bitmap bitmap = CameraHelper.handleTakePictureIntentResponse(requestCode, resultCode, data);
         Intent intent = new Intent();
         // item.getPicture().setProxyBitmap(new ProxyBitmap(bitmap));
         if(resultCode == RESULT_OK) {
             putTimeStamp();
-            item.getPicture().setFilePath(futurePath);
+
+            try {
+                String finalPath, compressedPath;
+
+                compressedPath = (new ImageHelper()).compressImage(futurePath);
+                FileHelper.fileDelete(futurePath);
+
+                finalPath = futurePath.replace("_new","");
+                FileHelper.fileCopy(new File(compressedPath), new File(finalPath));
+                FileHelper.fileDelete(compressedPath);
+
+                futurePath = finalPath;
+
+            } catch (Exception ex){
+                ex.printStackTrace();
+            }
+
+//            item.getPicture().setFileName(futurePath);
             intent.putExtra(ITEM_ID_KEY, position);
             intent.putExtra(ITEM_KEY, item);
             setResult(RESULT_OK, intent);
             finish();
+        } else {
+            File file = new File(futurePath);
+            if(file.exists()){
+                file.delete();
+            }
         }
     }
 

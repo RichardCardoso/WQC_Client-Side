@@ -1,11 +1,12 @@
 package com.richard.weger.wqc.rest;
 
-import com.google.android.gms.common.internal.safeparcel.SafeParcelable;
 import com.richard.weger.wqc.domain.Device;
+import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.Mark;
 import com.richard.weger.wqc.domain.Page;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
+import com.richard.weger.wqc.util.ItemsMissingPictures;
 
 import org.springframework.http.HttpEntity;
 
@@ -25,6 +26,8 @@ public class UriBuilder {
     private HttpEntity<Serializable> httpEntity;
     private Device device;
     private Report report;
+    private Item item;
+    private List<Item> missingPictures;
 
     public UriBuilder(){
         setParameters(new ArrayList<String>());
@@ -108,5 +111,21 @@ public class UriBuilder {
 
     public void setReport(Report report) {
         this.report = report;
+    }
+
+    public Item getItem() {
+        return item;
+    }
+
+    public void setItem(Item item) {
+        this.item = item;
+    }
+
+    public List<Item>  getMissingPictures() {
+        return missingPictures;
+    }
+
+    public void setMissingPictures(List<Item>  missingPictures) {
+        this.missingPictures = missingPictures;
     }
 }

@@ -5,10 +5,11 @@ import android.content.SharedPreferences;
 import android.widget.Toast;
 
 import com.richard.weger.wqc.R;
+import com.richard.weger.wqc.helper.QrTextHelper;
 
 import java.util.Map;
 
-import static com.richard.weger.wqc.util.AppConstants.*;
+import static com.richard.weger.wqc.constants.AppConstants.*;
 
 public class FileFromList{
     private int id;
@@ -28,10 +29,10 @@ public class FileFromList{
     @Override
     public String toString(){
         Map<String, String> mapValues;
-        QrTextHandler qrTextHandler = new QrTextHandler(context, ConfigurationsManager.getServerConfig());
+        QrTextHelper qrTextHelper = new QrTextHelper(ConfigurationsManager.getServerConfig());
         StringBuilder sb = new StringBuilder();
 
-        mapValues = qrTextHandler.execute("\\" +
+        mapValues = qrTextHelper.execute("\\" +
                 getFileName().substring(0,getFileName().lastIndexOf('.')));
         if(mapValues == null){
             Toast.makeText(context, R.string.unknownErrorMessage, Toast.LENGTH_LONG).show();

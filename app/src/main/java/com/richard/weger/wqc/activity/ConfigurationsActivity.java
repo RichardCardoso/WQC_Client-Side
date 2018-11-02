@@ -15,7 +15,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import static com.richard.weger.wqc.util.LogHandler.writeData;
+import static com.richard.weger.wqc.helper.LogHelper.writeData;
 
 public class ConfigurationsActivity extends Activity {
 
@@ -35,13 +35,13 @@ public class ConfigurationsActivity extends Activity {
         textView = findViewById(R.id.editServerPath);
         textView.setText(conf.getServerPath());
 
-        writeData("Finished filling configurations activity fields", getExternalFilesDir(null));
+        writeData("Finished filling configurations activity fields");
     }
 
     private void setListeners(){
         Button btn;
 
-        writeData("Started setting configurations activity listeners", getExternalFilesDir(null));
+        writeData("Started setting configurations activity listeners");
         btn = findViewById(R.id.btnSave);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,7 +58,7 @@ public class ConfigurationsActivity extends Activity {
                 finish();
             }
         });
-        writeData("Finished setting configurations activity listeners", getExternalFilesDir(null));
+        writeData("Finished setting configurations activity listeners");
     }
 
     private void saveConfig(){
@@ -66,12 +66,12 @@ public class ConfigurationsActivity extends Activity {
         TextView textView;
         int i = 0;
 
-        writeData("Retrieving configurations activity fields values", getExternalFilesDir(null));
+        writeData("Retrieving configurations activity fields values");
 
         textView = findViewById(R.id.editServerPath);
         conf.setServerPath(textView.getText().toString());
 
-        writeData("Validating configurations activity fields values", getExternalFilesDir(null));
+        writeData("Validating configurations activity fields values");
         for(Field f:conf.getClass().getDeclaredFields()){
             f.setAccessible(true);
             String fieldValue = (String)runGetter(f, new Configurations());
@@ -81,16 +81,16 @@ public class ConfigurationsActivity extends Activity {
                 }
             }
             else{
-                if(f != null && f.getClass().isAssignableFrom(String.class)) {
+                if(f.getClass().isAssignableFrom(String.class)) {
                     Toast.makeText(this, R.string.unknownErrorMessage, Toast.LENGTH_LONG).show();
                     return;
                 }
             }
         }
-        writeData("Finished validating configurations activity fields values", getExternalFilesDir(null));
+        writeData("Finished validating configurations activity fields values");
 
         if(i == 0) {
-            writeData("Requesting project's json export", getExternalFilesDir(null));
+            writeData("Requesting project's json export");
             ConfigurationsManager.setLocalConfig(conf);
             Toast.makeText(this, R.string.valuesSavedMessage, Toast.LENGTH_LONG).show();
         }

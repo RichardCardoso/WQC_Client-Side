@@ -102,4 +102,8 @@
     <string name="tryAgainTag">Riprova</string>
     <string name="notImplementedMessage">Non ancora implementato!</string>
     <string name="unknownDeviceMessage">Dispositivo sconosciuto</string>
+    <string name="usernameTag">Nome utente</string>
+    <string name="roleTag">Ruolo</string>
+    <string name="addeddateTag">Aggiunto a</string>
+    <string name="removeTag">Rimuovere</string>
 </resources>

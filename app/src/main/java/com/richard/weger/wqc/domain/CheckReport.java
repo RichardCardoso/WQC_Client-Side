@@ -7,13 +7,11 @@ public class CheckReport extends Report {
 
 	protected CheckReport() {
 		this.pages = new ArrayList<>();
-		this.clientPdfPath = "";
-		this.serverPdfPath = "";
+		this.fileName = "";
 	}
 
 	private List<Page> pages;
-	private String clientPdfPath;
-	private String serverPdfPath;
+	private String fileName;
 
 	public List<Page> getPages() {
 		return pages;
@@ -23,20 +21,12 @@ public class CheckReport extends Report {
 		this.pages = pages;
 	}
 
-	public String getClientPdfPath() {
-		return clientPdfPath;
+	public String getFileName() {
+		return fileName;
 	}
 
-	public void setClientPdfPath(String clientPdfPath) {
-		this.clientPdfPath = clientPdfPath;
-	}
-
-	public String getServerPdfPath() {
-		return serverPdfPath;
-	}
-
-	public void setServerPdfPath(String serverPdfPath) {
-		this.serverPdfPath = serverPdfPath;
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
 	}
 	
 	public int getPagesCount() {

@@ -2,7 +2,7 @@ package com.richard.weger.wqc.domain;
 
 import java.util.Map;
 
-import com.richard.weger.wqc.util.AppConstants;
+import com.richard.weger.wqc.constants.AppConstants;
 
 public abstract class FactoryProject {
 	public static Project getProject(Map<String, String> mapValues) {

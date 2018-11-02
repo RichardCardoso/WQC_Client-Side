@@ -15,7 +15,7 @@ import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.domain.CheckReport;
 import com.richard.weger.wqc.domain.ItemReport;
 import com.richard.weger.wqc.domain.Report;
-import com.richard.weger.wqc.util.ReportHelper;
+import com.richard.weger.wqc.helper.ReportHelper;
 
 import java.util.List;
 
@@ -23,6 +23,7 @@ public class ReportAdapter extends ArrayAdapter<Report> {
 
     private final List<Report> reportList;
     private final Context context;
+    private boolean enabled;
 
     private ChangeListener listener;
 
@@ -32,6 +33,10 @@ public class ReportAdapter extends ArrayAdapter<Report> {
 
     public interface ChangeListener {
         void reportListClick(Report report, int position);
+    }
+
+    public void setEnabled(boolean enabled){
+        this.enabled = enabled;
     }
 
     public ReportAdapter(@NonNull Context context, @NonNull List<Report> objects) {
@@ -50,14 +55,18 @@ public class ReportAdapter extends ArrayAdapter<Report> {
         ConstraintLayout constraintLayout = rowView.findViewById(R.id.conRep);
         LinearLayout linearLayout = rowView.findViewById(R.id.linRep);
 
+        textView.setEnabled(enabled);
+        constraintLayout.setEnabled(enabled);
+        linearLayout.setEnabled(enabled);
+
         final Report report = reportList.get(position);
 
         textView.setText((new ReportHelper()).getReportLabel(report.getReference()));
         checkBox.setText("");
 
-        if(report.toString().equals(ItemReport.class.getSimpleName())){
-                checkBox.setChecked(((ItemReport)report).getPendingItemsCount() == 0);
-        } else if (report.toString().equals(CheckReport.class.getSimpleName())){
+        if (report instanceof ItemReport){
+            checkBox.setChecked(((ItemReport) report).getPendingItemsCount() == 0);
+        } else if (report instanceof CheckReport){
             int marks = ((CheckReport)report).getMarksCount();
             checkBox.setChecked(marks > 0);
         }

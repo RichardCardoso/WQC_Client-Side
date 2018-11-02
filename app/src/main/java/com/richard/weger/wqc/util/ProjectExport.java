@@ -29,37 +29,6 @@ public class ProjectExport extends AsyncTask<Object, Integer, String> {
     }
 
     private String export(){
-/*
-        WorkbookHandler.handleWorkbook(
-                res,
-                externalFilesDir,
-                project,
-                b.getString(CONTROL_CARD_REPORT_FILE_KEY)
-        );
-
-        String inputPath = project.getDrawingList().getContext(0).getOriginalFileLocalPath();
-        WQCDocumentHandler.bitmap2Pdf(inputPath,
-                StringHandler.generateProjectFolderName(externalFilesDir, project)
-                        + conf.getDrawingCode() + "-" +
-                        StringHandler.generateFileName(project, "pdf"), project,
-                conf.getDrawingCode(),
-                project.getDrawingList().getContext(0).getDocumentMarks(), res);
-
-        publishProgress(50);
-
-        inputPath = project.getDrawingList().getContext(0).getDatasheet().getOriginalFileLocalPath();
-        WQCDocumentHandler.bitmap2Pdf(inputPath,
-                StringHandler.generateProjectFolderName(externalFilesDir, project)
-                        + conf.getDatasheetCode() + "-" +
-                        StringHandler.generateFileName(project, "pdf"), project,
-                conf.getDatasheetCode(),
-                project.getDrawingList().getContext(0).getDatasheet().getDocumentMarks(), res);
-
-        publishProgress(50);
-
-        inputPath = StringHandler.generateProjectFolderName(externalFilesDir, project);
-        return inputPath;
-*/
         return null;
     }
 

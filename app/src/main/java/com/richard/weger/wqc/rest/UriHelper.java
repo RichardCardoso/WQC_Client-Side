@@ -3,11 +3,11 @@ package com.richard.weger.wqc.rest;
 import com.richard.weger.wqc.util.Configurations;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 import com.richard.weger.wqc.util.DeviceManager;
-import com.richard.weger.wqc.util.StringHandler;
+import com.richard.weger.wqc.helper.StringHelper;
 
 import org.springframework.web.util.UriComponentsBuilder;
 
-import static com.richard.weger.wqc.util.AppConstants.*;
+import static com.richard.weger.wqc.constants.AppConstants.*;
 
 public class UriHelper {
 
@@ -24,7 +24,7 @@ public class UriHelper {
                 uriBuilder.setRequestMethod(GET_METHOD);
                 break;
             case REST_QRPROJECTCREATE_KEY:
-                url += "rest/scan/projects/" + uriBuilder.getParameters().get(0);
+                url += "rest/scan/projects/" + uriBuilder.getParameters().get(0).replace("\\","");
                 uriBuilder.setRequestMethod(POST_METHOD);
                 break;
             case REST_PDFREPORTREQUEST_KEY:
@@ -56,9 +56,7 @@ public class UriHelper {
                 break;
             case REST_PROJECTSAVE_KEY:
                 uriBuilder.setRequestMethod(PUT_METHOD);
-                url += "rest/projects"
-                + "&deviceId="
-                + DeviceManager.getCurrentDevice().getDeviceid();
+                url += "rest/projects/" + DeviceManager.getCurrentDevice().getDeviceid();
                 break;
             case REST_FIRSTCONNECTIONTEST_KEY:
                 uriBuilder.setRequestMethod(GET_METHOD);
@@ -79,9 +77,60 @@ public class UriHelper {
                         + "/drawings/"
                         + uriBuilder.getReport().getDrawingref().getId()
                         + "/reports?qrCode="
-                        + StringHandler.createQrText(uriBuilder.getProject())
+                        + StringHelper.getQrText(uriBuilder.getProject()).replace("\\","")
                         + "&deviceId="
                         + DeviceManager.getCurrentDevice().getDeviceid();
+                break;
+            case REST_ITEMSAVE_KEY:
+                uriBuilder.setRequestMethod(PUT_METHOD);
+                url += "rest/projects/"
+                        + uriBuilder.getProject().getId()
+                        + "/drawings/"
+                        + uriBuilder.getReport().getDrawingref().getId()
+                        + "/reports/"
+                        + uriBuilder.getReport().getId()
+                        + "/items/"
+                        + uriBuilder.getItem().getId()
+                        + "/"
+                        + StringHelper.getQrText(uriBuilder.getProject()).replace("\\","")
+                        + "/"
+                        + DeviceManager.getCurrentDevice().getDeviceid()
+                        + "/";
+                break;
+            case REST_PICTURESREQUEST_KEY:
+                uriBuilder.setRequestMethod(POST_METHOD);
+                url += "/rest/project/{reference}/pictures";
+                url = url.replace("{reference}", StringHelper.getQrText(uriBuilder.getProject()).replace("\\",""));
+                break;
+            case REST_PICTUREUPLOAD_KEY:
+                uriBuilder.setRequestMethod(POST_METHOD);
+                url += "/rest/projects/"
+                        + uriBuilder.getProject().getId()
+                        + "/drawings/"
+                        + uriBuilder.getReport().getDrawingref().getId()
+                        + "/reports/"
+                        + uriBuilder.getReport().getId()
+                        + "/items/" +
+                        + uriBuilder.getItem().getId()
+                        + "/picupload/"
+                        + StringHelper.getQrText(uriBuilder.getProject()).replace("\\","")
+                        + "/"
+                        + DeviceManager.getCurrentDevice().getDeviceid()
+                        + "/"
+                        + uriBuilder.getParameters().get(0);
+                uriBuilder.getParameters().add(StringHelper.getPicturesFolderPath(uriBuilder.getProject()).concat("/").concat(uriBuilder.getItem().getPicture().getFileName()));
+                break;
+            case REST_PICTUREDOWNLOAD_KEY:
+                uriBuilder.setRequestMethod(GET_METHOD);
+                url += "/rest/project/{qrText}/picture/{fileName}";
+                url = url.replace("{qrText}", StringHelper.getQrText(uriBuilder.getProject()).replace("\\",""));
+                url = url.replace("{fileName}", uriBuilder.getParameters().get(0));
+                break;
+            case REST_PROJECTUPLOAD_KEY:
+                uriBuilder.setRequestMethod(POST_METHOD);
+                url += "/rest/projects/{qrText}/export/{deviceId}";
+                url = url.replace("{qrText}", StringHelper.getQrText(uriBuilder.getProject()).replace("\\",""));
+                url = url.replace("{deviceId}", DeviceManager.getCurrentDevice().getDeviceid());
                 break;
             default:
                 uriBuilder.setRequestMethod(null);

@@ -42,9 +42,17 @@
         <activity android:name=".activity.ProjectFinishActivity" />
         <activity android:name=".activity.ConfigurationsActivity" />
         <activity android:name=".activity.CheckReportEditActivity"></activity>
+
         <service
-            android:name=".util.FileHandler"
+            android:name=".helper.FileHelper"
             android:exported="false"/>
+
+        <service
+            android:name=".firebird.FirebirdMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

@@ -4,12 +4,15 @@ import android.os.AsyncTask;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.domain.Device;
+import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.Mark;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
+import com.richard.weger.wqc.exception.DataRecoverException;
 import com.richard.weger.wqc.util.App;
-import com.richard.weger.wqc.util.ProjectHandler;
+import com.richard.weger.wqc.helper.ProjectHelper;
 
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -17,24 +20,28 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.List;
 
-import static com.richard.weger.wqc.util.AppConstants.*;
+import static com.richard.weger.wqc.constants.AppConstants.*;
 
 
 public class RestTemplateHelper extends AsyncTask<UriBuilder, Void, String> {
 
-    public interface HttpHelperResponse{
+    public interface RestHelperResponse {
         void RestTemplateCallback(String requestCode, String result);
     }
 
-    private HttpHelperResponse delegate;
+    private RestHelperResponse delegate;
     private String requestCode;
 
-    public RestTemplateHelper(HttpHelperResponse delegate){
+    public RestTemplateHelper(RestHelperResponse delegate){
         this.delegate = delegate;
     }
 
@@ -53,17 +60,32 @@ public class RestTemplateHelper extends AsyncTask<UriBuilder, Void, String> {
                     restTemplate.getMessageConverters().add(new ByteArrayHttpMessageConverter());
                     HttpHeaders headers = new HttpHeaders();
                     headers.setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM));
-                    HttpEntity<String> entity = new HttpEntity<String>(headers);
+                    HttpEntity<String> entity = new HttpEntity<>(headers);
 
                     ResponseEntity<byte[]> responseEntity = restTemplate.exchange(uriBuilder[0].getUri(), HttpMethod.GET, entity, byte[].class);
 
 //                    responseEntity = restTemplate.getForEntity(uriBuilder[0].getUri(), ResponseEntity.class);
                     byte[] contents = responseEntity.getBody();
-                    (new ProjectHandler()).byteArrayToFile(contents, uriBuilder[0].getProject(), uriBuilder[0]);
+                    ProjectHelper.byteArrayToFile(contents, uriBuilder[0].getProject(), uriBuilder[0], "Originals/");
                     response = uriBuilder[0].getParameters().get(0);
+                } else if (requestCode.equals(REST_PICTUREDOWNLOAD_KEY)){
+                    restTemplate.getMessageConverters().add(new ByteArrayHttpMessageConverter());
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setAccept(Arrays.asList(MediaType.IMAGE_JPEG));
+                    HttpEntity<String> entity = new HttpEntity<>(headers);
+
+                    ResponseEntity<byte[]> responseEntity = restTemplate.exchange(uriBuilder[0].getUri(), HttpMethod.GET, entity, byte[].class);
+                    byte[] contents = null;
+
+                    if(responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+                         contents = responseEntity.getBody();
+                    }
+                    ProjectHelper.byteArrayToFile(contents, uriBuilder[0].getProject(), uriBuilder[0], "Pictures/");
+                    response = uriBuilder[0].getParameters().get(0);
+
                 } else if (requestCode.equals(REST_FIRSTCONNECTIONTEST_KEY)){
                     response = restTemplate.getForObject(uriBuilder[0].getUri(), response.getClass());
-                } else if (requestCode.equals(REST_IDENTIFY_KEY)){
+                } else if (requestCode.equals(REST_IDENTIFY_KEY)) {
                     response = restTemplate.getForObject(uriBuilder[0].getUri(), response.getClass());
                 } else {
                     response = restTemplate.getForObject(uriBuilder[0].getUri(), response.getClass());
@@ -83,6 +105,50 @@ public class RestTemplateHelper extends AsyncTask<UriBuilder, Void, String> {
                         uriBuilder[0].setRequestCode(REST_MARKLOAD_KEY);
                         (new UriHelper()).execute(uriBuilder[0], response);
                         return doInBackground(uriBuilder);
+                    }
+                } else if (requestCode.equals(REST_PICTUREUPLOAD_KEY)){
+                    restTemplate.getMessageConverters().add(new ByteArrayHttpMessageConverter());
+
+                    LinkedMultiValueMap params = new LinkedMultiValueMap();
+                    params.add("file", new FileSystemResource(new File(uriBuilder[0].getParameters().get(1))));
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+                    HttpEntity entity = new HttpEntity<>(params, headers);
+                    ResponseEntity<String> responseEntity;
+                    try {
+                        responseEntity = restTemplate.exchange(uriBuilder[0].getUri(), HttpMethod.POST, entity, String.class);
+                        if (responseEntity != null && responseEntity.getStatusCode() == HttpStatus.OK) {
+                            return "ok";
+                        } else {
+                            return null;
+                        }
+                    } catch (Exception ex){
+                        DataRecoverException e = (DataRecoverException) ex;
+                        return App.getContext().getResources().getString(R.string.drawingLockedMessage).concat("###").concat(String.valueOf(e.id));
+                    }
+                } else if (requestCode.equals(REST_PICTURESREQUEST_KEY)) {
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+
+                    HttpEntity<List<Item>> entity = new HttpEntity<>(uriBuilder[0].getMissingPictures(), headers);
+                    ResponseEntity<String> responseEntity = restTemplate.exchange(uriBuilder[0].getUri(), HttpMethod.POST, entity, String.class);
+
+                    if (responseEntity != null && responseEntity.getStatusCode() == HttpStatus.OK) {
+                        return responseEntity.getBody();
+                    } else {
+                        return null;
+                    }
+                } else if (requestCode.equals(REST_PROJECTUPLOAD_KEY)){
+                    ResponseEntity<String> responseEntity = restTemplate.exchange(uriBuilder[0].getUri(), HttpMethod.POST, null, String.class);
+
+                    if (responseEntity != null){
+                        if(responseEntity.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR){
+                            return responseEntity.getHeaders().getFirst("message");
+                        } else {
+                            return "ok";
+                        }
+                    } else {
+                        return null;
                     }
                 } else {
                     URI uri = restTemplate.postForLocation(uriBuilder[0].getUri(), null);
@@ -106,9 +172,12 @@ public class RestTemplateHelper extends AsyncTask<UriBuilder, Void, String> {
                 } else if (requestCode.equals(REST_REPORTITEMSSAVE_KEY)){
                     HttpEntity<Report> entity = new HttpEntity<>(uriBuilder[0].getReport(), headers);
                     responseEntity = restTemplate.exchange(uriBuilder[0].getUri(), HttpMethod.PUT, entity, String.class);
+                } else if (requestCode.equals(REST_ITEMSAVE_KEY)){
+                    HttpEntity<Item> entity = new HttpEntity<>(uriBuilder[0].getItem(), headers);
+                    responseEntity = restTemplate.exchange(uriBuilder[0].getUri(), HttpMethod.PUT, entity, String.class);
                 }
                 if (responseEntity != null && responseEntity.getStatusCode() == HttpStatus.OK) {
-                    return "ok";
+                    return responseEntity.getBody();
                 } else {
                     return null;
                 }
@@ -120,6 +189,17 @@ public class RestTemplateHelper extends AsyncTask<UriBuilder, Void, String> {
             }
         } catch (Exception ex){
             ex.printStackTrace();
+            if(requestCode.equals(REST_PICTUREDOWNLOAD_KEY)){
+                try {
+                    ProjectHelper.byteArrayToFile(null, uriBuilder[0].getProject(), uriBuilder[0], "Pictures/");
+                    return "";
+                } catch (IOException e) {
+                    return null;
+                }
+            }
+            if(ex.getMessage().contains(App.getContext().getResources().getString(R.string.drawingLockedMessage))){
+                return App.getContext().getResources().getString(R.string.drawingLockedMessage);
+            }
             if(ex.getMessage().equals(App.getContext().getResources().getString(R.string.dataRecoverError))){
                 return ex.getMessage();
             } else {

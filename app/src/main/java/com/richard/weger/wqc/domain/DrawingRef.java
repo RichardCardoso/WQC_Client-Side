@@ -48,6 +48,15 @@ public class DrawingRef implements Serializable {
 		return reports;
 	}
 
+	public Report getReport(int reportId){
+		for(Report r : getReports()){
+			if(r.getId() == reportId){
+				return r;
+			}
+		}
+		return null;
+	}
+
 	public void setReports(List<Report> reports) {
 		this.reports = reports;
 	}

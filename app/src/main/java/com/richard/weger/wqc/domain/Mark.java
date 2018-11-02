@@ -22,6 +22,8 @@ public class Mark  implements Serializable{
 
 	private Device device;
 
+	private String addedOn;
+
 	private transient Page page;
 
 	public int getId() {
@@ -70,5 +72,13 @@ public class Mark  implements Serializable{
 
 	public void setDevice(Device device) {
 		this.device = device;
+	}
+
+	public String getAddedOn() {
+		return addedOn;
+	}
+
+	public void setAddedOn(String addedOn) {
+		this.addedOn = addedOn;
 	}
 }

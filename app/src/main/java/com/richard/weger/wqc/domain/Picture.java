@@ -9,12 +9,12 @@ public class Picture  implements Serializable{
 	public Picture() {
 		this.id = 0;
 		this.caption = "";
-		this.filePath = "";
+		this.fileName = "";
 	}
 
 	private String caption;
 
-	private String filePath;
+	private String fileName;
 
 	private transient Item item;
 
@@ -34,12 +34,12 @@ public class Picture  implements Serializable{
 		this.caption = caption;
 	}
 
-	public String getFilePath() {
-		return filePath;
+	public String getFileName() {
+		return fileName;
 	}
 
-	public void setFilePath(String filePath) {
-		this.filePath = filePath;
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
 	}
 
 	public Item getItem() {
@@ -49,4 +49,5 @@ public class Picture  implements Serializable{
 	public void setItem(Item item) {
 		this.item = item;
 	}
+
 }

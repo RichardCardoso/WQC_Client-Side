@@ -1,9 +1,10 @@
 package com.richard.weger.wqc.util;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.PointF;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -12,6 +13,7 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.ImageView;
 
+@SuppressLint("AppCompatCustomView")
 public class TouchImageView extends ImageView {
     Matrix matrix;
     // We can be in one of these 3 states
@@ -122,7 +124,7 @@ public class TouchImageView extends ImageView {
 
                             performClick();
 
-                        if(((int)v.getTag()) == 1){
+//                        if(((int)v.getTag()) == 1){
                             // Calculate the inverse matrix
                             Matrix inverse = new Matrix();
                             getImageMatrix().invert(inverse);
@@ -131,8 +133,11 @@ public class TouchImageView extends ImageView {
                             float[] touchPoint = new float[] {event.getX(), event.getY()};
                             inverse.mapPoints(touchPoint);
 
-                            listener.onChangeHappened(touchPoint);
-                        }
+                            touchPoint[0] /= ((BitmapDrawable)getDrawable()).getBitmap().getWidth();
+                            touchPoint[1] /= ((BitmapDrawable)getDrawable()).getBitmap().getHeight();
+
+                            listener.onTouch(touchPoint);
+//                        }
 
                         break;
 
@@ -352,7 +357,7 @@ public class TouchImageView extends ImageView {
     }
 
     public interface ChangeListener {
-        void onChangeHappened(float[] touchPoint);
+        void onTouch(float[] touchPoint);
     }
 
 }

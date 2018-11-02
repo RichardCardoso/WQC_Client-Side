@@ -8,34 +8,34 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.richard.weger.wqc.R;
+import com.richard.weger.wqc.domain.Item;
+import com.richard.weger.wqc.domain.ItemReport;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
-import com.richard.weger.wqc.paramconfigs.ParamConfigurations;
-import com.richard.weger.wqc.util.AsyncFromLocalfolderToServer;
-import com.richard.weger.wqc.util.LogHandler;
+import com.richard.weger.wqc.helper.FileHelper;
+import com.richard.weger.wqc.helper.ProjectHelper;
+import com.richard.weger.wqc.helper.ReportHelper;
+import com.richard.weger.wqc.helper.StringHelper;
+import com.richard.weger.wqc.rest.RestTemplateHelper;
+import com.richard.weger.wqc.rest.UriBuilder;
+import com.richard.weger.wqc.util.App;
+import com.richard.weger.wqc.util.DeviceManager;
 import com.richard.weger.wqc.util.ProjectExport;
 
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.FileHandler;
 
-import static com.richard.weger.wqc.util.AppConstants.*;
+import static com.richard.weger.wqc.constants.AppConstants.*;
+import static com.richard.weger.wqc.helper.LogHelper.writeData;
 
-public class ProjectFinishActivity extends Activity
-        implements
-        ProjectExport.ProjectHandlerResponse,
-        AsyncFromLocalfolderToServer.AsyncFromLocalfolderToServerResponse {
+public class ProjectFinishActivity extends Activity implements RestTemplateHelper.RestHelperResponse {
 
     Project project = null;
-    Map<String, String> mapValues = null;
-    ParamConfigurations conf;
-    ProgressBar progressBarOverall, progressBarOperation;
-    int overallProgress = 0;
-    AsyncTask asyncTask;
+    List<RestTemplateHelper> requests = new ArrayList<>();
 
     @Override
     public void onBackPressed(){}
@@ -45,11 +45,33 @@ public class ProjectFinishActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_project_finish);
 
+        findViewById(R.id.pbProjectFinish).setVisibility(View.INVISIBLE);
+
+        Bundle b = getIntent().getExtras();
+        project = (Project) b.get(PROJECT_KEY);
+        ProjectHelper.linkReferences(project);
+
         setListeners();
+        setFields();
+    }
 
-        mapValues = (HashMap) getIntent().getSerializableExtra(MAP_VALUES_KEY);
+    private void setFields(){
+        EditText editText;
+        for(Report r : project.getDrawingRefs().get(0).getReports()){
+            if(r instanceof ItemReport){
+                editText = findViewById(R.id.editClient);
 
-        init();
+                if(((ItemReport) r).getClient() != null)
+                    editText.setText(((ItemReport) r).getClient());
+                editText = findViewById(R.id.editReportComments);
+
+                if(((ItemReport) r).getComments() != null)
+                    editText.setText(((ItemReport) r).getComments());
+
+            }
+            editText = findViewById(R.id.editResponsible);
+            editText.setText(DeviceManager.getCurrentDevice().getName());
+        }
     }
 
     private void setListeners(){
@@ -64,55 +86,18 @@ public class ProjectFinishActivity extends Activity
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                end();
+                close(false);
             }
         });
     }
 
-    private void init(){
-        progressBarOverall = findViewById(R.id.progressBarOverall);
-        progressBarOverall.setIndeterminate(false);
-        progressBarOverall.setMax(100);
-
-        progressBarOperation = findViewById(R.id.progressBarOperation);
-        progressBarOperation .setIndeterminate(false);
-        progressBarOperation .setMax(100);
-
-        progressUpdate(false, overallProgress, 0);
-    }
-
-    private void end(){
-        if(asyncTask != null && (asyncTask.getStatus().equals(AsyncTask.Status.RUNNING)
-        || asyncTask.getStatus().equals(AsyncTask.Status.PENDING))){
-            asyncTask.cancel(true);
+    private void close(boolean error){
+        if(error){
+            setResult(RESULT_CANCELED);
+        } else {
+            setResult(RESULT_OK);
         }
         finish();
-    }
-
-    private void reportSubmit(){
-        Report report;
-        Bundle b;
-        EditText editClient, editResponsible, editComments;
-
-        editClient = findViewById(R.id.editClient);
-        editResponsible = findViewById(R.id.editResponsible);
-        editComments = findViewById(R.id.editReportComments);
-        if(editClient.getText().toString().equals("") || editResponsible.getText().toString().equals("")){
-            Toast.makeText(this, R.string.emptyFieldsError, Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        overallProgress = 0;
-        progressUpdate(true, overallProgress, 0);
-
-        b = getIntent().getExtras();
-        project = (Project) b.get(PROJECT_KEY);
-        report = project.getDrawingRefs().get(0).getReports().get(CONTROL_CARD_REPORT_ID);
-//        report.setClient(editClient.getText().toString());
-//        report.setResponsible(editResponsible.getText().toString());
-//        report.setComments(editComments.getText().toString());
-        report.setDate(Calendar.getInstance().getTime());
-        asyncTask = (new ProjectExport(this)).execute();
     }
 
     private void confirmUpload(){
@@ -122,7 +107,7 @@ public class ProjectFinishActivity extends Activity
         builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                reportSubmit();
+                projectSubmit();
             }
         });
         builder.setNegativeButton(R.string.noTag, new DialogInterface.OnClickListener() {
@@ -132,88 +117,144 @@ public class ProjectFinishActivity extends Activity
         builder.show();
     }
 
-    private void progressUpdate(boolean status, int overallProgress, int operationProgress){
-        progressBarOverall.setProgress(overallProgress, true);
-        progressBarOperation.setProgress(operationProgress, true);
-        if(status) {
-            progressBarOverall.setVisibility(View.VISIBLE);
-            progressBarOperation.setVisibility(View.VISIBLE);
-            (findViewById(R.id.btnReportSubmit)).setEnabled(false);
-            (findViewById(R.id.editClient)).setEnabled(false);
-            (findViewById(R.id.editReportComments)).setEnabled(false);
-            (findViewById(R.id.editResponsible)).setEnabled(false);
-            (findViewById(R.id.tvOperationProgress)).setVisibility(View.VISIBLE);
-            (findViewById(R.id.tvOverallProgress)).setVisibility(View.VISIBLE);
+    private void projectSubmit() {
+        EditText editClient, editComments;
+
+        toggleControls(false);
+        editClient = findViewById(R.id.editClient);
+        editComments = findViewById(R.id.editReportComments);
+        if (editClient.getText().toString().equals("")) {
+            Toast.makeText(this, R.string.emptyFieldsError, Toast.LENGTH_LONG).show();
+            return;
         }
-        else{
-            progressBarOverall.setVisibility(View.GONE);
-            progressBarOperation.setVisibility(View.GONE);
-            (findViewById(R.id.btnReportSubmit)).setEnabled(true);
-            (findViewById(R.id.editClient)).setEnabled(true);
-            (findViewById(R.id.editReportComments)).setEnabled(true);
-            (findViewById(R.id.editResponsible)).setEnabled(true);
-            (findViewById(R.id.tvOperationProgress)).setVisibility(View.INVISIBLE);
-            (findViewById(R.id.tvOverallProgress)).setVisibility(View.INVISIBLE);
+
+        for (Report r : project.getDrawingRefs().get(0).getReports()) {
+            if (r instanceof ItemReport) {
+                ((ItemReport) r).setClient(editClient.getText().toString());
+                ((ItemReport) r).setComments(editComments.getText().toString());
+            }
         }
+        projectSave();
     }
 
-    @Override
-    public void ProjectHandlerCallback(String inputPath) {
-        String serverPath = "smb://"
-                .concat(conf.getServerPath()
-                .concat(conf.getRootPath()
-                .concat(mapValues.get(COMMON_PATH_KEY)
-                .concat("QualityControl/"))));
-        LogHandler.writeData("Starting project's upload routine", getExternalFilesDir(null));
-//        serverPath = serverPath.concat(StringHandler.getProjectName(project));
-        overallProgress = 50;
-        progressUpdate(true, overallProgress, 0);
-        //asyncTask = (new AsyncFromLocalfileToServer(this, conf)).execute(serverPath, serverPath, inputPath.concat(".zip"));
-        asyncTask = (new AsyncFromLocalfolderToServer(this, conf)).execute(serverPath, inputPath);
+    private void projectSave(){
+        ProjectHelper.projectUpdate(project, this);
     }
 
-    @Override
-    public void ProjectHandlerProgressUpdate(int currentProgress) {
-        progressUpdate(true, overallProgress, currentProgress);
+    private void projectUpload(){
+        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(this);
+        UriBuilder uriBuilder = new UriBuilder();
+        uriBuilder.setRequestCode(REST_PROJECTUPLOAD_KEY);
+        uriBuilder.setProject(project);
+        restTemplateHelper.execute(uriBuilder);
     }
 
-    @Override
-    public void AsyncFromLocalfolderToServerProgressUpdate(int currentProgress) {
-        progressUpdate(true, overallProgress, currentProgress);
-    }
-
-    @Override
-    public void AsyncFromLocalfolderToServerCallback(boolean bResult, String serverPath) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(ProjectFinishActivity.this);
-        overallProgress = 100;
-        progressUpdate(true, overallProgress, 0);
-        if(bResult){
-            builder.setMessage(R.string.successfulServerUploadMessage);
-            builder.setPositiveButton(R.string.okTag, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    finish();
-                }
-            });
+    private void toggleControls(boolean bResume){
+        (findViewById(R.id.btnReportSubmit)).setEnabled(bResume);
+        (findViewById(R.id.editClient)).setEnabled(bResume);
+        (findViewById(R.id.editReportComments)).setEnabled(bResume);
+        if(bResume){
+            (findViewById(R.id.pbProjectFinish)).setVisibility(View.INVISIBLE);
         } else {
-            builder.setTitle(R.string.unknownErrorMessage);
-            builder.setMessage(getResources().getString(R.string.smbConnectError)
-                    .concat(" ")
-                    .concat(getResources().getString(R.string.tryAgainMessage)));
-            builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    reportSubmit();
-                }
-            });
-            builder.setNegativeButton(R.string.noTag, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    finish();
-                }
-            });
+            (findViewById(R.id.pbProjectFinish)).setVisibility(View.VISIBLE);
         }
+    }
+
+    private void dataLoadError(String message){
+        writeData("Showing data load error default message");
+        toggleControls(true);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        if(message == null) {
+            message = getResources().getString(R.string.dataRecoverError);
+        }
+        builder.setCancelable(false);
+        builder.setMessage(message);
+        builder.setPositiveButton(R.string.okTag, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                close(true);
+            }
+        });
         builder.show();
-        progressUpdate(false, overallProgress, 0);
+    }
+
+    private void pictureUpload(Report report, Item item, RestTemplateHelper restTemplateHelper){
+        writeData("Started picture upload request");
+        toggleControls(false);
+
+        String picName = item.getPicture().getFileName();
+        picName = picName.substring(picName.lastIndexOf("/") + 1);
+
+        UriBuilder uriBuilder = new UriBuilder();
+        uriBuilder.setRequestCode(REST_PICTUREUPLOAD_KEY);
+        uriBuilder.setReport(report);
+        uriBuilder.setItem(item);
+        uriBuilder.setProject(report.getDrawingref().getProject());
+        uriBuilder.getParameters().add(picName);
+        restTemplateHelper.execute(uriBuilder);
+    }
+
+    @Override
+    public void RestTemplateCallback(String requestCode, String result) {
+        if(result != null) {
+            if (!result.equals(App.getContext().getResources().getString(R.string.drawingLockedMessage))) {
+                if(requestCode.equals(REST_PROJECTSAVE_KEY)){
+                    projectUpload();
+                } else if (requestCode.equals(REST_PROJECTUPLOAD_KEY)) {
+                    if (result.equals("ok")) {
+                        int cnt = 0;
+                        for (Report r : project.getDrawingRefs().get(0).getReports()) {
+                            if (r instanceof ItemReport) {
+                                for(Item i : ((ItemReport) r).getItems()){
+                                    if(FileHelper.isValidFile(StringHelper.getPictureFilePath(project, i))) {
+                                        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(this);
+                                        pictureUpload(r, i, restTemplateHelper);
+                                        requests.add(restTemplateHelper);
+                                        cnt++;
+                                    }
+                                }
+                            }
+                        }
+                        if(cnt == 0){
+                            completion();
+                        }
+                    } else {
+                        dataLoadError(getResources().getString(R.string.dataRecoverError).concat(" Message: ").concat(result));
+                    }
+                } else if (requestCode.equals(REST_PICTUREUPLOAD_KEY)){
+                    for(int i = 0; i < requests.size(); i++){
+                        RestTemplateHelper r = requests.get(i);
+                        if(r.getStatus() == AsyncTask.Status.FINISHED || r.isCancelled()){
+                            requests.remove(r);
+                        }
+                    }
+                    if(requests.size() <=1){
+                        completion();
+                    }
+                }
+            } else {
+                String message = "A write attempt was made but the drawing is currently locked by another user. Aborting write attempt";
+                writeData(message);
+                message = message.concat(".\n").concat(getResources().getString(R.string.dataRecoverError));
+                toggleControls(false);
+                dataLoadError(message);
+            }
+        } else {
+            dataLoadError(null);
+        }
+    }
+
+    private void completion(){
+        toggleControls(true);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(getResources().getString(R.string.successfulServerUploadMessage));
+        builder.setPositiveButton(R.string.okTag, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                close(false);
+            }
+        });
+        builder.setCancelable(false);
+        builder.show();
     }
 }

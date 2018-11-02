@@ -15,7 +15,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.richard.weger.wqc.util.AppConstants.*;
+import static com.richard.weger.wqc.constants.AppConstants.*;
 
 public class FileSelectActivity extends ListActivity {
 

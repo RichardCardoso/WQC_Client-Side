@@ -1,9 +1,11 @@
 package com.richard.weger.wqc.adapter;
 
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.content.DialogInterface;
 import android.support.annotation.NonNull;
+import android.support.v4.content.res.ResourcesCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -19,18 +21,21 @@ import android.widget.TextView;
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.activity.ItemReportEditActivity;
 import com.richard.weger.wqc.domain.Item;
+import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.util.App;
-import com.richard.weger.wqc.util.FileHandler;
+import com.richard.weger.wqc.helper.FileHelper;
+import com.richard.weger.wqc.helper.StringHelper;
 
-import java.io.File;
 import java.util.List;
 
-import static com.richard.weger.wqc.util.AppConstants.*;
+import static com.richard.weger.wqc.constants.AppConstants.*;
 
 public class ItemAdapter extends ArrayAdapter<Item> {
 
-    private final List<Item> itemList;
+    private List<Item> itemList;
     private final Context context;
+    private Project project;
+    private boolean enabled;
 
     private ChangeListener listener;
 
@@ -39,42 +44,69 @@ public class ItemAdapter extends ArrayAdapter<Item> {
     }
 
     public interface ChangeListener {
-        void onChangeHappened(Item item, int position, View view);
+        void onChangeHappened(int position, View view);
     }
 
-    public ItemAdapter(@NonNull Context context, @NonNull List<Item> itemList) {
+    public void setEnabled(boolean enabled){
+        this.enabled = enabled;
+    }
+
+    public ItemAdapter(@NonNull Context context, @NonNull List<Item> itemList, Project project) {
         super(context, R.layout.item_row_layout, itemList);
         this.itemList = itemList;
         this.context = context;
+        this.project = project;
     }
 
+    public void setItemList(List<Item> itemList){
+        this.itemList = itemList;
+    }
+
+    @NonNull
     @Override
-    public View getView(@NonNull final int position,@NonNull View convertView,@NonNull ViewGroup parent){
+    public View getView(final int position, View convertView, @NonNull ViewGroup parent){
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(
                 Context.LAYOUT_INFLATER_SERVICE);
+
+        assert inflater != null;
+        @SuppressLint("ViewHolder")
         View rowView = inflater.inflate(R.layout.item_row_layout, parent, false);
 
-
         final ImageView imageView = rowView.findViewById(R.id.ivItem);
-        TextView textView = rowView.findViewById(R.id.tvItemDesc);
+        TextView tvItemDesc = rowView.findViewById(R.id.tvItemDesc);
         RadioButton rdNotChecked = rowView.findViewById(R.id.rdNotChecked);
         RadioButton rdNotAplicable = rowView.findViewById(R.id.rdNotAplicable);
         RadioButton rdNotAproved = rowView.findViewById(R.id.rdNotAproved);
         final RadioButton rdAproved = rowView.findViewById(R.id.rdAproved);
-        final EditText editText = rowView.findViewById(R.id.editItemComments);
+        final TextView tvComments = rowView.findViewById(R.id.tvItemComments);
 
-        final Item item = itemList.get(position);
-        if(FileHandler.isValidFile(item.getPicture().getFilePath())){
+        tvItemDesc.setEnabled(enabled);
+        imageView.setEnabled(enabled);
+        tvComments.setEnabled(enabled);
+        rdNotAplicable.setEnabled(enabled);
+        rdNotAproved.setEnabled(enabled);
+        rdNotChecked.setEnabled(enabled);
+        rdAproved.setEnabled(enabled);
+        tvComments.setEnabled(enabled);
+
+        Item item = itemList.get(position);
+        String picPath = "";
+        if(item != null && item.getItemReport() != null && item.getItemReport().getDrawingref() != null && item.getItemReport().getDrawingref().getProject() != null){
+            String fileName = item.getPicture().getFileName();
+            picPath = StringHelper.getPicturesFolderPath(project).concat(fileName);
+        }
+        if(FileHelper.isValidFile(picPath)){
             imageView.setImageDrawable(
-                    App.getContext().getResources().getDrawable(
-                            android.R.drawable.ic_menu_camera
-                    )
+                    ResourcesCompat.getDrawable(App.getContext().getResources(), android.R.drawable.ic_menu_camera, null)
+//                    App.getContext().getResources().getDrawable(
+//                            android.R.drawable.ic_menu_camera
+//                    )
             );
 //            imageView.setImageBitmap(
 //                    App.getContext().getResources().getDrawable(Android)
 //                    BitmapFactory.decodeFile(
 //                            new File(
-//                                    item.getPicture().getFilePath()
+//                                    item.getPicture().getFileName()
 //                            ).getAbsolutePath()
 //                    )
 //            );
@@ -84,9 +116,9 @@ public class ItemAdapter extends ArrayAdapter<Item> {
 //            imageView.setImageBitmap(proxyBitmap.getBitmap());
 //        }
 
-        textView.setText(String.valueOf(item.getNumber()).concat(" - ").concat(item.getDescription()));
+        tvItemDesc.setText(String.valueOf(item.getNumber()).concat(" - ").concat(item.getDescription()));
 
-        editText.setText(item.getComments());
+        tvComments.setText(item.getComments());
 
         switch(item.getStatus()){
             case ITEM_NOT_CHECKED_KEY:
@@ -106,21 +138,30 @@ public class ItemAdapter extends ArrayAdapter<Item> {
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                listener.onChangeHappened(item, position, imageView);
+                listener.onChangeHappened(position, imageView);
             }
         });
 
-        editText.addTextChangedListener(new TextWatcher() {
+        tvComments.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setMessage(itemList.get(position).getDescription());
+                final EditText input = new EditText(context);
+                builder.setView(input);
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                builder.setPositiveButton(App.getContext().getResources().getString(R.string.okTag), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    if (!input.getText().toString().equals(App.getContext().getResources().getString(R.string.editCommentsHint))) {
+                        itemList.get(position).setComments(input.getText().toString());
+                        tvComments.setText(input.getText().toString());
+                        listener.onChangeHappened(position, tvComments);
+                    }
+                    }
+                });
+                builder.show();
 
-            @Override
-            public void afterTextChanged(Editable s) {
-                itemList.get(position).setComments(s.toString());
-                listener.onChangeHappened(item, position, editText);
             }
         });
 
@@ -130,7 +171,7 @@ public class ItemAdapter extends ArrayAdapter<Item> {
                 if(isChecked){
                     itemList.get(position).setStatus(ITEM_APROVED_KEY);
                     ((ItemReportEditActivity)context).updatePendingItemsCount();
-                    listener.onChangeHappened(item, position, rdAproved);
+                    listener.onChangeHappened(position, rdAproved);
                 }
             }
         });
@@ -140,7 +181,7 @@ public class ItemAdapter extends ArrayAdapter<Item> {
                 if(isChecked){
                     itemList.get(position).setStatus(ITEM_NOT_APROVED_KEY);
                     ((ItemReportEditActivity)context).updatePendingItemsCount();
-                    listener.onChangeHappened(item, position, rdAproved);
+                    listener.onChangeHappened(position, rdAproved);
                 }
             }
         });
@@ -150,7 +191,7 @@ public class ItemAdapter extends ArrayAdapter<Item> {
                 if(isChecked){
                     itemList.get(position).setStatus(ITEM_NOT_APLICABLE_KEY);
                     ((ItemReportEditActivity)context).updatePendingItemsCount();
-                    listener.onChangeHappened(item, position, rdAproved);
+                    listener.onChangeHappened(position, rdAproved);
                 }
             }
         });
@@ -160,7 +201,7 @@ public class ItemAdapter extends ArrayAdapter<Item> {
                 if(isChecked){
                     itemList.get(position).setStatus(ITEM_NOT_CHECKED_KEY);
                     ((ItemReportEditActivity)context).updatePendingItemsCount();
-                    listener.onChangeHappened(item, position, rdAproved);
+                    listener.onChangeHappened(position, rdAproved);
                 }
             }
         });

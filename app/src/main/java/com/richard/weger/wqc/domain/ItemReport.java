@@ -2,15 +2,24 @@ package com.richard.weger.wqc.domain;
 
 import java.util.ArrayList;
 import java.util.List;
-import static com.richard.weger.wqc.util.AppConstants.*;
+import static com.richard.weger.wqc.constants.AppConstants.*;
 
 public class ItemReport extends Report {
 
 	private List<Item> items;
 
+	private String comments;
+
+	private String client;
+
 	protected ItemReport() {
 		this.items = new ArrayList<>();
 		super.setType(this.getClass().getName());
+	}
+
+	@Override
+	public String toString(){
+		return "Kontrollkarte";
 	}
 
 	public List<Item> getItems() {
@@ -31,4 +40,19 @@ public class ItemReport extends Report {
 		return cnt;
 	}
 
+	public String getComments() {
+		return comments;
+	}
+
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+
+	public String getClient() {
+		return client;
+	}
+
+	public void setClient(String client) {
+		this.client = client;
+	}
 }
