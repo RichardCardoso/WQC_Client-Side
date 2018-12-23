@@ -9,6 +9,8 @@ import com.richard.weger.wqc.domain.Mark;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
 import com.richard.weger.wqc.exception.DataRecoverException;
+import com.richard.weger.wqc.helper.FileHelper;
+import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.helper.ProjectHelper;
 
@@ -20,12 +22,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 
@@ -68,7 +72,7 @@ public class RestTemplateHelper extends AsyncTask<UriBuilder, Void, String> {
                     byte[] contents = responseEntity.getBody();
                     ProjectHelper.byteArrayToFile(contents, uriBuilder[0].getProject(), uriBuilder[0], "Originals/");
                     response = uriBuilder[0].getParameters().get(0);
-                } else if (requestCode.equals(REST_PICTUREDOWNLOAD_KEY)){
+                } else if (requestCode.equals(REST_PICTUREDOWNLOAD_KEY) || requestCode.equals(REST_GENPICTUREDOWNLOAD_KEY)){
                     restTemplate.getMessageConverters().add(new ByteArrayHttpMessageConverter());
                     HttpHeaders headers = new HttpHeaders();
                     headers.setAccept(Arrays.asList(MediaType.IMAGE_JPEG));
@@ -87,6 +91,17 @@ public class RestTemplateHelper extends AsyncTask<UriBuilder, Void, String> {
                     response = restTemplate.getForObject(uriBuilder[0].getUri(), response.getClass());
                 } else if (requestCode.equals(REST_IDENTIFY_KEY)) {
                     response = restTemplate.getForObject(uriBuilder[0].getUri(), response.getClass());
+                } else if (requestCode.equals(REST_GENPICTURESREQUEST_KEY)) {
+                    HttpHeaders headers = new HttpHeaders();
+
+                    HttpEntity<List<String>> entity = new HttpEntity<>(headers);
+                    ResponseEntity<String> responseEntity = restTemplate.exchange(uriBuilder[0].getUri(), HttpMethod.GET, entity, String.class);
+
+                    if (responseEntity != null && responseEntity.getStatusCode() == HttpStatus.OK) {
+                        return responseEntity.getBody();
+                    } else {
+                        return null;
+                    }
                 } else {
                     response = restTemplate.getForObject(uriBuilder[0].getUri(), response.getClass());
                     if (response == null) {
@@ -106,7 +121,7 @@ public class RestTemplateHelper extends AsyncTask<UriBuilder, Void, String> {
                         (new UriHelper()).execute(uriBuilder[0], response);
                         return doInBackground(uriBuilder);
                     }
-                } else if (requestCode.equals(REST_PICTUREUPLOAD_KEY)){
+                } else if (requestCode.equals(REST_PICTUREUPLOAD_KEY) || requestCode.equals(REST_GENPICTUREUPLOAD_KEY)){
                     restTemplate.getMessageConverters().add(new ByteArrayHttpMessageConverter());
 
                     LinkedMultiValueMap params = new LinkedMultiValueMap();
@@ -118,6 +133,24 @@ public class RestTemplateHelper extends AsyncTask<UriBuilder, Void, String> {
                     try {
                         responseEntity = restTemplate.exchange(uriBuilder[0].getUri(), HttpMethod.POST, entity, String.class);
                         if (responseEntity != null && responseEntity.getStatusCode() == HttpStatus.OK) {
+                            if(requestCode.equals(REST_GENPICTUREUPLOAD_KEY)){
+                                String originalFileName = responseEntity.getHeaders().getFirst("originalFileName");
+                                String newFileName = responseEntity.getHeaders().getFirst("newFileName");
+                                if(newFileName != null && !newFileName.equals(originalFileName)){
+                                    String picFolder = StringHelper.getPicturesFolderPath(uriBuilder[0].getProject());
+                                    FileHelper.fileCopy(new File(picFolder.concat(originalFileName)),
+                                            new File(picFolder.concat(newFileName)));
+                                    FileHelper.fileDelete(picFolder.concat(originalFileName));
+                                    UriBuilder builder = uriBuilder[0];
+                                    builder.setRequestCode(REST_GENPICTUREDOWNLOAD_KEY);
+                                    builder.getParameters().clear();
+                                    builder.getParameters().add(originalFileName);
+                                    doInBackground(builder);
+                                    return newFileName;
+                                } else {
+                                    return originalFileName;
+                                }
+                            }
                             return "ok";
                         } else {
                             return null;

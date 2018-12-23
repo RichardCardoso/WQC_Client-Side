@@ -88,9 +88,9 @@
     <string name="itemTag">Item</string>
     <string name="overallProgressLabel">Overall progress:</string>
     <string name="operationProgressLabel">"Operation progress: "</string>
-    <string name="constructionDrawingLabel">Construction drawing</string>
-    <string name="electricDrawingLabel">Electric drawing</string>
-    <string name="datasheetLabel">Datasheet</string>
+    <string name="wiredDrawingLabel">Drawing (EL)</string>
+    <string name="cablelessDrawingLabel">Drawing</string>
+    <string name="wiredDatasheetLabel">Datasheet (EL)</string>
     <string name="controlCardLabel">Control card</string>
     <string name="cancelTag">Cancel</string>
     <string name="serverPathRequestMessage">Please enter the server path</string>
@@ -105,4 +105,11 @@
     <string name="roleTag">Role</string>
     <string name="addeddateTag">Added on</string>
     <string name="removeTag">Remove</string>
+    <string name="cablelessDatasheetLabel">Datasheet</string>
+    <string name="getMorePicturesTag">Do you want to take more pictures?</string>
+    <string name="noDataTag">No data</string>
+    <string name="picturesListTag">General pictures list</string>
+    <string name="retrievingGeneralPicturesTag">Retrieving General Photos</string>
+    <string name="retrievingPdfsTag">Retrieving pdf files</string>
+    <string name="retrievingReportPicturesTag">Retrieving control card pictures</string>
 </resources>

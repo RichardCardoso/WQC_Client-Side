@@ -121,10 +121,26 @@ public class UriHelper {
                 uriBuilder.getParameters().add(StringHelper.getPicturesFolderPath(uriBuilder.getProject()).concat("/").concat(uriBuilder.getItem().getPicture().getFileName()));
                 break;
             case REST_PICTUREDOWNLOAD_KEY:
+            case REST_GENPICTUREDOWNLOAD_KEY:
                 uriBuilder.setRequestMethod(GET_METHOD);
                 url += "/rest/project/{qrText}/picture/{fileName}";
                 url = url.replace("{qrText}", StringHelper.getQrText(uriBuilder.getProject()).replace("\\",""));
                 url = url.replace("{fileName}", uriBuilder.getParameters().get(0));
+                break;
+            case REST_GENPICTUREUPLOAD_KEY:
+                uriBuilder.setRequestMethod(POST_METHOD);
+                url += "/rest/projects/"
+                        + StringHelper.getQrText(uriBuilder.getProject()).replace("\\","")
+                        + "/generalpictures/upload/"
+                        + DeviceManager.getCurrentDevice().getDeviceid()
+                        + "/"
+                        + uriBuilder.getParameters().get(0);
+                uriBuilder.getParameters().add(StringHelper.getPicturesFolderPath(uriBuilder.getProject()).concat("/").concat(uriBuilder.getParameters().get(0)));
+                break;
+            case REST_GENPICTURESREQUEST_KEY:
+                uriBuilder.setRequestMethod(GET_METHOD);
+                url += "/rest/project/{reference}/generalpictures";
+                url = url.replace("{reference}", StringHelper.getQrText(uriBuilder.getProject()).replace("\\",""));
                 break;
             case REST_PROJECTUPLOAD_KEY:
                 uriBuilder.setRequestMethod(POST_METHOD);

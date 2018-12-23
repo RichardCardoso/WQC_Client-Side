@@ -7,14 +7,16 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
-        android:name="com.richard.weger.wqc.util.App"
+        android:name=".util.App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activity.WelcomeActivity" android:exported="true">
+        <activity
+            android:name=".activity.WelcomeActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -23,8 +25,7 @@
         </activity>
         <activity
             android:name=".activity.ProjectEditActivity"
-            android:label="@string/app_name">
-        </activity>
+            android:label="@string/app_name"></activity>
         <activity android:name=".activity.ItemReportEditActivity" />
         <activity android:name=".activity.PictureViewerActivity" />
         <activity android:name=".activity.FileSelectActivity" />
@@ -41,18 +42,18 @@
 
         <activity android:name=".activity.ProjectFinishActivity" />
         <activity android:name=".activity.ConfigurationsActivity" />
-        <activity android:name=".activity.CheckReportEditActivity"></activity>
+        <activity android:name=".activity.CheckReportEditActivity" />
 
         <service
             android:name=".helper.FileHelper"
-            android:exported="false"/>
-
-        <service
-            android:name=".firebird.FirebirdMessagingService">
+            android:exported="false" />
+        <service android:name=".firebird.FirebirdMessagingService">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <activity android:name=".activity.PicturesListActivity"></activity>
     </application>
 
 </manifest>

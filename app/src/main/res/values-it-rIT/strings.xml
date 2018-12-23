@@ -89,9 +89,9 @@
     <string name="itemTag">articolo</string>
     <string name="overallProgressLabel">Progressi generali:</string>
     <string name="operationProgressLabel">Avanzamento dell\'operazione:</string>
-    <string name="constructionDrawingLabel">" Disegno di costruzione"</string>
-    <string name="electricDrawingLabel">Disegno elettrico</string>
-    <string name="datasheetLabel">Scheda dati</string>
+    <string name="wiredDrawingLabel">" Disegno (EL)"</string>
+    <string name="cablelessDrawingLabel">Disegno</string>
+    <string name="wiredDatasheetLabel">Scheda dati (EL)</string>
     <string name="controlCardLabel">Carta di controllo</string>
     <string name="cancelTag">Annulla</string>
     <string name="serverPathRequestMessage">Si prega di inserire il percorso del server</string>
@@ -106,4 +106,11 @@
     <string name="roleTag">Ruolo</string>
     <string name="addeddateTag">Aggiunto a</string>
     <string name="removeTag">Rimuovere</string>
+    <string name="cablelessDatasheetLabel">Scheda dati</string>
+    <string name="getMorePicturesTag">Vuoi fare altre foto?</string>
+    <string name="noDataTag">Nessun dato</string>
+    <string name="picturesListTag">Elenco delle foto generali</string>
+    <string name="retrievingGeneralPicturesTag">" Recupero di foto generali"</string>
+    <string name="retrievingPdfsTag">" Recupero di file PDF"</string>
+    <string name="retrievingReportPicturesTag">Recupero delle immagini della scheda di controllo</string>
 </resources>

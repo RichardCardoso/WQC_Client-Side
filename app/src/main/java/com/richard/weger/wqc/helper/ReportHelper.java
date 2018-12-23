@@ -1,6 +1,5 @@
 package com.richard.weger.wqc.helper;
 
-import android.os.AsyncTask;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.activity.ItemReportEditActivity;
@@ -16,8 +15,9 @@ import com.richard.weger.wqc.rest.UriBuilder;
 import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.logging.FileHandler;
+import java.util.Map;
 
 import static com.richard.weger.wqc.constants.AppConstants.REST_PDFREPORTREQUEST_KEY;
 import static com.richard.weger.wqc.constants.AppConstants.REST_PICTUREDOWNLOAD_KEY;
@@ -25,16 +25,21 @@ import static com.richard.weger.wqc.constants.AppConstants.REST_PICTURESREQUEST_
 
 public class ReportHelper {
 
-    public String getReportLabel(String sCode){
+    private Map<String, String> mapReportLabel;
+    public ReportHelper(){
         ParamConfigurations conf = ConfigurationsManager.getServerConfig();
-        if(sCode.equals(conf.getConstructionDrawingCode())){
-            return App.getContext().getResources().getString(R.string.constructionDrawingLabel);
-        } else if(sCode.equals(conf.getElectricDrawingCode())){
-            return App.getContext().getResources().getString(R.string.electricDrawingLabel);
-        } else if(sCode.equals(conf.getDatasheetCode())){
-            return App.getContext().getResources().getString(R.string.datasheetLabel);
-        } else if(sCode.equals(conf.getControlCardReportCode())){
-            return App.getContext().getResources().getString(R.string.controlCardLabel);
+
+        mapReportLabel = new HashMap<>();
+        mapReportLabel.put(conf.getControlCardReportCode(), App.getContext().getResources().getString(R.string.controlCardLabel));
+        mapReportLabel.put(conf.getWiredDatasheetCode(), App.getContext().getResources().getString(R.string.wiredDatasheetLabel));
+        mapReportLabel.put(conf.getCablelessDatasheetCode(), App.getContext().getResources().getString(R.string.cablelessDatasheetLabel));
+        mapReportLabel.put(conf.getWiredDrawingCode(), App.getContext().getResources().getString(R.string.wiredDrawingLabel));
+        mapReportLabel.put(conf.getCablelessDrawingCode(), App.getContext().getResources().getString(R.string.cablelessDrawingLabel));
+    }
+
+    public String getReportLabel(String sCode){
+        if(mapReportLabel.containsKey(sCode)){
+            return mapReportLabel.get(sCode);
         } else {
             return null;
         }
@@ -68,13 +73,13 @@ public class ReportHelper {
         restTemplateHelper.execute(uriBuilder);
     }
 
-    public void getPictures(RestTemplateHelper.RestHelperResponse delegate, List<Item> items, List<RestTemplateHelper> restTemplateHelperQueue){
-        for(Item item : items) {
+    public void getPictures(RestTemplateHelper.RestHelperResponse delegate, List<Item> items, List<RestTemplateHelper> restTemplateHelperQueue) {
+        for (Item item : items) {
             String fileName = item.getPicture().getFileName();
 //            boolean exists = FileHelper.isValidFile(StringHelper.getQrText(item.getItemReport().getDrawingref().getProject()).concat("/").concat(fileName));
-            if(fileName.length() > 0) {
+            if (fileName.length() > 0) {
                 RestTemplateHelper restTemplateHelper = new RestTemplateHelper(delegate);
-                if(restTemplateHelperQueue != null) {
+                if (restTemplateHelperQueue != null) {
                     restTemplateHelperQueue.add(restTemplateHelper);
                 }
 
@@ -93,26 +98,4 @@ public class ReportHelper {
         }
     }
 
-    public static boolean hasPendingTasks(List<RestTemplateHelper> restTemplateHelperQueue, boolean ignoreLast){
-        int limit = 0;
-
-        if(ignoreLast)
-            limit = 1;
-
-        if(restTemplateHelperQueue != null){
-            removeFinishedTasks(restTemplateHelperQueue);
-            return restTemplateHelperQueue.size() > limit;
-        } else {
-            return false;
-        }
-    }
-
-    private static void removeFinishedTasks(List<RestTemplateHelper> restTemplateHelperQueue){
-        for (int i = 0; i < restTemplateHelperQueue.size(); i ++) {
-            RestTemplateHelper r = restTemplateHelperQueue.get(i);
-            if (r.getStatus() == AsyncTask.Status.FINISHED || r.isCancelled() || r.getStatus() == AsyncTask.Status.PENDING) {
-                restTemplateHelperQueue.remove(r);
-            }
-        }
-    }
 }

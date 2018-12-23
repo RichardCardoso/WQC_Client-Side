@@ -6,8 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.support.annotation.NonNull;
 import android.support.v4.content.res.ResourcesCompat;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +34,7 @@ public class ItemAdapter extends ArrayAdapter<Item> {
     private final Context context;
     private Project project;
     private boolean enabled;
+    private boolean cameraEnabled;
 
     private ChangeListener listener;
 
@@ -48,7 +47,12 @@ public class ItemAdapter extends ArrayAdapter<Item> {
     }
 
     public void setEnabled(boolean enabled){
+        this.cameraEnabled = enabled;
         this.enabled = enabled;
+    }
+
+    public void setCameraEnabled(boolean enabled){
+        this.cameraEnabled = enabled;
     }
 
     public ItemAdapter(@NonNull Context context, @NonNull List<Item> itemList, Project project) {
@@ -81,7 +85,7 @@ public class ItemAdapter extends ArrayAdapter<Item> {
         final TextView tvComments = rowView.findViewById(R.id.tvItemComments);
 
         tvItemDesc.setEnabled(enabled);
-        imageView.setEnabled(enabled);
+        imageView.setEnabled(cameraEnabled);
         tvComments.setEnabled(enabled);
         rdNotAplicable.setEnabled(enabled);
         rdNotAproved.setEnabled(enabled);

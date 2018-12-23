@@ -1,6 +1,7 @@
 package com.richard.weger.wqc.helper;
 
 import android.content.Context;
+import android.os.AsyncTask;
 
 import com.richard.weger.wqc.domain.CheckReport;
 import com.richard.weger.wqc.domain.DrawingRef;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.richard.weger.wqc.constants.AppConstants.*;
+import static com.richard.weger.wqc.helper.LogHelper.writeData;
 import static java.io.File.separatorChar;
 
 public class ProjectHelper {
@@ -166,5 +168,125 @@ public class ProjectHelper {
         uriBuilder.setRequestCode(REST_PROJECTSAVE_KEY);
         uriBuilder.setProject(project);
         restTemplateHelper.execute(uriBuilder);
+    }
+
+    public void checkForGenPictures(RestTemplateHelper.RestHelperResponse delegate, Project project, boolean deleteOldFiles){
+        writeData("Started routine to check if general pictures download is necessary");
+        if(deleteOldFiles) {
+            String picFolderPath = StringHelper.getPicturesFolderPath(project);
+            if (FileHelper.isValidFile(picFolderPath)) {
+                File picFolder = new File(picFolderPath);
+                for (File f : picFolder.listFiles()) {
+                    if (f.getName().contains("QP")) {
+                        FileHelper.fileDelete(f.getAbsolutePath());
+                    }
+                }
+            }
+        }
+        requestGenPictures(delegate, project);
+    }
+
+    private void requestGenPictures(RestTemplateHelper.RestHelperResponse delegate, Project project){
+        UriBuilder uriBuilder = new UriBuilder();
+        uriBuilder.setRequestCode(REST_GENPICTURESREQUEST_KEY);
+        uriBuilder.setProject(project);
+
+        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(delegate);
+        restTemplateHelper.execute(uriBuilder);
+    }
+
+    public void getGenPictures(RestTemplateHelper.RestHelperResponse delegate, List<String> pictures, List<RestTemplateHelper> queue, Project project){
+        for(String fileName : pictures) {
+            boolean isNeeded = true;
+//            boolean exists = FileHelper.isValidFile(StringHelper.getQrText(fileName.getItemReport().getDrawingref().getProject()).concat("/").concat(fileName));
+            if(fileName.length() > 0) {
+                File picturesFolder = new File(StringHelper.getPicturesFolderPath(project));
+                if(picturesFolder.exists()) {
+                    for (File f : picturesFolder.listFiles()) {
+                        if (f.getName().contains(fileName)) {
+                            isNeeded = false;
+                            break;
+                        }
+                    }
+                }
+                if(isNeeded){
+                    RestTemplateHelper restTemplateHelper = addTask(delegate, queue);
+                    if (fileName.contains("/")) {
+                        fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
+                    }
+                    UriBuilder uriBuilder = new UriBuilder();
+                    uriBuilder.setRequestCode(REST_GENPICTUREDOWNLOAD_KEY);
+                    uriBuilder.setProject(project);
+                    uriBuilder.getParameters().add(fileName);
+
+                    restTemplateHelper.execute(uriBuilder);
+                }
+            }
+        }
+    }
+
+    public static boolean hasPendingTasks(List<RestTemplateHelper> restTemplateHelperQueue, boolean ignoreLast){
+        int limit = 0;
+
+        if(ignoreLast)
+            limit = 1;
+
+        if(restTemplateHelperQueue != null){
+            removeFinishedTasks(restTemplateHelperQueue);
+            return restTemplateHelperQueue.size() > limit;
+        } else {
+            return false;
+        }
+    }
+
+    private static void removeFinishedTasks(List<RestTemplateHelper> restTemplateHelperQueue){
+        for (int i = 0; i < restTemplateHelperQueue.size(); i ++) {
+            RestTemplateHelper r = restTemplateHelperQueue.get(i);
+            if (r.getStatus() == AsyncTask.Status.FINISHED || r.isCancelled() || r.getStatus() == AsyncTask.Status.PENDING) {
+                restTemplateHelperQueue.remove(r);
+            }
+        }
+    }
+
+    public static int getCurrentPicNumber(Project project){
+        File folder = new File(StringHelper.getPicturesFolderPath(project));
+        int currentPicNumber = 1;
+        for(File f : folder.listFiles()){
+            String fName = f.getName();
+            if(fName.contains("QP"))
+                currentPicNumber++;
+        }
+        return currentPicNumber;
+    }
+
+    public static void itemPictureUpload(RestTemplateHelper.RestHelperResponse delegate, Item item, Report report){
+        writeData("Started picture upload request");
+
+        String picName = item.getPicture().getFileName();
+        picName = picName.substring(picName.lastIndexOf("/") + 1);
+
+        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(delegate);
+        UriBuilder uriBuilder = new UriBuilder();
+        uriBuilder.setRequestCode(REST_PICTUREUPLOAD_KEY);
+        uriBuilder.setReport(report);
+        uriBuilder.setItem(item);
+        uriBuilder.setProject(report.getDrawingref().getProject());
+        uriBuilder.getParameters().add(picName);
+        restTemplateHelper.execute(uriBuilder);
+    }
+
+    public static void generalPictureUpload(RestTemplateHelper.RestHelperResponse delegate, Project project, String picName, List<RestTemplateHelper> queue){
+        RestTemplateHelper restTemplateHelper = addTask(delegate, queue);
+        UriBuilder uriBuilder = new UriBuilder();
+        uriBuilder.setRequestCode(REST_GENPICTUREUPLOAD_KEY);
+        uriBuilder.setProject(project);
+        uriBuilder.getParameters().add(picName);
+        restTemplateHelper.execute(uriBuilder);
+    }
+
+    private static RestTemplateHelper addTask(RestTemplateHelper.RestHelperResponse delegate, List<RestTemplateHelper> queue){
+        RestTemplateHelper helper = new RestTemplateHelper(delegate);
+        queue.add(helper);
+        return helper;
     }
 }

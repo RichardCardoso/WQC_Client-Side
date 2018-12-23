@@ -12,7 +12,6 @@ import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.adapter.ReportAdapter;
@@ -29,7 +28,7 @@ import static com.richard.weger.wqc.helper.LogHelper.*;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.ReportHelper;
 import com.richard.weger.wqc.helper.StringHelper;
-import com.richard.weger.wqc.util.ProjectExport;
+import com.richard.weger.wqc.util.DeviceManager;
 
 import java.util.Locale;
 import java.util.Map;
@@ -122,6 +121,11 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
     private void inflateActivityLayout(){
         writeData("Started layout inflate activity");
         setContentView(R.layout.activity_project_edit);
+
+        if(DeviceManager.getCurrentDevice().getRole().equals("TE")){
+            findViewById(R.id.btnProjectFinish).setVisibility(View.INVISIBLE);
+        }
+
         setListeners();
         if(project != null){
             setFields();
@@ -172,6 +176,17 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
     private void setListeners(){
         writeData("Started listeners set routine");
         Button button;
+
+        button = findViewById(R.id.btnCustomPictures);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                writeData("Started general pictures list activity");
+                Intent intent = new Intent(ProjectEditActivity.this, PicturesListActivity.class);
+                intent.putExtra(PROJECT_KEY, project);
+                startActivityForResult(intent, PICTURE_LIST_SCREEN_ID);
+            }
+        });
 
         button = findViewById(R.id.btnProjectFinish);
         button.setOnClickListener(new View.OnClickListener() {

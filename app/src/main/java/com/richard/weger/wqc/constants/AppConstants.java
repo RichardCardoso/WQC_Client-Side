@@ -40,9 +40,14 @@ public class AppConstants {
     public final static String REPORT_ID_KEY = "itemIdKey";
     public final static String REPORT_KEY = "singleReport";
     public final static String PROJECT_KEY = "singleProject";
+    public final static String TAKEN_PICTURES_KEY = "takenPictures";
     public final static String CAMERA_PERMISSION = "android.permission.CAMERA";
     public final static String EXTERNAL_DIR_PERMISSION = "android.permission.WRITE_EXTERNAL_STORAGE";
     public final static String DATA_KEY = "data";
+    public final static String PICTURE_CAPTURE_MODE = "pictureCaptureMode";
+    public final static String ITEM_PICTURE_MODE = "itemPictureMode";
+    public final static String GENERAL_PICTURE_MODE = "generalPictureMode";
+    public final static String PICTURE_FILEPATH_KEY = "pictureFilenameKey";
 
     public final static int CONFIG_SCREEN_KEY = 0;
     public final static int CONTROL_CARD_REPORT_ID = 1;
@@ -52,6 +57,7 @@ public class AppConstants {
     public final static int PICTURE_VIEWER_SCREEN_ID = 5;
     public final static int PROJECT_FINISH_SCREEN_ID = 6;
     public final static int INTRINSIC_PERMISSIONS_CODE = 7;
+    public final static int PICTURE_LIST_SCREEN_ID = 8;
 
     public final static String REST_QRPROJECTLOAD_KEY = "httpProjectLoadKey";
     public final static String REST_QRPROJECTCREATE_KEY = "httpProjectCreateKey";
@@ -60,6 +66,9 @@ public class AppConstants {
     public final static String REST_PICTURESREQUEST_KEY = "httpPicturesRequestKey";
     public final static String REST_PICTUREDOWNLOAD_KEY = "httpPictureDownloadKey";
     public final static String REST_PICTUREUPLOAD_KEY = "httpPictureUploadKey";
+    public final static String REST_GENPICTURESREQUEST_KEY = "httpGenPicturesRequestKey";
+    public final static String REST_GENPICTUREDOWNLOAD_KEY = "httpGenPictureDownloadKey";
+    public final static String REST_GENPICTUREUPLOAD_KEY = "httpGenPictureUploadKey";
     public final static String REST_PROJECTSAVE_KEY = "httpProjectSaveKey";
     public final static String REST_MARKSAVE_KEY = "httpMarkSaveKey";
     public final static String REST_IDENTIFY_KEY = "httpIdentifyKey";

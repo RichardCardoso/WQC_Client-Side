@@ -20,6 +20,8 @@ import com.richard.weger.wqc.domain.Device;
 import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
+import com.richard.weger.wqc.helper.FileHelper;
+import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.paramconfigs.ParamConfigurations;
 import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.Configurations;
@@ -32,6 +34,7 @@ import com.richard.weger.wqc.rest.UriBuilder;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.ReportHelper;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +50,9 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     List<RestTemplateHelper> restTemplateHelperQueue;
     RestTemplateHelper restTemplateHelper;
     boolean hasAuthorization = false;
+    boolean checkedForGenPictures = false;
+    boolean projectEditStarted = false;
+    TextView tvStatus;
 
     private ZXingScannerView mScannerView;
     PermissionsManager permissionsManager = new PermissionsManager();
@@ -162,6 +168,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
         setContentView(R.layout.activity_welcome);
         setListeners();
         setTextEditValue(DeviceManager.getCurrentDevice());
+         tvStatus = findViewById(R.id.tvStatus);
     }
 
     public void QrScan(){
@@ -272,16 +279,20 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     }
 
     private void startProjectEdit(){
-        writeData("Started routine to open the project edit screen");
-        Intent intent = new Intent(WelcomeActivity.this, ProjectEditActivity.class);
-        intent.putExtra(PROJECT_KEY, project);
-        startActivityForResult(intent, PROJECT_EDIT_SCREEN_KEY);
+        if(!projectEditStarted) {
+            writeData("Started routine to open the project edit screen");
+            Intent intent = new Intent(WelcomeActivity.this, ProjectEditActivity.class);
+            intent.putExtra(PROJECT_KEY, project);
+            startActivityForResult(intent, PROJECT_EDIT_SCREEN_KEY);
+            projectEditStarted = true;
+        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
         writeData("Started routine to handle activity's result");
         if(requestCode == PROJECT_EDIT_SCREEN_KEY) {
+            projectEditStarted = false;
             if (requestCode == RESULT_CANCELED) {
                 ProjectHelper.reportFilesErase(project);
                 startDataLoad();
@@ -293,7 +304,8 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     }
 
     private boolean needsPictures(boolean request){
-        writeData("Started routine to check if pictures download is necessary");
+        tvStatus.setText(R.string.retrievingReportPicturesTag);
+        writeData("Started routine to check if item pictures download is necessary");
         List<Item> items = ProjectHelper.itemsWithMissingPictures(project);
         if(items.size() == 0){
             writeData("No pictures download is needed");
@@ -311,6 +323,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     }
 
     private boolean needsPdfFiles(boolean request){
+        tvStatus.setText(R.string.retrievingPdfsTag);
         writeData("Started routine to check if pdf files download is necessary");
         if(ProjectHelper.hasAllReportFiles(project)) {
             writeData("No pdf files are needed at all");
@@ -382,6 +395,17 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
             }
         }
         builder.show();
+        if(tvStatus != null) {
+            tvStatus.setText(message);
+        }
+    }
+
+    private void checkForGenPictures(){
+        tvStatus.setText(R.string.retrievingGeneralPicturesTag);
+        if(!checkedForGenPictures) {
+            (new ProjectHelper()).checkForGenPictures(this, project, true);
+            checkedForGenPictures = true;
+        }
     }
 
     @Override
@@ -409,20 +433,18 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                             needsPdfFiles = needsPdfFiles(true);
                             needsPictures = needsPictures(true);
                             if (!(needsPdfFiles || needsPictures)) {
-                                writeData("Starting routine to open the project edit screen");
-//                                ProjectHelper.linkExistingPictures(project);
-                                startProjectEdit();
+                                checkForGenPictures();
                             }
                         }
                         break;
                     case REST_PDFREPORTREQUEST_KEY:
                         writeData("The response was a Pdf file");
-                        if(!ReportHelper.hasPendingTasks(restTemplateHelperQueue, true)){
-                            startProjectEdit();
+                        if(!ProjectHelper.hasPendingTasks(restTemplateHelperQueue, true)){
+                            checkForGenPictures();
                         }
                         break;
                     case REST_PICTURESREQUEST_KEY:
-                        writeData("Got existing pictures list from server");
+                        writeData("Got existing item pictures list from server");
                         List<Item> items = JsonHelper.toList(result, Item.class);
                         if(items.size() > 0) {
                             for(int i = 0; i < items.size(); i++){
@@ -432,12 +454,36 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                             ReportHelper reportHelper = new ReportHelper();
                             reportHelper.getPictures(this, items, restTemplateHelperQueue);
                         } else {
-                            startProjectEdit();
+                            if(!checkedForGenPictures) {
+                                checkForGenPictures();
+                            } else {
+                                startProjectEdit();
+                            }
                         }
                         break;
                     case REST_PICTUREDOWNLOAD_KEY:
                         writeData("The response was a JPG file");
-                        if (!ReportHelper.hasPendingTasks(restTemplateHelperQueue, true)) {
+                        if (!ProjectHelper.hasPendingTasks(restTemplateHelperQueue, true)) {
+                            if(!checkedForGenPictures) {
+                                checkForGenPictures();
+                            } else {
+                                startProjectEdit();
+                            }
+                        }
+                        break;
+                    case REST_GENPICTURESREQUEST_KEY:
+                        writeData("Got existing general pictures list from server");
+                        List<String> pictures = JsonHelper.toList(result, String.class);
+                        if(pictures.size() > 0) {
+                            ProjectHelper projectHelper = new ProjectHelper();
+                            projectHelper.getGenPictures(this, pictures, restTemplateHelperQueue, project);
+                        } else {
+                            startProjectEdit();
+                        }
+                        break;
+                    case REST_GENPICTUREDOWNLOAD_KEY:
+                        writeData("The response was a JPG file");
+                        if( !ProjectHelper.hasPendingTasks(restTemplateHelperQueue, true)){
                             startProjectEdit();
                         }
                         break;

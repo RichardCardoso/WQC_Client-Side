@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Project  implements Serializable{
+public class Project implements Serializable{
 
 	private int id;
 	

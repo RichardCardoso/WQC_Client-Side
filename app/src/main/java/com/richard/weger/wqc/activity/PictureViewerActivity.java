@@ -1,6 +1,8 @@
 package com.richard.weger.wqc.activity;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,6 +14,7 @@ import android.provider.MediaStore;
 import android.os.Bundle;
 import android.support.v4.content.FileProvider;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -21,23 +24,21 @@ import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
 import com.richard.weger.wqc.helper.FileHelper;
 import com.richard.weger.wqc.helper.ImageHelper;
+import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.StringHelper;
+import com.richard.weger.wqc.util.DeviceManager;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import uk.co.senab.photoview.PhotoViewAttacher;
 
-import static com.richard.weger.wqc.constants.AppConstants.ITEM_ID_KEY;
-import static com.richard.weger.wqc.constants.AppConstants.ITEM_KEY;
-import static com.richard.weger.wqc.constants.AppConstants.PICTURES_AUTHORITY;
-import static com.richard.weger.wqc.constants.AppConstants.PROJECT_KEY;
-import static com.richard.weger.wqc.constants.AppConstants.REPORT_KEY;
-import static com.richard.weger.wqc.constants.AppConstants.REQUEST_IMAGE_CAPTURE_ACTION;
-import static com.richard.weger.wqc.constants.AppConstants.SDF;
+import static com.richard.weger.wqc.constants.AppConstants.*;
 
 public class PictureViewerActivity extends Activity{
 
@@ -48,11 +49,11 @@ public class PictureViewerActivity extends Activity{
     String futurePath = "";
     Project project;
     Report report;
+    String mode;
+    ArrayList<String> takenPictures = new ArrayList<>();
 
     @Override
-    public void onBackPressed(){
-
-    }
+    public void onBackPressed(){}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,25 +64,54 @@ public class PictureViewerActivity extends Activity{
 
         Intent intent = getIntent();
         if(intent != null){
-            item = (Item) intent.getSerializableExtra(ITEM_KEY);
-            position = intent.getIntExtra(ITEM_ID_KEY, -1);
+
             project = (Project) intent.getSerializableExtra(PROJECT_KEY);
-            report = (Report) intent.getSerializableExtra(REPORT_KEY);
-            if(position == -1){
-                Toast.makeText(this, R.string.dataRecoverError, Toast.LENGTH_LONG).show();
-                resultCanceled();
-            }
-        }
-        if(item != null){
-            if (item.getPicture() != null && item.getPicture().getFileName() != null){
-                File file = new File(StringHelper.getPicturesFolderPath(project).concat(item.getPicture().getFileName()));
-                if(file.exists() && FileHelper.isValidFile(file.getPath())){
-                    Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-                    if(bitmap != null) {
-                        imageView.setImageBitmap(bitmap);
+            ProjectHelper.linkReferences(project);
+
+            mode = intent.getStringExtra(PICTURE_CAPTURE_MODE);
+            if(mode.equals(ITEM_PICTURE_MODE)) {
+                report = (Report) intent.getSerializableExtra(REPORT_KEY);
+                item = (Item) intent.getSerializableExtra(ITEM_KEY);
+                position = intent.getIntExtra(ITEM_ID_KEY, -1);
+                if(position == -1){
+                    Toast.makeText(this, R.string.dataRecoverError, Toast.LENGTH_LONG).show();
+                    resultCanceled();
+                }
+
+                if(item != null){
+                    if (item.getPicture() != null && item.getPicture().getFileName() != null){
+                        File file = new File(StringHelper.getPicturesFolderPath(project).concat(item.getPicture().getFileName()));
+                        if(file.exists() && FileHelper.isValidFile(file.getPath())){
+                            Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                            if(bitmap != null) {
+                                imageView.setImageBitmap(bitmap);
+                            }
+                        }
                     }
                 }
+            } else {
+                if(intent.hasExtra(PICTURE_FILEPATH_KEY)){
+                    String filePath = intent.getStringExtra(PICTURE_FILEPATH_KEY);
+                    if(filePath != null) {
+                        findViewById(R.id.btnTakeNew).setVisibility(View.INVISIBLE);
+                        File file = new File(filePath);
+                        if (file.exists() && FileHelper.isValidFile(file.getPath())) {
+                            Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                            if (bitmap != null) {
+                                imageView.setImageBitmap(bitmap);
+                            }
+                        }
+                    } else {
+                        takePicture();
+                    }
+                } else {
+                    takePicture();
+                }
             }
+        }
+
+        if(DeviceManager.getCurrentDevice().getRole().toLowerCase().equals("te")){
+            findViewById(R.id.btnTakeNew).setVisibility(View.INVISIBLE);
         }
 
         findViewById(R.id.btnTakeNew).setOnClickListener(new View.OnClickListener() {
@@ -128,7 +158,19 @@ public class PictureViewerActivity extends Activity{
     private File createImageFile(){
         // Create an image file name
         // String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = item.getPicture().getFileName();
+        String imageFileName;
+        if(mode.equals(ITEM_PICTURE_MODE)) {
+            imageFileName = item.getPicture().getFileName();
+        } else {
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM-dd-yyyy_hh:mm:ss");
+            imageFileName = project.getReference()
+                    .concat("Z").concat(String.valueOf(project.getDrawingRefs().get(0).getNumber()))
+                    .concat("T").concat(String.valueOf(project.getDrawingRefs().get(0).getParts().get(0).getNumber()))
+                    .concat("QP").concat(String.valueOf(ProjectHelper.getCurrentPicNumber(project)))
+//                    .concat("_")
+//                    .concat(sdf.format(Calendar.getInstance().getTime()))
+                    .concat(".jpg");
+        }
         String folderPath = StringHelper.getProjectFolderPath(project).concat("Pictures/");
         File storageDir = new File(folderPath);
 //        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
@@ -201,7 +243,6 @@ public class PictureViewerActivity extends Activity{
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Bitmap bitmap = CameraHelper.handleTakePictureIntentResponse(requestCode, resultCode, data);
-        Intent intent = new Intent();
         // item.getPicture().setProxyBitmap(new ProxyBitmap(bitmap));
         if(resultCode == RESULT_OK) {
             putTimeStamp();
@@ -217,22 +258,52 @@ public class PictureViewerActivity extends Activity{
                 FileHelper.fileDelete(compressedPath);
 
                 futurePath = finalPath;
+                takenPictures.add(futurePath);
 
             } catch (Exception ex){
                 ex.printStackTrace();
             }
 
 //            item.getPicture().setFileName(futurePath);
-            intent.putExtra(ITEM_ID_KEY, position);
-            intent.putExtra(ITEM_KEY, item);
-            setResult(RESULT_OK, intent);
-            finish();
+
+            if(mode.equals(GENERAL_PICTURE_MODE)) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage(R.string.getMorePicturesTag);
+                builder.setCancelable(false);
+                builder.setNegativeButton(R.string.noTag, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finishTakingPictures();
+                    }
+                });
+                builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        takePicture();
+                    }
+                });
+                builder.show();
+            } else {
+                finishTakingPictures();
+            }
         } else {
             File file = new File(futurePath);
             if(file.exists()){
                 file.delete();
             }
         }
+    }
+
+    private void finishTakingPictures(){
+        Intent intent = new Intent();
+        if(mode.equals(GENERAL_PICTURE_MODE)){
+            intent.putStringArrayListExtra(TAKEN_PICTURES_KEY, takenPictures);
+        }
+        intent.putExtra(PICTURE_CAPTURE_MODE, mode);
+        intent.putExtra(ITEM_ID_KEY, position);
+        intent.putExtra(ITEM_KEY, item);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
     private void putTimeStamp(){
@@ -248,8 +319,7 @@ public class PictureViewerActivity extends Activity{
                 .concat("\n").concat(drawingLabel).concat(": ").concat(String.valueOf(project.getDrawingRefs().get(0).getNumber()))
                 .concat("\n").concat(partLabel).concat(": ").concat(String.valueOf(project.getDrawingRefs().get(0).getParts().get(0).getNumber()))
                 .concat("\n");
-        String itemInfo = report.toString().concat(", ").concat(getResources().getString(R.string.itemTag))
-                .concat(": ").concat(String.valueOf(item.getNumber()));
+        String itemInfo;
 
         Canvas cs = new Canvas(dest);
         Paint tPaint = new Paint();
@@ -259,6 +329,14 @@ public class PictureViewerActivity extends Activity{
         float height = tPaint.measureText("yY");
         cs.drawBitmap(src, 0f, 0f, null);
         cs.drawText(projectInfo.concat(" - ").concat(dateTime),20f, height + 15f, tPaint);
+        if(mode.equals(ITEM_PICTURE_MODE)) {
+            itemInfo = report.toString().concat(", ").concat(getResources().getString(R.string.itemTag))
+                    .concat(": ").concat(String.valueOf(item.getNumber()));
+
+        } else {
+
+            itemInfo = "QP" + ProjectHelper.getCurrentPicNumber(project);
+        }
         cs.drawText(itemInfo,20f, 2*height + 15f, tPaint);
 
         try {

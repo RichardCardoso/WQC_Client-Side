@@ -10,10 +10,11 @@ public class ParamConfigurations implements Serializable {
 	
 	private int id = 1;
 	private String originalDocsPath = "";
-	private String constructionDrawingCode = "";
-	private String datasheetCode = "";
+	private String wiredDrawingCode = "";
+	private String wiredDatasheetCode = "";
 	private String controlCardReportCode = "0000";
-	private String electricDrawingCode = "";
+	private String cablelessDrawingCode = "";
+	private String cablelessDatasheetCode = "";
 	private String originalDocsExtension = "";
 	private String rootPath = "";
 	private String serverPath = "";
@@ -38,28 +39,28 @@ public class ParamConfigurations implements Serializable {
 		this.originalDocsPath = technicDatasheetPath;
 	}
 
-	public String getConstructionDrawingCode() {
-		return constructionDrawingCode;
+	public String getWiredDrawingCode() {
+		return wiredDrawingCode;
 	}
 
-	public void setConstructionDrawingCode(String drawingCode) {
-		this.constructionDrawingCode = drawingCode;
+	public void setWiredDrawingCode(String drawingCode) {
+		this.wiredDrawingCode = drawingCode;
 	}
 
-	public String getDatasheetCode() {
-		return datasheetCode;
+	public String getWiredDatasheetCode() {
+		return wiredDatasheetCode;
 	}
 
-	public void setDatasheetCode(String datasheetCode) {
-		this.datasheetCode = datasheetCode;
+	public void setWiredDatasheetCode(String wiredDatasheetCode) {
+		this.wiredDatasheetCode = wiredDatasheetCode;
 	}
 
-	public String getElectricDrawingCode() {
-		return electricDrawingCode;
+	public String getCablelessDrawingCode() {
+		return cablelessDrawingCode;
 	}
 
-	public void setElectricDrawingCode(String electricDrawingCode) {
-		this.electricDrawingCode = electricDrawingCode;
+	public void setCablelessDrawingCode(String cablelessDrawingCode) {
+		this.cablelessDrawingCode = cablelessDrawingCode;
 	}
 
 	public String getOriginalDocsExtension() {
@@ -124,5 +125,13 @@ public class ParamConfigurations implements Serializable {
 
 	public void setControlCardReportCode(String controlCardReportCode) {
 		this.controlCardReportCode = controlCardReportCode;
+	}
+
+	public String getCablelessDatasheetCode() {
+		return cablelessDatasheetCode;
+	}
+
+	public void setCablelessDatasheetCode(String cablelessDatasheetCode) {
+		this.cablelessDatasheetCode = cablelessDatasheetCode;
 	}
 }

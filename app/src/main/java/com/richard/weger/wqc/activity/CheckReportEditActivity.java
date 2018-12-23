@@ -156,7 +156,7 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
 
         writeData("Getting document pages count");
         pageCount = PdfHelper.getPageCount(filePath);
-        if(pageCount == 0){
+        if(pageCount == 0 || pageCount != report.getPages().size()){
             // Toast.makeText(this, R.string.dataRecoverError, Toast.LENGTH_LONG).show();
             setResult(RESULT_CANCELED);
             finish();
@@ -181,6 +181,12 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
     private void inflateActivityLayout(){
         writeData("Setting content view");
         setContentView(R.layout.activity_check_report_edit);
+
+        if(DeviceManager.getCurrentDevice().getRole().equals("TE")){
+            findViewById(R.id.btnAddMark).setVisibility(View.INVISIBLE);
+            findViewById(R.id.btnUndo).setVisibility(View.INVISIBLE);
+        }
+
         configImageView(R.id.ivDocument);
     }
 
@@ -438,7 +444,8 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
                 m.getDevice().getRole(),
                 getResources().getString(R.string.addeddateTag),
                 m.getAddedOn()));
-        if (m.getDevice().getRole().equals(DeviceManager.getCurrentDevice().getRole())) {
+        if (!DeviceManager.getCurrentDevice().getRole().equals("TE") &&
+                m.getDevice().getRole().equals(DeviceManager.getCurrentDevice().getRole())) {
             canRemove = true;
         }
         if (canRemove){
@@ -451,18 +458,22 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
 
                 }
             });
+            builder.setPositiveButton(positiveButtonTag, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (markRole.equals(DeviceManager.getCurrentDevice().getRole())){
+                        remove(lastTouchedMark);
+                    }
+                }
+            });
         } else {
             positiveButtonTag = getResources().getString(R.string.okTag);
-        }
-
-        builder.setPositiveButton(positiveButtonTag, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (markRole.equals(DeviceManager.getCurrentDevice().getRole())){
-                    remove(lastTouchedMark);
+            builder.setPositiveButton(positiveButtonTag, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
                 }
-            }
-        });
+            });
+        }
 
         builder.show();
     }

@@ -31,12 +31,12 @@ public class FileHelper {
         String constExtension = "";
         switch(entryData){
             case CONSTRUCTION_PATH_KEY: {
-                constCode = conf.getConstructionDrawingCode();
+                constCode = conf.getWiredDrawingCode();
                 constExtension = conf.getOriginalDocsExtension();
                 break;
             }
             case TECHNICAL_PATH_KEY: {
-                constCode = conf.getDatasheetCode();
+                constCode = conf.getWiredDatasheetCode();
                 constExtension = conf.getOriginalDocsExtension();
                 break;
             }

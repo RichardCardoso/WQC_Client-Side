@@ -30,6 +30,7 @@ import com.richard.weger.wqc.adapter.ItemAdapter;
 import com.richard.weger.wqc.helper.JsonHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.ReportHelper;
+import com.richard.weger.wqc.util.DeviceManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -155,6 +156,12 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
         setListeners();
         setTextViews();
         toggleControls(true);
+
+        if(DeviceManager.getCurrentDevice().getRole().toLowerCase().equals("te")){
+            itemAdapter.setEnabled(false);
+            itemAdapter.setCameraEnabled(true);
+            itemAdapter.notifyDataSetChanged();
+        }
     }
 
     private void setTextViews(){
@@ -212,7 +219,6 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         if(canEdit) {
-            writeData("Report list item clicked");
             super.onListItemClick(l, v, position, id);
         }
     }
@@ -231,8 +237,8 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
         canEdit = bResume;
         itemAdapter.setEnabled(bResume);
         itemAdapter.notifyDataSetChanged();
-        getListView().setClickable(bResume);
-        getListView().setEnabled(bResume);
+        // getListView().setClickable(bResume);
+        // getListView().setEnabled(bResume);
         if(bResume){
             findViewById(R.id.pbItemReportEdit).setVisibility(View.INVISIBLE);
         }
@@ -255,26 +261,12 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
 
         String fileName = StringHelper.getPicturesFolderPath(project).concat("/").concat(item.getPicture().getFileName());
         if(savePicture && FileHelper.isValidFile(fileName)) {
-            pictureUpload(item);
+            toggleControls(false);
+            ProjectHelper.itemPictureUpload(this, item, report);
         }
     }
 
-    private void pictureUpload(Item item){
-        writeData("Started picture upload request");
-        toggleControls(false);
 
-        String picName = item.getPicture().getFileName();
-        picName = picName.substring(picName.lastIndexOf("/") + 1);
-
-        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(this);
-        UriBuilder uriBuilder = new UriBuilder();
-        uriBuilder.setRequestCode(REST_PICTUREUPLOAD_KEY);
-        uriBuilder.setReport(report);
-        uriBuilder.setItem(item);
-        uriBuilder.setProject(report.getDrawingref().getProject());
-        uriBuilder.getParameters().add(picName);
-        restTemplateHelper.execute(uriBuilder);
-    }
 
     @Override
     public void onChangeHappened(int position, View view) {
@@ -284,6 +276,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
             Intent intent = new Intent(ItemReportEditActivity.this, PictureViewerActivity.class);
             intent.putExtra(ITEM_KEY, item);
             intent.putExtra(ITEM_ID_KEY, position);
+            intent.putExtra(PICTURE_CAPTURE_MODE, ITEM_PICTURE_MODE);
             intent.putExtra(REPORT_KEY, report);
             intent.putExtra(PROJECT_KEY, project);
             startActivityForResult(intent, PICTURE_VIEWER_SCREEN_ID);

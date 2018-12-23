@@ -61,7 +61,7 @@ public class ReportAdapter extends ArrayAdapter<Report> {
 
         final Report report = reportList.get(position);
 
-        textView.setText((new ReportHelper()).getReportLabel(report.getReference()));
+        textView.setText((new ReportHelper()).getReportLabel(report.getReference())); //.concat(" - Z").concat(String.valueOf(report.getDrawingref().getNumber()))
         checkBox.setText("");
 
         if (report instanceof ItemReport){
