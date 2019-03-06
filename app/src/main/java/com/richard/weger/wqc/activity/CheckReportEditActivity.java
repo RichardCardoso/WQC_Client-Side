@@ -182,7 +182,7 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
         writeData("Setting content view");
         setContentView(R.layout.activity_check_report_edit);
 
-        if(DeviceManager.getCurrentDevice().getRole().equals("TE")){
+        if(DeviceManager.getCurrentDevice().getRole().equals("TE") || report.getDrawingref().isFinished()){
             findViewById(R.id.btnAddMark).setVisibility(View.INVISIBLE);
             findViewById(R.id.btnUndo).setVisibility(View.INVISIBLE);
         }

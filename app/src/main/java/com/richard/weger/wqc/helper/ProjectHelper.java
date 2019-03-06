@@ -18,6 +18,7 @@ import com.richard.weger.wqc.util.ItemsMissingPictures;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.richard.weger.wqc.constants.AppConstants.*;
@@ -251,10 +252,13 @@ public class ProjectHelper {
     public static int getCurrentPicNumber(Project project){
         File folder = new File(StringHelper.getPicturesFolderPath(project));
         int currentPicNumber = 1;
-        for(File f : folder.listFiles()){
-            String fName = f.getName();
-            if(fName.contains("QP"))
-                currentPicNumber++;
+        if(folder.exists() && folder.listFiles().length > 0) {
+            currentPicNumber += Arrays.asList(folder.listFiles()).stream().filter(f -> f.getName().contains("QP")).count();
+//            for (File f : folder.listFiles()) {
+//                String fName = f.getName();
+//                if (fName.contains("QP"))
+//                    currentPicNumber++;
+//            }
         }
         return currentPicNumber;
     }

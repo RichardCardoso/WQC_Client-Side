@@ -157,7 +157,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
         setTextViews();
         toggleControls(true);
 
-        if(DeviceManager.getCurrentDevice().getRole().toLowerCase().equals("te")){
+        if(DeviceManager.getCurrentDevice().getRole().toLowerCase().equals("te") || report.getDrawingref().isFinished()){
             itemAdapter.setEnabled(false);
             itemAdapter.setCameraEnabled(true);
             itemAdapter.notifyDataSetChanged();
@@ -235,7 +235,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     private void toggleControls(boolean bResume){
         writeData("Toggling screen controls");
         canEdit = bResume;
-        itemAdapter.setEnabled(bResume);
+        itemAdapter.setEnabled(bResume && !project.getDrawingRefs().get(0).isFinished());
         itemAdapter.notifyDataSetChanged();
         // getListView().setClickable(bResume);
         // getListView().setEnabled(bResume);

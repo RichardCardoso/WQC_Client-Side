@@ -110,7 +110,7 @@ public class PictureViewerActivity extends Activity{
             }
         }
 
-        if(DeviceManager.getCurrentDevice().getRole().toLowerCase().equals("te")){
+        if(DeviceManager.getCurrentDevice().getRole().toLowerCase().equals("te") || project.getDrawingRefs().get(0).isFinished()){
             findViewById(R.id.btnTakeNew).setVisibility(View.INVISIBLE);
         }
 
@@ -289,7 +289,7 @@ public class PictureViewerActivity extends Activity{
         } else {
             File file = new File(futurePath);
             if(file.exists()){
-                file.delete();
+                file.delete()
             }
         }
     }

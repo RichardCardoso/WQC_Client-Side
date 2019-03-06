@@ -485,6 +485,11 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                         writeData("The response was a JPG file");
                         if( !ProjectHelper.hasPendingTasks(restTemplateHelperQueue, true)){
                             startProjectEdit();
+                        } else {
+                            String text = getResources().getString(R.string.retrievingGeneralPicturesTag)
+                                    .concat(" - ")
+                                    .concat(getResources().getString(R.string.remainingTag, restTemplateHelperQueue.size() - 1));
+                            tvStatus.setText(text);
                         }
                         break;
                     case REST_PROJECTSAVE_KEY:
@@ -513,6 +518,14 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                             conf.setUsername(device.getName());
                             conf.setRole(device.getRole());
                             conf.setDeviceId(device.getDeviceid());
+
+                            if(conf.getRole() == null || conf.getRole().equals("")){
+                                writeData("Invalid role returned from the server");
+                            } else if(conf.getUsername() == null || conf.getUsername().equals("")){
+                                writeData("Invalid username returned from the server");
+                            } else if (!device.isEnabled()){
+                                writeData("Disabled device returned from the server");
+                            }
 
                             if (conf.getRole() == null || conf.getUsername() == null || !device.isEnabled()
                                     || conf.getRole().equals("") || conf.getUsername().equals("")) {

@@ -51,7 +51,7 @@
     <string name="tvTestedBy">Testato da</string>
     <string name="btnReportSubmit">Invia rapporti</string>
     <string name="emptyFieldsError">Impossibile procedere quando ci sono campi vuoti</string>
-    <string name="projectFinishTitle">Finitura del progetto</string>
+    <string name="projectInfoTitle">Informazioni sul progetto</string>
     <string name="tvConstructionDrawingPath">Cartella di disegno</string>
     <string name="tvTechnicDatasheetPath">Cartella del foglio dati</string>
     <string name="tvDrawingCode">Codice di disegno</string>
@@ -113,4 +113,8 @@
     <string name="retrievingGeneralPicturesTag">" Recupero di foto generali"</string>
     <string name="retrievingPdfsTag">" Recupero di file PDF"</string>
     <string name="retrievingReportPicturesTag">Recupero delle immagini della scheda di controllo</string>
+    <string name="remainingTag">" Oggetti rimanenti: %d"</string>
+    <string name="finishedTag">Finito</string>
+    <string name="mustWaitCompletion">Si prega di attendere fino al termine dell\'attività corrente</string>
+    <string name="picturesUploadTag">Carica foto</string>
 </resources>

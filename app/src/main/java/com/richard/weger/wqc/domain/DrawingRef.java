@@ -28,6 +28,8 @@ public class DrawingRef implements Serializable {
 
 	private Date lastEditTime;
 
+	private boolean finished;
+
 	public int getId() {
 		return id;
 	}
@@ -91,5 +93,13 @@ public class DrawingRef implements Serializable {
 
 	public void setLastEditTime(Date lastEditTime) {
 		this.lastEditTime = lastEditTime;
+	}
+
+	public boolean isFinished() {
+		return finished;
+	}
+
+	public void setFinished(boolean finished) {
+		this.finished = finished;
 	}
 }

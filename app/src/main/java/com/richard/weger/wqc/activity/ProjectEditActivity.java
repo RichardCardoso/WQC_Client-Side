@@ -11,6 +11,8 @@ import android.content.Intent;
 import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.richard.weger.wqc.R;
@@ -123,7 +125,7 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
         setContentView(R.layout.activity_project_edit);
 
         if(DeviceManager.getCurrentDevice().getRole().equals("TE")){
-            findViewById(R.id.btnProjectFinish).setVisibility(View.INVISIBLE);
+            findViewById(R.id.btnProjectInfo).setVisibility(View.INVISIBLE);
         }
 
         setListeners();
@@ -146,15 +148,13 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
         getListView().setClickable(bResume);
         reportAdapter.setEnabled(bResume);
         reportAdapter.notifyDataSetChanged();
-        if(!bResume)
-            findViewById(R.id.btnProjectFinish).setEnabled(bResume);
-        else
-            findViewById(R.id.btnProjectFinish).setEnabled(ProjectHelper.isEverythingFinished(project));
-        if(bResume){
-            findViewById(R.id.progressBarProjectMain).setVisibility(View.INVISIBLE);
-        }
-        else{
+
+        findViewById(R.id.btnProjectInfo).setEnabled(bResume);
+
+        if(!bResume) {
             findViewById(R.id.progressBarProjectMain).setVisibility(View.VISIBLE);
+        } else {
+            findViewById(R.id.progressBarProjectMain).setVisibility(View.INVISIBLE);
         }
         writeData("Finished toggle controls routine");
     }
@@ -188,47 +188,48 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
             }
         });
 
-        button = findViewById(R.id.btnProjectFinish);
+        button = findViewById(R.id.btnProjectInfo);
+
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 //                Toast.makeText(ProjectEditActivity.this,R.string.notImplementedMessage, Toast.LENGTH_LONG).show();
 
-                if(ProjectHelper.isEverythingFinished(project)) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(ProjectEditActivity.this);
-                    builder.setTitle(R.string.projectFinishButton);
-                    builder.setMessage(R.string.projectFinishConfirmation);
-                    builder.setCancelable(false);
-                    builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            writeData("Starting project finish activity");
-                            Intent intent = new Intent(ProjectEditActivity.this, ProjectFinishActivity.class);
+//                if(ProjectHelper.isEverythingFinished(project)) {
+//                    AlertDialog.Builder builder = new AlertDialog.Builder(ProjectEditActivity.this);
+//                    builder.setTitle(R.string.projectFinishButton);
+//                    builder.setMessage(R.string.projectFinishConfirmation);
+//                    builder.setCancelable(false);
+//                    builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialog, int which) {
+//                            writeData("Starting project finish activity");
+                            Intent intent = new Intent(ProjectEditActivity.this, ProjectInfoActivity.class);
                             intent.putExtra(PROJECT_KEY, project);
                             startActivityForResult(intent, PROJECT_FINISH_SCREEN_ID);
-                        }
-                    });
-                    builder.setNegativeButton(R.string.noTag, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                        }
-                    });
-                    builder.show();
-                }
-                else {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(ProjectEditActivity.this);
-                    builder.setTitle(R.string.unableToProcced);
-                    builder.setMessage(R.string.unfinishedReportsMessage);
-                    builder.setCancelable(false);
-                    builder.setPositiveButton(R.string.okTag, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                        }
-                    });
-                    builder.show();
-                }
+//                        }
+//                    });
+//                    builder.setNegativeButton(R.string.noTag, new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialog, int which) {
+//
+//                        }
+//                    });
+//                    builder.show();
+//                }
+//                else {
+//                    AlertDialog.Builder builder = new AlertDialog.Builder(ProjectEditActivity.this);
+//                    builder.setTitle(R.string.unableToProcced);
+//                    builder.setMessage(R.string.unfinishedReportsMessage);
+//                    builder.setCancelable(false);
+//                    builder.setPositiveButton(R.string.okTag, new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialog, int which) {
+//
+//                        }
+//                    });
+//                    builder.show();
+//                }
             }
         });
 
@@ -254,6 +255,7 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
                 builder.show();
             }
         });
+
         writeData("Finished listeners set routine");
     }
 

@@ -40,7 +40,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity android:name=".activity.ProjectFinishActivity" />
+        <activity android:name=".activity.ProjectInfoActivity" />
         <activity android:name=".activity.ConfigurationsActivity" />
         <activity android:name=".activity.CheckReportEditActivity" />
 

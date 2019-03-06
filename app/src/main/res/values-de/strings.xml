@@ -51,7 +51,7 @@
     <string name="tvTestedBy">Getestet von</string>
     <string name="btnReportSubmit">Berichte einreichen</string>
     <string name="emptyFieldsError">Kann nicht fortgesetzt werden, wenn leere Felder vorhanden sind</string>
-    <string name="projectFinishTitle">Projektabschluss</string>
+    <string name="projectInfoTitle">Projektinfo</string>
     <string name="tvConstructionDrawingPath">Zeichnungsordner</string>
     <string name="tvTechnicDatasheetPath">Datenblattordner</string>
     <string name="tvDrawingCode">Zeichnungscode</string>
@@ -113,4 +113,8 @@
     <string name="retrievingGeneralPicturesTag">" Allgemeine Fotos abrufen"</string>
     <string name="retrievingPdfsTag">" Pdf-Dateien abrufen"</string>
     <string name="retrievingReportPicturesTag">Bilder der Steuerkarte abrufen</string>
+    <string name="remainingTag">" Restliche Artikel: %d"</string>
+    <string name="finishedTag">Fertig</string>
+    <string name="mustWaitCompletion">Bitte warten Sie, bis die aktuelle Aufgabe abgeschlossen ist</string>
+    <string name="picturesUploadTag">Bilder hochladen</string>
 </resources>

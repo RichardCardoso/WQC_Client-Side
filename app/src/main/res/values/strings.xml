@@ -50,7 +50,7 @@
     <string name="tvTestedBy">Tested by</string>
     <string name="btnReportSubmit">Submit reports</string>
     <string name="emptyFieldsError">Unable to proceed when there are empty fields</string>
-    <string name="projectFinishTitle">Project finish</string>
+    <string name="projectInfoTitle">Project info</string>
     <string name="tvConstructionDrawingPath">Drawing folder</string>
     <string name="tvTechnicDatasheetPath">Datasheet folder</string>
     <string name="tvDrawingCode">Drawing code</string>
@@ -112,4 +112,8 @@
     <string name="retrievingGeneralPicturesTag">Retrieving General Photos</string>
     <string name="retrievingPdfsTag">Retrieving pdf files</string>
     <string name="retrievingReportPicturesTag">Retrieving control card pictures</string>
+    <string name="remainingTag">Remaining items: %d</string>
+    <string name="finishedTag">Finished</string>
+    <string name="mustWaitCompletion">Please wait until the current task is finished</string>
+    <string name="picturesUploadTag">Pictures upload</string>
 </resources>
