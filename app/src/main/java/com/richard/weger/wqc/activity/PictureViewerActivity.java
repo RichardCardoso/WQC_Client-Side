@@ -2,7 +2,6 @@ package com.richard.weger.wqc.activity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,7 +13,6 @@ import android.provider.MediaStore;
 import android.os.Bundle;
 import android.support.v4.content.FileProvider;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -24,9 +22,10 @@ import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
 import com.richard.weger.wqc.helper.FileHelper;
 import com.richard.weger.wqc.helper.ImageHelper;
+import com.richard.weger.wqc.helper.MessageboxHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.StringHelper;
-import com.richard.weger.wqc.util.DeviceManager;
+import com.richard.weger.wqc.helper.DeviceHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -38,7 +37,7 @@ import java.util.Calendar;
 
 import uk.co.senab.photoview.PhotoViewAttacher;
 
-import static com.richard.weger.wqc.constants.AppConstants.*;
+import static com.richard.weger.wqc.appconstants.AppConstants.*;
 
 public class PictureViewerActivity extends Activity{
 
@@ -100,6 +99,17 @@ public class PictureViewerActivity extends Activity{
                             if (bitmap != null) {
                                 imageView.setImageBitmap(bitmap);
                             }
+                        } else {
+                            MessageboxHelper.showMessage(
+                                    this,
+                                    getResources().getString(R.string.fileNotFoundMessage),
+                                    getResources().getString(R.string.okTag),
+                                    () -> {
+                                        setResult(RESULT_OK);
+                                        finish();
+                                    }
+                            );
+                            return;
                         }
                     } else {
                         takePicture();
@@ -110,22 +120,12 @@ public class PictureViewerActivity extends Activity{
             }
         }
 
-        if(DeviceManager.getCurrentDevice().getRole().toLowerCase().equals("te") || project.getDrawingRefs().get(0).isFinished()){
+        if(DeviceHelper.isOnlyRole("te") || (report != null && report.isFinished())){
             findViewById(R.id.btnTakeNew).setVisibility(View.INVISIBLE);
         }
 
-        findViewById(R.id.btnTakeNew).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                takePicture();
-            }
-        });
-        findViewById(R.id.btnCancel).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                resultCanceled();
-            }
-        });
+        findViewById(R.id.btnTakeNew).setOnClickListener(v -> takePicture());
+        findViewById(R.id.btnCancel).setOnClickListener(v -> resultCanceled());
 
         mAttacher = new PhotoViewAttacher(imageView);
     }
@@ -164,16 +164,13 @@ public class PictureViewerActivity extends Activity{
         } else {
             SimpleDateFormat sdf = new SimpleDateFormat("MMM-dd-yyyy_hh:mm:ss");
             imageFileName = project.getReference()
-                    .concat("Z").concat(String.valueOf(project.getDrawingRefs().get(0).getNumber()))
+                    .concat("Z").concat(String.valueOf(project.getDrawingRefs().get(0).getDnumber()))
                     .concat("T").concat(String.valueOf(project.getDrawingRefs().get(0).getParts().get(0).getNumber()))
                     .concat("QP").concat(String.valueOf(ProjectHelper.getCurrentPicNumber(project)))
-//                    .concat("_")
-//                    .concat(sdf.format(Calendar.getInstance().getTime()))
                     .concat(".jpg");
         }
         String folderPath = StringHelper.getProjectFolderPath(project).concat("Pictures/");
         File storageDir = new File(folderPath);
-//        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         if(!storageDir.exists()){
             storageDir.mkdirs();
         }
@@ -188,9 +185,7 @@ public class PictureViewerActivity extends Activity{
             if(image.exists()){
                 image.delete();
             }
-//            FileWriter fileWriter = new FileWriter(image.getAbsolutePath(), false);
             image.createNewFile();
-//            image = File.createTempFile(imageFileName,".jpg", storageDir);
         } catch (Exception e) {
             try{
                 imageFileName = imageFileName.substring(
@@ -215,35 +210,8 @@ public class PictureViewerActivity extends Activity{
         return image;
     }
 
-//    private void setPic() {
-//        // Get the dimensions of the View
-//        ImageView mImageView = findViewById(R.id.ivItem);
-//        int targetW = mImageView.getWidth();
-//        int targetH = mImageView.getHeight();
-//
-//        // Get the dimensions of the bitmap
-//        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-//        bmOptions.inJustDecodeBounds = true;
-//        BitmapFactory.decodeFile(item.getPicture().getFileName(), bmOptions);
-//        int photoW = bmOptions.outWidth;
-//        int photoH = bmOptions.outHeight;
-//
-//        // Determine how much to scale down the image
-//        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
-//
-//        // Decode the image file into a Bitmap sized to fill the View
-//        bmOptions.inJustDecodeBounds = false;
-//        bmOptions.inSampleSize = scaleFactor;
-//        bmOptions.inPurgeable = true;
-//
-//        Bitmap bitmap = BitmapFactory.decodeFile(item.getPicture().getFileName(), bmOptions);
-//        mImageView.setImageBitmap(bitmap);
-//    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Bitmap bitmap = CameraHelper.handleTakePictureIntentResponse(requestCode, resultCode, data);
-        // item.getPicture().setProxyBitmap(new ProxyBitmap(bitmap));
         if(resultCode == RESULT_OK) {
             putTimeStamp();
 
@@ -264,32 +232,29 @@ public class PictureViewerActivity extends Activity{
                 ex.printStackTrace();
             }
 
-//            item.getPicture().setFileName(futurePath);
-
             if(mode.equals(GENERAL_PICTURE_MODE)) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setMessage(R.string.getMorePicturesTag);
                 builder.setCancelable(false);
-                builder.setNegativeButton(R.string.noTag, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finishTakingPictures();
-                    }
-                });
-                builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        takePicture();
-                    }
-                });
+                builder.setNegativeButton(R.string.noTag, (dialog, which) -> finishTakingPictures());
+                builder.setPositiveButton(R.string.yesTAG, (dialog, which) -> takePicture());
                 builder.show();
             } else {
                 finishTakingPictures();
             }
         } else {
-            File file = new File(futurePath);
-            if(file.exists()){
-                file.delete()
+            if(mode.equals(GENERAL_PICTURE_MODE)){
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage(R.string.getMorePicturesTag);
+                builder.setCancelable(false);
+                builder.setNegativeButton(R.string.noTag, (dialog, which) -> finishTakingPictures());
+                builder.setPositiveButton(R.string.yesTAG, (dialog, which) -> takePicture());
+                builder.show();
+            } else {
+                File file = new File(futurePath);
+                if (file.exists()) {
+                    file.delete();
+                }
             }
         }
     }
@@ -316,7 +281,7 @@ public class PictureViewerActivity extends Activity{
         partLabel = getResources().getString(R.string.partLabel);
         String projectInfo = projectLabel
                 .concat(": ").concat(project.getReference())
-                .concat("\n").concat(drawingLabel).concat(": ").concat(String.valueOf(project.getDrawingRefs().get(0).getNumber()))
+                .concat("\n").concat(drawingLabel).concat(": ").concat(String.valueOf(project.getDrawingRefs().get(0).getDnumber()))
                 .concat("\n").concat(partLabel).concat(": ").concat(String.valueOf(project.getDrawingRefs().get(0).getParts().get(0).getNumber()))
                 .concat("\n");
         String itemInfo;
@@ -335,7 +300,7 @@ public class PictureViewerActivity extends Activity{
 
         } else {
 
-            itemInfo = "QP" + ProjectHelper.getCurrentPicNumber(project);
+            itemInfo = "QP" + (ProjectHelper.getCurrentPicNumber(project) - 1);
         }
         cs.drawText(itemInfo,20f, 2*height + 15f, tPaint);
 

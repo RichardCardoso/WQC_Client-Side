@@ -43,20 +43,12 @@ public class ConfigurationsActivity extends Activity {
 
         writeData("Started setting configurations activity listeners");
         btn = findViewById(R.id.btnSave);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                saveConfig();
-            }
-        });
+        btn.setOnClickListener(view -> saveConfig());
 
         btn = findViewById(R.id.btnCancel);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                setResult(RESULT_CANCELED);
-                finish();
-            }
+        btn.setOnClickListener(view -> {
+            setResult(RESULT_CANCELED);
+            finish();
         });
         writeData("Finished setting configurations activity listeners");
     }
@@ -105,7 +97,7 @@ public class ConfigurationsActivity extends Activity {
 
     public static Object runGetter(Field field, Configurations o)
     {
-        // MZ: Find the correct method
+        // MZ: Find the correct Method
         for (Method method : o.getClass().getMethods())
         {
             if ((method.getName().startsWith("get")) && (method.getName().length() == (field.getName().length() + 3)))

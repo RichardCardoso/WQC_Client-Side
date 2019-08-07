@@ -5,7 +5,7 @@ import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
-import static com.richard.weger.wqc.constants.AppConstants.INTRINSIC_PERMISSIONS_CODE;
+import static com.richard.weger.wqc.appconstants.AppConstants.INTRINSIC_PERMISSIONS_CODE;
 
 public class PermissionsManager extends ActivityCompat {
 

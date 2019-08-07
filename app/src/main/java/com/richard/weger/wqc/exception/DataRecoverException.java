@@ -1,8 +1,8 @@
 package com.richard.weger.wqc.exception;
 
-import java.io.IOException;
+import org.springframework.web.client.ResourceAccessException;
 
-public class DataRecoverException extends IOException {
+public class DataRecoverException extends ResourceAccessException {
     public int id = 0;
     public DataRecoverException(String message){
         super(message);

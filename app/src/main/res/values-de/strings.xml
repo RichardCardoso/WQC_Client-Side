@@ -26,7 +26,7 @@
     <string name="btnErasePicture">Bild löschen</string>
     <string name="saveButton">Speichern</string>
     <string name="dataRecoverError">Die angeforderten Daten konnten nicht wiederhergestellt werden. Bitte versuche es später erneut.</string>
-    <string name="pendingItems">Gegenstände in Bearbeitung</string>
+    <string name="pendingItemsLabel">Gegenstände in Bearbeitung</string>
     <string name="btnContinueProject">Bestehendes Projekt fortsetzen</string>
     <string name="btnGetProjectFromServer">Beende das Projekt vom Server</string>
     <string name="projectFinishConfirmation">Sind Sie sicher, dass Sie das Projekt beenden möchten?</string>
@@ -70,7 +70,7 @@
     <string name="passwordProtectedTitle">Bitte geben Sie das Passwort ein</string>
     <string name="invalidPasswordMessage">Ungültiges Passwort!</string>
     <string name="invalidQrCodeString">Das angegebene qr-Code-Format ist ungültig</string>
-    <string name="closeMessage">Möchten Sie die App schließen?</string>
+    <string name="closeQuestion">Möchten Sie die App schließen?</string>
     <string name="confirmationNeeded">Bitte bestätigen Sie Ihre Aktion</string>
     <string name="btnAddMark">Markierung</string>
     <string name="btnUndo">Rückgängig machen</string>
@@ -117,4 +117,19 @@
     <string name="finishedTag">Fertig</string>
     <string name="mustWaitCompletion">Bitte warten Sie, bis die aktuelle Aufgabe abgeschlossen ist</string>
     <string name="picturesUploadTag">Bilder hochladen</string>
+    <string name="fileNotFoundMessage">Diese Datei kann derzeit nicht gefunden oder abgerufen werden. Bitte kontaktieren Sie Ihren Systemadministrator!</string>
+    <string name="staleDataMessage">Ihre Daten sind veraltet. Bitte versuche es erneut. Dieser Fehler tritt auf, weil jemand etwas geändert hat und Sie nicht die letzte Kopie erhalten haben.</string>
+    <string name="noRolesMessage">Die Rollenliste dieses Geräts ist leer. Bitte wenden Sie sich an Ihren Systemadministrator.</string>
+    <string name="accessDisabledMessage">Der Systemzugriff für dieses Gerät ist deaktiviert. Bitte wenden Sie sich an Ihren Systemadministrator.</string>
+    <string name="invalidUsernameMessage">Der Benutzername dieses Geräts ist ungültig. Bitte wenden Sie sich an Ihren Systemadministrator.</string>
+    <string name="retrievingFilesTag">" 28/5000 Dateien vom Server abrufen"</string>
+    <string name="commentsLabel">Kommentare hier ...</string>
+    <string name="reportFinishMessage">Möchten Sie diesen Bericht als abgeschlossen festlegen? Es sind keine Änderungen zulässig, solange der Bericht als abgeschlossen festgelegt ist!</string>
+    <string name="reportUnfinishMessage">Möchten Sie diesen Bericht als nicht abgeschlossen festlegen? Dadurch kann der Bericht bearbeitet werden!</string>
+    <string name="noMarksMessage">Sie können einen Bericht, der keine Punkte enthält, nicht als abgeschlossen festlegen!</string>
+    <string name="pendingItemsMessage">Sie können keinen Bericht als abgeschlossen festlegen, der noch nicht überprüfte Elemente enthält!</string>
+    <string name="changesSavedMessage">Änderungen erfolgreich gespeichert!</string>
+    <string name="clientNameInformMessage">Bitte geben Sie den Kundennamen an</string>
+    <string name="qrScanQuestion">Möchten Sie einen neuen QR-Code-Scan durchführen?</string>
+    <string name="invalidPictureFilenameMessage">Die Änderungen können aufgrund eines ungültigen Bilddateinamens nicht gespeichert werden!</string>
 </resources>

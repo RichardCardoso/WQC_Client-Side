@@ -3,14 +3,12 @@ package com.richard.weger.wqc.adapter;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.support.annotation.NonNull;
 import android.support.v4.content.res.ResourcesCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioButton;
@@ -18,15 +16,20 @@ import android.widget.TextView;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.activity.ItemReportEditActivity;
+import com.richard.weger.wqc.domain.DomainEntity;
 import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.Project;
-import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.helper.FileHelper;
 import com.richard.weger.wqc.helper.StringHelper;
+import com.richard.weger.wqc.util.App;
 
+import java.util.Comparator;
 import java.util.List;
 
-import static com.richard.weger.wqc.constants.AppConstants.*;
+import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_APROVED_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_NOT_APLICABLE_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_NOT_APROVED_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_NOT_CHECKED_KEY;
 
 public class ItemAdapter extends ArrayAdapter<Item> {
 
@@ -72,6 +75,8 @@ public class ItemAdapter extends ArrayAdapter<Item> {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(
                 Context.LAYOUT_INFLATER_SERVICE);
 
+        itemList.sort(Comparator.comparing(DomainEntity::getId));
+
         assert inflater != null;
         @SuppressLint("ViewHolder")
         View rowView = inflater.inflate(R.layout.item_row_layout, parent, false);
@@ -95,7 +100,7 @@ public class ItemAdapter extends ArrayAdapter<Item> {
 
         Item item = itemList.get(position);
         String picPath = "";
-        if(item != null && item.getItemReport() != null && item.getItemReport().getDrawingref() != null && item.getItemReport().getDrawingref().getProject() != null){
+        if(item != null && item.getParent() != null && item.getParent().getParent() != null && item.getParent().getParent().getParent() != null){
             String fileName = item.getPicture().getFileName();
             picPath = StringHelper.getPicturesFolderPath(project).concat(fileName);
         }
@@ -122,7 +127,11 @@ public class ItemAdapter extends ArrayAdapter<Item> {
 
         tvItemDesc.setText(String.valueOf(item.getNumber()).concat(" - ").concat(item.getDescription()));
 
-        tvComments.setText(item.getComments());
+        if(item.getComments() != null && item.getComments().length() > 0) {
+            tvComments.setText(item.getComments());
+        } else {
+            tvComments.setText(App.getContext().getResources().getString(R.string.commentsLabel));
+        }
 
         switch(item.getStatus()){
             case ITEM_NOT_CHECKED_KEY:
@@ -139,74 +148,52 @@ public class ItemAdapter extends ArrayAdapter<Item> {
                 break;
         }
 
-        imageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                listener.onChangeHappened(position, imageView);
+        imageView.setOnClickListener(v -> listener.onChangeHappened(position, imageView));
+
+        tvComments.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setMessage(itemList.get(position).getDescription());
+            final EditText input = new EditText(context);
+            input.setText(itemList.get(position).getComments());
+            builder.setView(input);
+
+            builder.setPositiveButton(App.getContext().getResources().getString(R.string.okTag), (dialog, which) -> {
+            if (!input.getText().toString().equals(App.getContext().getResources().getString(R.string.editCommentsHint))) {
+                itemList.get(position).setComments(input.getText().toString());
+                tvComments.setText(input.getText().toString());
+                listener.onChangeHappened(position, tvComments);
             }
+            });
+            builder.show();
+
         });
 
-        tvComments.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                builder.setMessage(itemList.get(position).getDescription());
-                final EditText input = new EditText(context);
-                builder.setView(input);
-
-                builder.setPositiveButton(App.getContext().getResources().getString(R.string.okTag), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                    if (!input.getText().toString().equals(App.getContext().getResources().getString(R.string.editCommentsHint))) {
-                        itemList.get(position).setComments(input.getText().toString());
-                        tvComments.setText(input.getText().toString());
-                        listener.onChangeHappened(position, tvComments);
-                    }
-                    }
-                });
-                builder.show();
-
+        rdAproved.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(isChecked){
+                itemList.get(position).setStatus(ITEM_APROVED_KEY);
+                ((ItemReportEditActivity)context).updatePendingItemsCount();
+                listener.onChangeHappened(position, rdAproved);
             }
         });
-
-        rdAproved.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked){
-                    itemList.get(position).setStatus(ITEM_APROVED_KEY);
-                    ((ItemReportEditActivity)context).updatePendingItemsCount();
-                    listener.onChangeHappened(position, rdAproved);
-                }
+        rdNotAproved.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(isChecked){
+                itemList.get(position).setStatus(ITEM_NOT_APROVED_KEY);
+                ((ItemReportEditActivity)context).updatePendingItemsCount();
+                listener.onChangeHappened(position, rdAproved);
             }
         });
-        rdNotAproved.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked){
-                    itemList.get(position).setStatus(ITEM_NOT_APROVED_KEY);
-                    ((ItemReportEditActivity)context).updatePendingItemsCount();
-                    listener.onChangeHappened(position, rdAproved);
-                }
+        rdNotAplicable.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(isChecked){
+                itemList.get(position).setStatus(ITEM_NOT_APLICABLE_KEY);
+                ((ItemReportEditActivity)context).updatePendingItemsCount();
+                listener.onChangeHappened(position, rdAproved);
             }
         });
-        rdNotAplicable.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked){
-                    itemList.get(position).setStatus(ITEM_NOT_APLICABLE_KEY);
-                    ((ItemReportEditActivity)context).updatePendingItemsCount();
-                    listener.onChangeHappened(position, rdAproved);
-                }
-            }
-        });
-        rdNotChecked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked){
-                    itemList.get(position).setStatus(ITEM_NOT_CHECKED_KEY);
-                    ((ItemReportEditActivity)context).updatePendingItemsCount();
-                    listener.onChangeHappened(position, rdAproved);
-                }
+        rdNotChecked.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(isChecked){
+                itemList.get(position).setStatus(ITEM_NOT_CHECKED_KEY);
+                ((ItemReportEditActivity)context).updatePendingItemsCount();
+                listener.onChangeHappened(position, rdAproved);
             }
         });
 

@@ -2,15 +2,15 @@ package com.richard.weger.wqc.helper;
 
 import android.annotation.SuppressLint;
 
-import com.richard.weger.wqc.constants.AppConstants;
-import com.richard.weger.wqc.paramconfigs.ParamConfigurations;
+import com.richard.weger.wqc.appconstants.AppConstants;
+import com.richard.weger.wqc.domain.ParamConfigurations;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.richard.weger.wqc.constants.AppConstants.DRAWING_NUMBER_KEY;
-import static com.richard.weger.wqc.constants.AppConstants.PART_NUMBER_KEY;
-import static com.richard.weger.wqc.constants.AppConstants.PROJECT_NUMBER_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.DRAWING_NUMBER_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.PART_NUMBER_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_NUMBER_KEY;
 
 public class QrTextHelper {
     private Map<String, String> mapValues = new HashMap<>();

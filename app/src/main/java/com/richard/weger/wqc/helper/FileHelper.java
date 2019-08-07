@@ -2,7 +2,7 @@ package com.richard.weger.wqc.helper;
 
 import android.net.Uri;
 
-import com.richard.weger.wqc.paramconfigs.ParamConfigurations;
+import com.richard.weger.wqc.domain.ParamConfigurations;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import static com.richard.weger.wqc.constants.AppConstants.*;
+import static com.richard.weger.wqc.appconstants.AppConstants.*;
 
 public class FileHelper {
 
@@ -52,7 +52,9 @@ public class FileHelper {
     public static boolean isValidFile(String filePath){
         String path = Uri.parse(filePath).getPath();
         File file = new File(path);
-        return (file.exists() && !(file.length() == 0));
+        boolean result = file.exists();
+        result &= (!(file.length() == 0));
+        return result;
     }
 
     public static void byteArray2File(String filePath, byte[] bytes) throws IOException {

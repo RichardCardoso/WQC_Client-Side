@@ -3,7 +3,6 @@ package com.richard.weger.wqc.activity;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -11,57 +10,63 @@ import android.content.Intent;
 import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.adapter.ReportAdapter;
+import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
 import com.richard.weger.wqc.firebird.FirebirdMessagingService;
-import com.richard.weger.wqc.paramconfigs.ParamConfigurations;
-import com.richard.weger.wqc.rest.RestTemplateHelper;
-import com.richard.weger.wqc.rest.UriBuilder;
+import com.richard.weger.wqc.helper.MessageboxHelper;
+import com.richard.weger.wqc.helper.ProjectHelper;
+import com.richard.weger.wqc.rest.entity.EntityRestResult;
+import com.richard.weger.wqc.rest.entity.EntityRestTemplateHelper;
+import com.richard.weger.wqc.service.AbstractEntityRequestParametersResolver;
+import com.richard.weger.wqc.service.ProjectRequestParametersResolver;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 
 import static com.richard.weger.wqc.helper.LogHelper.*;
 
-import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.ReportHelper;
-import com.richard.weger.wqc.helper.StringHelper;
-import com.richard.weger.wqc.util.DeviceManager;
+import com.richard.weger.wqc.helper.DeviceHelper;
 
+import org.springframework.http.HttpStatus;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static com.richard.weger.wqc.constants.AppConstants.*;
+import static com.richard.weger.wqc.appconstants.AppConstants.*;
 
-public class ProjectEditActivity extends ListActivity implements ReportAdapter.ChangeListener, RestTemplateHelper.RestHelperResponse, FirebirdMessagingService.FirebaseListener {
+public class ProjectEditActivity extends ListActivity
+        implements ReportAdapter.ChangeListener,
+                    EntityRestTemplateHelper.EntityRestResponse,
+                    FirebirdMessagingService.FirebaseListener {
 
     ParamConfigurations conf;
     Project project;
     Locale locale ;
     ReportAdapter reportAdapter;
-    Intent intent = null;
+    List<Report> reports = new ArrayList<>();
 
     Runnable runnable;
     Handler handler = new Handler();
     boolean paused = false;
+    boolean resumed = true;
 
     private void setRunnable(){
         final int interval = 1000;
-        runnable = new Runnable(){
-            public void run(){
-                if(!checkInternetConnection()){
-                    setWaitingLayout();
-                    paused = true;
-                } else {
+        runnable = () -> {
+            if(!checkInternetConnection()){
+                setWaitingLayout();
+                paused = true;
+            } else {
+                if(paused){
                     inflateActivityLayout();
-                    if(paused){
-                        projectLoad();
-                        paused = false;
-                    }
+                    projectLoad();
+                    paused = false;
                 }
             }
         };
@@ -72,12 +77,9 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
     private void setWaitingLayout(){
         setContentView(R.layout.activity_wait);
         (findViewById(R.id.pbWelcome)).setVisibility(View.VISIBLE);
-        ((findViewById(R.id.btnExit))).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-                onDestroy();
-            }
+        ((findViewById(R.id.btnExit))).setOnClickListener(v -> {
+            finish();
+            onDestroy();
         });
     }
 
@@ -103,7 +105,9 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
         super.onResume();
         writeData("Activity resumed. Starting project load routine");
         projectLoad();
-        FirebirdMessagingService.delegate = this;
+        if (FirebirdMessagingService.delegate != this) {
+            FirebirdMessagingService.delegate = this;
+        }
         setRunnable();
     }
 
@@ -114,17 +118,17 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
         writeData("Getting project data from previous activity intent");
         Intent intent = getIntent();
         project = (Project) intent.getSerializableExtra(PROJECT_KEY);
-        writeData("Starting routine to link the project's references");
+        reports = project.getDrawingRefs().get(0).getReports();
         ProjectHelper.linkReferences(project);
-        writeData("Starting init routine from project edit screen");
         init();
+        resumed = false;
     }
 
     private void inflateActivityLayout(){
         writeData("Started layout inflate activity");
         setContentView(R.layout.activity_project_edit);
 
-        if(DeviceManager.getCurrentDevice().getRole().equals("TE")){
+        if(DeviceHelper.isOnlyRole("TE")){
             findViewById(R.id.btnProjectInfo).setVisibility(View.INVISIBLE);
         }
 
@@ -132,7 +136,7 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
         if(project != null){
             setFields();
         }
-        locale = getResources().getConfiguration().locale;
+        locale = getApplicationContext().getResources().getConfiguration().getLocales().get(0);
     }
 
     private void init(){
@@ -140,10 +144,10 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
         setFields();
         setConf();
         setAdapter();
-        writeData("Finished init routine from project edit screen");
     }
 
-    private void toggleControls(boolean bResume){
+    @Override
+    public void toggleControls(boolean bResume){
         writeData("Started toggle controls routine");
         getListView().setClickable(bResume);
         reportAdapter.setEnabled(bResume);
@@ -156,21 +160,22 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
         } else {
             findViewById(R.id.progressBarProjectMain).setVisibility(View.INVISIBLE);
         }
-        writeData("Finished toggle controls routine");
+    }
+
+    @Override
+    public void onError() {
+
     }
 
     private void setConf(){
-        writeData("Started saved configs load");
         conf = ConfigurationsManager.getServerConfig();
-        writeData("Finished saved configs load");
     }
 
     private void setAdapter(){
         writeData("Started adapters set routine");
-        reportAdapter = new ReportAdapter(this, project.getDrawingRefs().get(0).getReports());
+        reportAdapter = new ReportAdapter(this, reports);
         setListAdapter(reportAdapter);
         reportAdapter.setChangeListener(this);
-        writeData("Finished adapters set routine");
     }
 
     private void setListeners(){
@@ -178,124 +183,54 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
         Button button;
 
         button = findViewById(R.id.btnCustomPictures);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                writeData("Started general pictures list activity");
-                Intent intent = new Intent(ProjectEditActivity.this, PicturesListActivity.class);
-                intent.putExtra(PROJECT_KEY, project);
-                startActivityForResult(intent, PICTURE_LIST_SCREEN_ID);
-            }
+        button.setOnClickListener(v -> {
+            writeData("Started general pictures list activity");
+            Intent intent = new Intent(ProjectEditActivity.this, PicturesListActivity.class);
+            intent.putExtra(PROJECT_KEY, project);
+            startActivityForResult(intent, PICTURE_LIST_SCREEN_ID);
         });
 
         button = findViewById(R.id.btnProjectInfo);
 
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                Toast.makeText(ProjectEditActivity.this,R.string.notImplementedMessage, Toast.LENGTH_LONG).show();
-
-//                if(ProjectHelper.isEverythingFinished(project)) {
-//                    AlertDialog.Builder builder = new AlertDialog.Builder(ProjectEditActivity.this);
-//                    builder.setTitle(R.string.projectFinishButton);
-//                    builder.setMessage(R.string.projectFinishConfirmation);
-//                    builder.setCancelable(false);
-//                    builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
-//                        @Override
-//                        public void onClick(DialogInterface dialog, int which) {
-//                            writeData("Starting project finish activity");
-                            Intent intent = new Intent(ProjectEditActivity.this, ProjectInfoActivity.class);
-                            intent.putExtra(PROJECT_KEY, project);
-                            startActivityForResult(intent, PROJECT_FINISH_SCREEN_ID);
-//                        }
-//                    });
-//                    builder.setNegativeButton(R.string.noTag, new DialogInterface.OnClickListener() {
-//                        @Override
-//                        public void onClick(DialogInterface dialog, int which) {
-//
-//                        }
-//                    });
-//                    builder.show();
-//                }
-//                else {
-//                    AlertDialog.Builder builder = new AlertDialog.Builder(ProjectEditActivity.this);
-//                    builder.setTitle(R.string.unableToProcced);
-//                    builder.setMessage(R.string.unfinishedReportsMessage);
-//                    builder.setCancelable(false);
-//                    builder.setPositiveButton(R.string.okTag, new DialogInterface.OnClickListener() {
-//                        @Override
-//                        public void onClick(DialogInterface dialog, int which) {
-//
-//                        }
-//                    });
-//                    builder.show();
-//                }
-            }
+        button.setOnClickListener(v -> {
+            Intent intent = new Intent(ProjectEditActivity.this, ProjectInfoActivity.class);
+            intent.putExtra(PROJECT_KEY, project);
+            intent.putExtra(PARAMCONFIG_KEY, conf);
+            startActivityForResult(intent, PROJECT_FINISH_SCREEN_ID);
         });
 
         button = findViewById(R.id.btnExit);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(ProjectEditActivity.this);
-                builder.setTitle(R.string.confirmationNeeded);
-                builder.setMessage(R.string.closeMessage);
-                builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        finish();
-                    }
-                });
-                builder.setNegativeButton(R.string.noTag, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-
-                    }
-                });
-                builder.show();
-            }
-        });
-
-        writeData("Finished listeners set routine");
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data){
-        writeData("Started activity result handle routine");
-        Bundle b;
-        if(data != null) {
-            b = data.getExtras();
-        }
-        if(resultCode == RESULT_CANCELED){
-            writeData("Close app request received from the user");
-            switch(requestCode){
-                case CHECK_REPORT_EDIT_SCREEN_KEY:
-                    writeData("The sender was the check report edit screen");
-                    setResult(RESULT_CANCELED);
+        button.setOnClickListener(v -> MessageboxHelper.showMessage(this,
+                getResources().getString(R.string.confirmationNeeded),
+                getResources().getString(R.string.qrScanQuestion),
+                getResources().getString(R.string.yesTAG),
+                getResources().getString(R.string.noTag),
+                () -> {
+                    Intent intent = new Intent(ProjectEditActivity.this, WelcomeActivity.class);
+                    startActivityForResult(intent, WELCOME_ACTIVITY_SCREEN_KEY);
                     finish();
-                    break;
-            }
-        } else {
-            writeData("User finished edition of the check report");
-            writeData("Started get updated project from server routine");
-            toggleControls(false);
-            projectLoad();
-        }
-        reportAdapter.notifyDataSetChanged();
-        writeData("Finished activity result handle routine");
+                },
+                () -> MessageboxHelper.showMessage(this,
+                        getResources().getString(R.string.app_name),
+                        getResources().getString(R.string.closeQuestion),
+                        getResources().getString(R.string.yesTAG),
+                        getResources().getString(R.string.noTag),
+                        this::finish,
+                        null)));
+
     }
 
     private void setFields(){
         writeData("Started trial to set the Project main activity's fields values.");
         String projectNumber = project.getReference();
-        String drawingNumber = String.valueOf(project.getDrawingRefs().get(0).getNumber());
+        String drawingNumber = String.valueOf(project.getDrawingRefs().get(0).getDnumber());
         String partNumber = String.valueOf(project.getDrawingRefs().get(0).getParts().get(0).getNumber());
 
         project.setReference(projectNumber);
         ((TextView)findViewById(R.id.tvProjectInfo)).setText(String.format(locale, "%s%s",
                 getResources().getString(R.string.projectNumberPrefix), projectNumber));
 
-        project.getDrawingRefs().get(0).setNumber(Integer.valueOf(drawingNumber));
+        project.getDrawingRefs().get(0).setDnumber(Integer.valueOf(drawingNumber));
         ((TextView)findViewById(R.id.tvReportType)).setText(String.format(locale, "%s%s",
                 getResources().getString(R.string.drawingNumberPrefix), drawingNumber));
 
@@ -303,59 +238,67 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
         ((TextView)findViewById(R.id.tvPartNumber)).setText(String.format(locale, "%s%s",
                 getResources().getString(R.string.partNumberPrefix), partNumber));
 
-        writeData("Successful finished trial to set the Project main activity's fields values.");
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        toggleControls(false);
+    }
+
+    private void startReportEdit(Long id) {
+        writeData("Starting report edit activity");
+        Report report = project.getDrawingRefs().get(0).getReports().stream().filter(r -> r.getId().equals(id)).findFirst().orElse(null);
+        if(report != null) {
+            ReportHelper helper = new ReportHelper();
+            toggleControls(false);
+            Class targetActivityClass;
+            targetActivityClass = helper.getTargetActivityClass(report);
+            writeData("Starting report edit screen (class: " + targetActivityClass.getSimpleName() + ")");
+            Intent intent = new Intent(ProjectEditActivity.this, targetActivityClass);
+            intent.putExtra(REPORT_KEY, report);
+            intent.putExtra(PROJECT_KEY, project);
+            intent.putExtra(REPORT_ID_KEY, report.getId());
+            intent.putExtra(PARAMCONFIG_KEY, conf);
+            startActivityForResult(intent, helper.getTargetActivityKey(report));
+        } else {
+            writeData("Report with id " + id + " not found. Edit activity will not start");
+            MessageboxHelper.showMessage(this,
+                    getResources().getString(R.string.unknownErrorMessage),
+                    getResources().getString(R.string.okTag),
+                    null);
+        }
     }
 
      @Override
-    public void reportListClick(Report report, int position) {
-         writeData("Started report list click routine");
-        Class targetActivityClass;
-        toggleControls(false);
-        targetActivityClass = (new ReportHelper()).getTargetActivityClass(report);
-         writeData("Starting report edit screen");
-        intent = new Intent(ProjectEditActivity.this, targetActivityClass);
-        intent.putExtra(REPORT_KEY, report);
-        intent.putExtra(PROJECT_KEY, project);
-        intent.putExtra(REPORT_ID_KEY, position);
-        projectLoad();
+    public void reportListClick(Long id) {
+        startReportEdit(id);
     }
 
     private void projectLoad(){
         writeData("Started project download from server routine");
         toggleControls(false);
-        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(this);
-        UriBuilder uriBuilder = new UriBuilder();
-        uriBuilder.setRequestCode(REST_QRPROJECTLOAD_KEY);
-        uriBuilder.getParameters().add(StringHelper.getQrText(project));
-        restTemplateHelper.execute(uriBuilder);
-        writeData("Finished project download from server routine");
+        AbstractEntityRequestParametersResolver<Project> resolver = new ProjectRequestParametersResolver(REST_QRPROJECTLOAD_KEY, conf, true);
+        resolver.getEntity(project, this);
     }
 
     @Override
-    public void RestTemplateCallback(String requestCode, String result) {
+    public void EntityRestCallback(EntityRestResult result) {
         writeData("Started server response handling routine");
-        if(result != null) {
-            if (requestCode.equals(REST_QRPROJECTLOAD_KEY)) {
-                writeData("The request was a qr project load one");
-                if (!result.equals("")) {
-                    writeData("Started trial to parse the result to a project entity");
-                    project = ProjectHelper.fromJson(result);
-                    ProjectHelper.linkReferences(project);
-                    if (project == null) {
-                        writeData("Error while trying to parse result to project");
-                        dataLoadError();
-                    } else {
-                        writeData("Parse successful");
-                        init();
-                        reportAdapter.notifyDataSetChanged();
-                        toggleControls(true);
-                        setFields();
-                        if(intent != null){
-                            writeData("Starting check report edit screen");
-                            startActivityForResult(intent, CHECK_REPORT_EDIT_SCREEN_KEY);
-                            intent = null;
-                        }
-                    }
+        toggleControls(true);
+        if (result.getRequestCode().equals(REST_QRPROJECTLOAD_KEY)) {
+            writeData("The request was a qr project load one");
+            if (result.getStatus() == HttpStatus.OK) {
+                writeData("Started trial to parse the result to a project entity");
+                project = (Project) result.getEntities().get(0);
+                ProjectHelper.linkReferences(project);
+                if (project == null) {
+                    writeData("Error while trying to parse result to project");
+                    dataLoadError();
+                } else {
+                    writeData("Parse successful");
+                    reports.clear();
+                    reports.addAll(project.getDrawingRefs().get(0).getReports());
+                    reportAdapter.notifyDataSetChanged();
                 }
             }
         }
@@ -369,28 +312,23 @@ public class ProjectEditActivity extends ListActivity implements ReportAdapter.C
                 .concat(". ")
                 .concat(getResources().getString(R.string.tryAgainMessage));
         builder.setMessage(message);
-        builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                setResult(RESULT_OK);
-                finish();
-            }
+        builder.setPositiveButton(R.string.yesTAG, (dialog, which) -> {
+            setResult(RESULT_OK);
+            finish();
         });
         builder.setNegativeButton(R.string.noTag, null);
         builder.show();
-        writeData("Finished error message show routine");
     }
 
     @Override
     public void messageReceived(Map<String, String> data) {
         String qrCode = data.get("qrCode");
-        if(StringHelper.getQrText(project).equals(qrCode)){
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    projectLoad();
-                }
-            });
+        if(qrCode != null) {
+//            qrCode = data.replace("\\", "");
+            if (ProjectHelper.getQrCode().equals(qrCode)) {
+                runOnUiThread(this::projectLoad);
+            }
         }
     }
+
 }

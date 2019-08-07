@@ -2,16 +2,15 @@ package com.richard.weger.wqc.helper;
 
 
 import com.richard.weger.wqc.R;
-import com.richard.weger.wqc.activity.ItemReportEditActivity;
 import com.richard.weger.wqc.activity.CheckReportEditActivity;
+import com.richard.weger.wqc.activity.ItemReportEditActivity;
 import com.richard.weger.wqc.domain.CheckReport;
-import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.ItemReport;
+import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
-import com.richard.weger.wqc.paramconfigs.ParamConfigurations;
-import com.richard.weger.wqc.rest.RestTemplateHelper;
-import com.richard.weger.wqc.rest.UriBuilder;
+import com.richard.weger.wqc.rest.file.FileRestTemplateHelper;
+import com.richard.weger.wqc.service.FileRequestParametersResolver;
 import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 
@@ -19,9 +18,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.richard.weger.wqc.constants.AppConstants.REST_PDFREPORTREQUEST_KEY;
-import static com.richard.weger.wqc.constants.AppConstants.REST_PICTUREDOWNLOAD_KEY;
-import static com.richard.weger.wqc.constants.AppConstants.REST_PICTURESREQUEST_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.CHECK_REPORT_EDIT_SCREEN_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_REPORT_EDIT_SCREEN_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_PDFREPORTDOWNLOAD_KEY;
 
 public class ReportHelper {
 
@@ -55,45 +54,30 @@ public class ReportHelper {
         }
     }
 
-    public void getPdfFilesPath(CheckReport r, RestTemplateHelper restTemplateHelper){
-        UriBuilder uriBuilder = new UriBuilder();
-        uriBuilder.setRequestCode(REST_PDFREPORTREQUEST_KEY);
-        uriBuilder.setProject(r.getDrawingref().getProject());
-        uriBuilder.getParameters().add(r.getFileName());
-        restTemplateHelper.execute(uriBuilder);
+    public int getTargetActivityKey(Report report){
+        if(report instanceof CheckReport){
+            return CHECK_REPORT_EDIT_SCREEN_KEY;
+        } else if (report instanceof ItemReport){
+            return ITEM_REPORT_EDIT_SCREEN_KEY;
+        } else {
+            return 0;
+        }
     }
 
-    public void requestPictures(RestTemplateHelper.RestHelperResponse delegate, List<Item> items, Project project){
-        UriBuilder uriBuilder = new UriBuilder();
-        uriBuilder.setRequestCode(REST_PICTURESREQUEST_KEY);
-        uriBuilder.setMissingPictures(items);
-        uriBuilder.setProject(project);
+    public void picturesDownload(FileRestTemplateHelper.FileRestResponse delegate, Project project, List<String> files, List<FileRestTemplateHelper> queue) {
+        if (files != null) {
+            for (String fileName : files) {
+                if (fileName.length() > 0) {
+                    if (fileName.contains("/")) {
+                        fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
+                    }
 
-        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(delegate);
-        restTemplateHelper.execute(uriBuilder);
-    }
-
-    public void getPictures(RestTemplateHelper.RestHelperResponse delegate, List<Item> items, List<RestTemplateHelper> restTemplateHelperQueue) {
-        for (Item item : items) {
-            String fileName = item.getPicture().getFileName();
-//            boolean exists = FileHelper.isValidFile(StringHelper.getQrText(item.getItemReport().getDrawingref().getProject()).concat("/").concat(fileName));
-            if (fileName.length() > 0) {
-                RestTemplateHelper restTemplateHelper = new RestTemplateHelper(delegate);
-                if (restTemplateHelperQueue != null) {
-                    restTemplateHelperQueue.add(restTemplateHelper);
+                    FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_PDFREPORTDOWNLOAD_KEY, delegate);
+                    FileRestTemplateHelper helper = resolver.getPicture(fileName, StringHelper.getQrText(project));
+                    if (queue != null) {
+                        queue.add(helper);
+                    }
                 }
-
-                if (fileName.contains("/")) {
-                    fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
-                }
-
-                UriBuilder uriBuilder = new UriBuilder();
-                uriBuilder.setRequestCode(REST_PICTUREDOWNLOAD_KEY);
-                uriBuilder.setItem(item);
-                uriBuilder.setProject(item.getItemReport().getDrawingref().getProject());
-                uriBuilder.getParameters().add(fileName);
-
-                restTemplateHelper.execute(uriBuilder);
             }
         }
     }

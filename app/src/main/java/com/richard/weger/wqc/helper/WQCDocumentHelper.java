@@ -58,7 +58,7 @@ public abstract class WQCDocumentHelper {
     }
 
     private static void drawMark(Mark mark, Canvas canvas, Paint paint, float X, float Y) {
-        String text = mark.getDevice().getRole();
+        String text = mark.getRoleToShow();
         Rect bounds = new Rect();
         paint.getTextBounds(text,0, text.length(), bounds);
 

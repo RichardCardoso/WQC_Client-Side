@@ -25,7 +25,7 @@
     <string name="btnErasePicture">Erase picture</string>
     <string name="saveButton">Save</string>
     <string name="dataRecoverError">Unable to recover the requested data. Please try again later.</string>
-    <string name="pendingItems">Pending items</string>
+    <string name="pendingItemsLabel">Pending items</string>
     <string name="btnContinueProject">Continue existing project</string>
     <string name="btnGetProjectFromServer">Get finished project from server</string>
     <string name="projectFinishConfirmation">Are you sure you want to finish the project?</string>
@@ -69,7 +69,7 @@
     <string name="passwordProtectedTitle">Please enter the password</string>
     <string name="invalidPasswordMessage">Invalid password!</string>
     <string name="invalidQrCodeString">The given qr code format is invalid</string>
-    <string name="closeMessage">Do you wish to close the app?</string>
+    <string name="closeQuestion">Do you wish to close the app?</string>
     <string name="confirmationNeeded">Please confirm your action</string>
     <string name="btnAddMark">Add mark</string>
     <string name="btnUndo">Undo</string>
@@ -79,7 +79,7 @@
     <string name="invalidDocumentCodesMessage">Unable to proceed. Please check the app parameters (Drawing code + extension and Datasheet code + extension</string>
     <string name="successfulServerUploadMessage">Project uploaded successfully!</string>
     <string name="invalidServerFileMessage">The file in the server is invalid / corrupted. Please replace it with a valid one and try again.</string>
-    <string name="projectUploadMessage">Do you wish to upload the report files?</string>
+    <string name="projectUploadMessage">Do you wish to postType the report files?</string>
     <string name="tryAgainMessage">Do you want to try again?</string>
     <string name="permissionsNeededMessage">Not all needed permissions were granted to the app. Without them, it\'s impossible to continue. The app will be closed now.</string>
     <string name="noPermissionsGrantedTitle">Permissions missing</string>
@@ -115,5 +115,20 @@
     <string name="remainingTag">Remaining items: %d</string>
     <string name="finishedTag">Finished</string>
     <string name="mustWaitCompletion">Please wait until the current task is finished</string>
-    <string name="picturesUploadTag">Pictures upload</string>
+    <string name="picturesUploadTag">Pictures postType</string>
+    <string name="fileNotFoundMessage">This file cannot be found or accessed at this time. Please contact your system administrator!</string>
+    <string name="staleDataMessage">Your data is stale. Please try again. This error occurs because someone may have changed something and you did not get the last copy.</string>
+    <string name="noRolesMessage">This device\'s roles list is empty. Please contact your system admin.</string>
+    <string name="accessDisabledMessage">System access for this device is disabled. Please contact your system administrator.</string>
+    <string name="invalidUsernameMessage">This device\'s username is invalid. Please contact your system admin.</string>
+    <string name="retrievingFilesTag">Retrieving files from server</string>
+    <string name="commentsLabel">Comments here...</string>
+    <string name="reportFinishMessage">Do you want to set this report as finished? No changes are allowed while report is set as finished!</string>
+    <string name="reportUnfinishMessage">Do you want to set this report as not finished? This will allow the report to be edited!</string>
+    <string name="noMarksMessage">You can\'t set as finished a report that has no marks!</string>
+    <string name="pendingItemsMessage">You can\'t set as finished a report that still has \'not checked\' items!</string>
+    <string name="changesSavedMessage">Changes saved successfully!</string>
+    <string name="clientNameInformMessage">Please inform the customer name</string>
+    <string name="qrScanQuestion">Would you like to do a new qr code scan?</string>
+    <string name="invalidPictureFilenameMessage">Unable to save the changes due to invalid picture filename!</string>
 </resources>

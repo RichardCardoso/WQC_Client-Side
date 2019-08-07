@@ -1,9 +1,7 @@
 package com.richard.weger.wqc.activity;
 
-import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -11,42 +9,68 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.richard.weger.wqc.R;
+import com.richard.weger.wqc.adapter.ItemAdapter;
+import com.richard.weger.wqc.domain.DomainEntity;
 import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.ItemReport;
+import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.firebird.FirebirdMessagingService;
-import com.richard.weger.wqc.helper.StringHelper;
-import com.richard.weger.wqc.rest.RestTemplateHelper;
-import com.richard.weger.wqc.rest.UriBuilder;
-import com.richard.weger.wqc.util.App;
+import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.helper.FileHelper;
-import com.richard.weger.wqc.adapter.ItemAdapter;
-import com.richard.weger.wqc.helper.JsonHelper;
+import com.richard.weger.wqc.helper.MessageboxHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
-import com.richard.weger.wqc.helper.ReportHelper;
-import com.richard.weger.wqc.util.DeviceManager;
+import com.richard.weger.wqc.helper.StringHelper;
+import com.richard.weger.wqc.rest.entity.EntityRestResult;
+import com.richard.weger.wqc.rest.entity.EntityRestTemplateHelper;
+import com.richard.weger.wqc.rest.file.FileRestResult;
+import com.richard.weger.wqc.rest.file.FileRestTemplateHelper;
+import com.richard.weger.wqc.service.ErrorResponseHandler;
+import com.richard.weger.wqc.service.ItemRequestParametersResolver;
+import com.richard.weger.wqc.service.ProjectRequestParametersResolver;
+import com.richard.weger.wqc.service.ReportRequestParametersResolver;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.springframework.http.HttpStatus;
+
 import java.util.Map;
 
-import static com.richard.weger.wqc.constants.AppConstants.*;
+import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_ID_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_NOT_CHECKED_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_PICTURE_MODE;
+import static com.richard.weger.wqc.appconstants.AppConstants.PARAMCONFIG_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_CAPTURE_MODE;
+import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_VIEWER_SCREEN_ID;
+import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REPORT_ID_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REPORT_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_ITEMSAVE_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTUREDOWNLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTUREUPLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_REPORTUPLOAD_KEY;
 import static com.richard.weger.wqc.helper.LogHelper.writeData;
 
-public class ItemReportEditActivity extends ListActivity implements ItemAdapter.ChangeListener, RestTemplateHelper.RestHelperResponse, FirebirdMessagingService.FirebaseListener {
+public class ItemReportEditActivity extends ListActivity implements ItemAdapter.ChangeListener,
+        EntityRestTemplateHelper.EntityRestResponse,
+        FileRestTemplateHelper.FileRestResponse,
+        FirebirdMessagingService.FirebaseListener {
 
     ItemReport report;
     Project project;
     ItemAdapter itemAdapter;
-    String oldItemPicturePath;
+    ParamConfigurations conf;
     int lastItemId = -1;
     boolean canEdit = true;
+
+    boolean schedulePicSave = false;
 
     Runnable runnable;
     Handler handler = new Handler();
@@ -54,17 +78,15 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
 
     private void setRunnable(){
         final int interval = 1000;
-        runnable = new Runnable(){
-            public void run(){
-                if(!checkInternetConnection()){
-                    setWaitingLayout();
-                    paused = true;
-                } else {
-                    inflateActivityLayout();
-                    if(paused){
-                        projectLoad();
-                        paused = false;
-                    }
+        runnable = () -> {
+            if(!checkInternetConnection()){
+                setWaitingLayout();
+                paused = true;
+            } else {
+                inflateActivityLayout();
+                if(paused){
+                    projectLoad();
+                    paused = false;
                 }
             }
         };
@@ -75,12 +97,9 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     private void setWaitingLayout(){
         setContentView(R.layout.activity_wait);
         (findViewById(R.id.pbWelcome)).setVisibility(View.VISIBLE);
-        ((findViewById(R.id.btnExit))).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-                onDestroy();
-            }
+        ((findViewById(R.id.btnExit))).setOnClickListener(v -> {
+            finish();
+            onDestroy();
         });
     }
 
@@ -113,7 +132,6 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     protected void onPause(){
         super.onPause();
         handler.removeCallbacks(runnable);
-//        close(false);
     }
 
     @Override
@@ -123,19 +141,17 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
         writeData("Started intent data get");
         Intent intent = getIntent();
         if(intent != null) {
-            int id;
-            id = intent.getIntExtra(REPORT_ID_KEY, -1);
+            Long id;
+            id = intent.getLongExtra(REPORT_ID_KEY, -1);
             if(id < 0){
                 writeData("Invalid id got from intent. Aborting");
                 setResult(RESULT_CANCELED);
                 finish();
             }
-            writeData("Started project from intent extras get");
+            conf = (ParamConfigurations) intent.getSerializableExtra(PARAMCONFIG_KEY);
             project = (Project) intent.getSerializableExtra(PROJECT_KEY);
-            writeData("Started project references link");
             ProjectHelper.linkReferences(project);
-            writeData("Started report get from project");
-            report = (ItemReport) project.getDrawingRefs().get(0).getReports().get(id);
+            report = (ItemReport) project.getDrawingRefs().get(0).getReports().stream().filter(r -> r.getId().equals(id)).findFirst().orElse(null);
         }
         if(report == null || project == null){
             writeData("Invalid project and / or report. Closing report edit screen.");
@@ -157,20 +173,27 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
         setTextViews();
         toggleControls(true);
 
-        if(DeviceManager.getCurrentDevice().getRole().toLowerCase().equals("te") || report.getDrawingref().isFinished()){
+        if(DeviceHelper.isOnlyRole("te")){
             itemAdapter.setEnabled(false);
-            itemAdapter.setCameraEnabled(true);
-            itemAdapter.notifyDataSetChanged();
+            (findViewById(R.id.chkFinished)).setEnabled(false);
+            (findViewById(R.id.chkFinished)).setClickable(false);
+        } else {
+            itemAdapter.setEnabled(!report.isFinished());
+            (findViewById(R.id.chkFinished)).setEnabled(true);
+            (findViewById(R.id.chkFinished)).setClickable(true);
         }
+        itemAdapter.setCameraEnabled(true);
+        itemAdapter.notifyDataSetChanged();
+
     }
 
     private void setTextViews(){
         writeData("Setting text views");
         ((TextView)findViewById(R.id.tvProjectInfo)).setText(
-                String.format(getResources().getConfiguration().locale,
+                String.format(getResources().getConfiguration().getLocales().get(0),
                         "%s - Z%d",
                         project.getReference(),
-                        project.getDrawingRefs().get(0).getNumber()
+                        project.getDrawingRefs().get(0).getDnumber()
 //                        ,project.getDrawingRefs().getContext(0).getPart().getContext(0).getNumber()
                         )
         );
@@ -183,27 +206,75 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     private void setListeners(){
         writeData("Setting listeners");
         Button btn = findViewById(R.id.btnCancel);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                String currentItemPicturePath = report.getItems().get(lastItemId).getPicture().getFileName();
-//                if(oldItemPicturePath != null
-//                        &&
-//                        !currentItemPicturePath.contains(oldItemPicturePath)){
-//                    FileHelper.fileDelete(report.getItems().get(lastItemId).getPicture().getFileName());
-//                }
-                close(false);
+        btn.setOnClickListener(v -> close(false));
+
+        CheckBox chkFinished = findViewById(R.id.chkFinished);
+        chkFinished.setOnClickListener((view) ->
+        {
+            toggleControls(false);
+            if(report.getItems().stream().noneMatch(i -> i.getStatus() == ITEM_NOT_CHECKED_KEY) || report.isFinished()) {
+                shouldChangeReportState();
+            } else {
+                MessageboxHelper.showMessage(this,
+                        getResources().getString(R.string.pendingItemsMessage),
+                        getResources().getString(R.string.okTag),
+                        this::cancelReportFinish);
             }
         });
     }
+
+    private void shouldChangeReportState(){
+        if(!report.isFinished()) {
+            MessageboxHelper.showMessage(this,
+                    getResources().getString(R.string.confirmationNeeded),
+                    getResources().getString(R.string.reportFinishMessage),
+                    getResources().getString(R.string.yesTAG),
+                    getResources().getString(R.string.noTag),
+                    () -> reportFinish(true),
+                    this::cancelReportFinish);
+        } else {
+            MessageboxHelper.showMessage(this,
+                    getResources().getString(R.string.confirmationNeeded),
+                    getResources().getString(R.string.reportUnfinishMessage),
+                    getResources().getString(R.string.yesTAG),
+                    getResources().getString(R.string.noTag),
+                    () -> reportFinish(false),
+                    this::cancelReportFinish);
+        }
+    }
+
+    private void cancelReportFinish(){
+        toggleControls(true);
+        ((CheckBox) findViewById(R.id.chkFinished)).setChecked(report.isFinished());
+    }
+
+    private void reportFinish(boolean finish){
+        toggleControls(false);
+        if(report.getClient() == null || report.getClient().isEmpty()){
+            MessageboxHelper.getString(this, getResources().getString(R.string.clientNameInformMessage), (content) -> {
+                if(content != null && !content.isEmpty()) {
+                    report.setClient(content);
+                    reportFinish(!report.isFinished());
+                } else {
+                    MessageboxHelper.showMessage(this,
+                            getResources().getString(R.string.emptyFieldsError),
+                            getResources().getString(R.string.okTag),
+                            () -> toggleControls(true));
+                }
+            });
+        } else {
+            report.setFinished(finish);
+            ReportRequestParametersResolver resolver = new ReportRequestParametersResolver(REST_REPORTUPLOAD_KEY, conf,false);
+            resolver.postEntity(report, this);
+        }
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         writeData("Started activity result handling");
         if(resultCode == RESULT_OK){
-            writeData("Result code is OK");
             if(requestCode == PICTURE_VIEWER_SCREEN_ID){
-                writeData("Result came from picture viewer screen");
                 Item newItem = (Item) data.getSerializableExtra(ITEM_KEY);
                 int itemId = data.getIntExtra(ITEM_ID_KEY, -1);
                 if(itemId > -1) {
@@ -225,47 +296,52 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
 
     public void updatePendingItemsCount(){
         writeData("Updating pending items count");
-        int pendingItems = report.getPendingItemsCount();
+        long pendingItems = report.getItems().stream().filter(i -> i.getStatus() == ITEM_NOT_CHECKED_KEY).count();
         ((TextView)findViewById(R.id.tvPendingItems)).setText(
-                String.format(getResources().getConfiguration().locale, "%s: %d",
-                        getResources().getString(R.string.pendingItems),
+                String.format(getResources().getConfiguration().getLocales().get(0), "%s: %d",
+                        getResources().getString(R.string.pendingItemsLabel),
                         pendingItems));
     }
 
-    private void toggleControls(boolean bResume){
+    @Override
+    public void toggleControls(boolean bResume){
         writeData("Toggling screen controls");
         canEdit = bResume;
-        itemAdapter.setEnabled(bResume && !project.getDrawingRefs().get(0).isFinished());
+        itemAdapter.setEnabled(bResume && !report.isFinished() && !DeviceHelper.isOnlyRole("te"));
         itemAdapter.notifyDataSetChanged();
-        // getListView().setClickable(bResume);
-        // getListView().setEnabled(bResume);
         if(bResume){
             findViewById(R.id.pbItemReportEdit).setVisibility(View.INVISIBLE);
         }
         else{
             findViewById(R.id.pbItemReportEdit).setVisibility(View.VISIBLE);
         }
+        (findViewById(R.id.chkFinished)).setEnabled(bResume && !DeviceHelper.isOnlyRole("te"));
+        ((CheckBox) findViewById(R.id.chkFinished)).setChecked(report.isFinished());
+        itemAdapter.setCameraEnabled(true);
+    }
+
+    @Override
+    public void onError() {
+
     }
 
     private void save(Item item, boolean savePicture){
         writeData("Started report save request");
         toggleControls(false);
 
-        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(this);
-        UriBuilder uriBuilder = new UriBuilder();
-        uriBuilder.setRequestCode(REST_ITEMSAVE_KEY);
-        uriBuilder.setReport(report);
-        uriBuilder.setItem(item);
-        uriBuilder.setProject(report.getDrawingref().getProject());
-        restTemplateHelper.execute(uriBuilder);
-
         String fileName = StringHelper.getPicturesFolderPath(project).concat("/").concat(item.getPicture().getFileName());
-        if(savePicture && FileHelper.isValidFile(fileName)) {
-            toggleControls(false);
-            ProjectHelper.itemPictureUpload(this, item, report);
+        if(!savePicture || FileHelper.isValidFile(fileName)) {
+            ItemRequestParametersResolver resolver = new ItemRequestParametersResolver(REST_ITEMSAVE_KEY, conf, false);
+            resolver.postEntity(item, this);
+            schedulePicSave = savePicture;
+        } else {
+            MessageboxHelper.showMessage(this,
+                    getResources().getString(R.string.invalidPictureFilenameMessage),
+                    getResources().getString(R.string.okTag),
+                    () -> close(false));
         }
-    }
 
+    }
 
 
     @Override
@@ -273,6 +349,8 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
         writeData("Started list's item change handler");
         Item item = report.getItems().get(position);
         if(view instanceof ImageView) {
+            view.setEnabled(false);
+            view.setClickable(false);
             Intent intent = new Intent(ItemReportEditActivity.this, PictureViewerActivity.class);
             intent.putExtra(ITEM_KEY, item);
             intent.putExtra(ITEM_ID_KEY, position);
@@ -280,6 +358,8 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
             intent.putExtra(REPORT_KEY, report);
             intent.putExtra(PROJECT_KEY, project);
             startActivityForResult(intent, PICTURE_VIEWER_SCREEN_ID);
+            view.setEnabled(true);
+            view.setClickable(true);
         } else {
             save(item, false);
         }
@@ -298,122 +378,94 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
         super.onDestroy();
     }
 
-    private void dataLoadError(){
-        writeData("Showing data load error default message");
-        toggleControls(true);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        String message = getResources().getString(R.string.dataRecoverError);
-        builder.setCancelable(false);
-        builder.setMessage(message);
-        builder.setPositiveButton(R.string.okTag, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                close(true);
-            }
-        });
-        builder.show();
-    }
-
-    private void dataLoadError(String customMessage){
-        writeData("Showing data load error custom message");
-        toggleControls(true);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(customMessage);
-        builder.setCancelable(false);
-        builder.setPositiveButton(R.string.okTag, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-            }
-        });
-        builder.show();
-    }
-
     private void projectLoad(){
         writeData("Started routine to load project from the server");
-        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(this);
-        UriBuilder uriBuilder = new UriBuilder();
-        uriBuilder.setRequestCode(REST_QRPROJECTLOAD_KEY);
-        uriBuilder.getParameters().add(StringHelper.getQrText(report.getDrawingref().getProject()));
-        restTemplateHelper.execute(uriBuilder);
         toggleControls(false);
-    }
+        ProjectRequestParametersResolver resolver = new ProjectRequestParametersResolver(REST_QRPROJECTLOAD_KEY, conf, true);
+        resolver.getEntity(ProjectHelper.getProject(), this);
 
-    @Override
-    public void RestTemplateCallback(String requestCode, String result) {
-        writeData("Started server response handler");
-        if(result != null) {
-            writeData("response is not null");
-            if (!result.equals(App.getContext().getResources().getString(R.string.drawingLockedMessage))) {
-                if (requestCode.equals(REST_REPORTITEMSSAVE_KEY)) {
-                    writeData("The response was got from a report item save request");
-                    updatePendingItemsCount();
-                    toggleControls(true);
-                } else if (requestCode.equals(REST_ITEMSAVE_KEY)) {
-                    writeData("The response was got from an item save request");
-                    Item item;
-                    item = JsonHelper.toObject(result, Item.class);
-                    if (item != null) {
-                        for (int i = 0; i < report.getItems().size(); i++) {
-                            if (report.getItems().get(i).getId() == item.getId()) {
-                                report.getItems().set(i, item);
-                                break;
-                            }
-                        }
-                        updatePendingItemsCount();
-                        toggleControls(true);
-                    } else {
-                        dataLoadError();
-                    }
-                } else if (requestCode.equals(REST_PICTUREDOWNLOAD_KEY)){
-                    inflateActivityLayout();
-                    toggleControls(true);
-                } else if (requestCode.equals(REST_PICTUREUPLOAD_KEY)){
-                    writeData("The response was got from a picture save request");
-                    updatePendingItemsCount();
-                    toggleControls(true);
-                } else if (requestCode.equals(REST_QRPROJECTLOAD_KEY)) {
-                    writeData("The response was got from a project load request");
-                    Project project = ProjectHelper.fromJson(result);
-                    report = (ItemReport) project.getDrawingRefs().get(0).getReport(report.getId());
-                    itemAdapter.setItemList(report.getItems());
-                    itemAdapter.notifyDataSetChanged();
-                    toggleControls(true);
-                }
-            } else {
-                if(requestCode.equals(REST_PICTUREUPLOAD_KEY)) {
-                    toggleControls(false);
-                    int id = Integer.valueOf(result.substring(result.lastIndexOf("#") + 1));
-
-                    Item item = report.getItems().get(id);
-                    List<Item> items = new ArrayList<>();
-                    items.add(item);
-
-                    FileHelper.fileDelete(StringHelper.getPictureFilePath(project, item));
-
-                    ReportHelper reportHelper = new ReportHelper();
-                    reportHelper.getPictures(this, items, null);
-                } else {
-                    writeData("A write attempt was made but the drawing is currently locked by another user. Aborting write attempt");
-                    toggleControls(false);
-                    projectLoad();
-                    dataLoadError(App.getContext().getResources().getString(R.string.drawingLockedMessage));
-                }
-            }
-        } else {
-            dataLoadError();
-        }
     }
 
     @Override
     public void messageReceived(Map<String, String> data) {
         String qrCode = data.get("qrCode");
-        if(StringHelper.getQrText(report.getDrawingref().getProject()).equals(qrCode)){
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    projectLoad();
-                }
-            });
+        if(qrCode != null) {
+//            qrCode = data.replace("\\", "");
+            if (ProjectHelper.getQrCode().equals(qrCode)) {
+                runOnUiThread(this::projectLoad);
+            }
         }
     }
+
+    @Override
+    public <T extends DomainEntity> void EntityRestCallback(EntityRestResult<T> result) {
+        writeData("Started server response handler");
+        if(result.getStatus() == HttpStatus.OK || result.getStatus() == HttpStatus.CREATED) {
+            switch (result.getRequestCode()) {
+                case REST_ITEMSAVE_KEY:
+                    writeData("The response was got from an item save request");
+                    /*
+                    Item item;
+                    item = (Item) result.getEntities().get(0);
+                    for (int i = 0; i < report.getItems().size(); i++) {
+                        if (report.getItems().get(i).getId().equals(item.getId())) {
+                            report.getItems().set(i, item);
+                            break;
+                        }
+                    }
+                    updatePendingItemsCount();
+                    if(schedulePicSave){
+                        toggleControls(false);
+                        schedulePicSave = false;
+                        ProjectHelper.itemPictureUpload(this, item, project);
+                    } else {
+                        toggleControls(true);
+                        Toast.makeText(this, R.string.changesSavedMessage, Toast.LENGTH_SHORT).show();
+                    }
+                    */
+                    break;
+                case REST_QRPROJECTLOAD_KEY:
+                    writeData("The response was got from a project load request");
+                    Project project = (Project) result.getEntities().get(0);
+                    report = (ItemReport) project.getDrawingRefs().get(0).getReports().stream().filter(r -> r.getId().equals(report.getId())).findFirst().orElse(null);
+                    if (report != null) {
+                        itemAdapter.setItemList(report.getItems());
+                        itemAdapter.notifyDataSetChanged();
+                    }
+                    toggleControls(true);
+                    break;
+                case REST_REPORTUPLOAD_KEY:
+                    /*
+                    MessageboxHelper.showMessage(this,
+                            getResources().getString(R.string.changesSavedMessage),
+                            getResources().getString(R.string.okTag),
+                            () -> {
+                                toggleControls(false);
+                                projectLoad();
+                            });
+                            */
+                    break;
+            }
+        } else {
+            ErrorResponseHandler.handle(result, this, () -> close(true));
+        }
+    }
+
+    @Override
+    public void FileRestCallback(FileRestResult result) {
+        if(result.getStatus() == HttpStatus.OK || result.getStatus() == HttpStatus.CREATED) {
+            if (result.getRequestCode().equals(REST_PICTUREDOWNLOAD_KEY)) {
+                inflateActivityLayout();
+                toggleControls(true);
+            } else if (result.getRequestCode().equals(REST_PICTUREUPLOAD_KEY)) {
+                writeData("The response was got from a picture save request");
+                updatePendingItemsCount();
+                projectLoad();
+            }
+            Toast.makeText(this, R.string.changesSavedMessage, Toast.LENGTH_SHORT).show();
+        } else {
+            ErrorResponseHandler.handle(result, this, () -> close(true));
+        }
+    }
+
 }

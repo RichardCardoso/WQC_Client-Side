@@ -2,7 +2,6 @@ package com.richard.weger.wqc.activity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -17,42 +16,67 @@ import com.google.zxing.Result;
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.domain.CheckReport;
 import com.richard.weger.wqc.domain.Device;
+import com.richard.weger.wqc.domain.DomainEntity;
 import com.richard.weger.wqc.domain.Item;
+import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
-import com.richard.weger.wqc.helper.FileHelper;
+import com.richard.weger.wqc.domain.Role;
+import com.richard.weger.wqc.helper.MessageboxHelper;
 import com.richard.weger.wqc.helper.StringHelper;
-import com.richard.weger.wqc.paramconfigs.ParamConfigurations;
+import com.richard.weger.wqc.rest.entity.EntityRestResult;
+import com.richard.weger.wqc.rest.entity.EntityRestTemplateHelper;
+import com.richard.weger.wqc.rest.file.FileRestResult;
+import com.richard.weger.wqc.rest.file.FileRestTemplateHelper;
+import com.richard.weger.wqc.service.DeviceRequestParameterResolver;
+import com.richard.weger.wqc.service.FileRequestParametersResolver;
+import com.richard.weger.wqc.service.ParamConfigurationsRequestParametersResolver;
+import com.richard.weger.wqc.service.ProjectRequestParametersResolver;
 import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.Configurations;
 import com.richard.weger.wqc.util.ConfigurationsManager;
-import com.richard.weger.wqc.rest.RestTemplateHelper;
-import com.richard.weger.wqc.util.DeviceManager;
-import com.richard.weger.wqc.helper.JsonHelper;
+import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.util.PermissionsManager;
-import com.richard.weger.wqc.rest.UriBuilder;
 import com.richard.weger.wqc.helper.ProjectHelper;
-import com.richard.weger.wqc.helper.ReportHelper;
 
-import java.io.File;
+import org.springframework.http.HttpStatus;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
-import static com.richard.weger.wqc.constants.AppConstants.*;
+import static com.richard.weger.wqc.appconstants.AppConstants.CAMERA_PERMISSION;
+import static com.richard.weger.wqc.appconstants.AppConstants.EXTERNAL_DIR_PERMISSION;
+import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_EDIT_SCREEN_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_ASKAUTHORIZATION_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_CONFIGLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREDOWNLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTURESREQUEST_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_IDENTIFY_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_PDFREPORTDOWNLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTUREDOWNLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_PROJECTSAVE_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTCREATE_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
 import static com.richard.weger.wqc.helper.LogHelper.writeData;
 
-public class WelcomeActivity extends Activity implements ZXingScannerView.ResultHandler, RestTemplateHelper.RestHelperResponse {
+public class WelcomeActivity extends Activity implements ZXingScannerView.ResultHandler,
+        EntityRestTemplateHelper.EntityRestResponse,
+        FileRestTemplateHelper.FileRestResponse {
 
     Project project;
     String qrCode;
-    List<RestTemplateHelper> restTemplateHelperQueue;
-    RestTemplateHelper restTemplateHelper;
+    List<EntityRestTemplateHelper> entityHelperQueue;
+    List<FileRestTemplateHelper> fileHelperQueue;
+    EntityRestTemplateHelper entityRestTemplateHelper;
     boolean hasAuthorization = false;
     boolean checkedForGenPictures = false;
     boolean projectEditStarted = false;
     TextView tvStatus;
+    ParamConfigurations conf;
 
     private ZXingScannerView mScannerView;
     PermissionsManager permissionsManager = new PermissionsManager();
@@ -75,35 +99,36 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
 
         setContentView(R.layout.activity_wait);
         (findViewById(R.id.pbWelcome)).setVisibility(View.VISIBLE);
-        ((findViewById(R.id.btnExit))).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-                onDestroy();
-            }
+        ((findViewById(R.id.btnExit))).setOnClickListener(v -> {
+            finish();
+            onDestroy();
         });
 
-        writeData("Starting permissions handler");
         if(handlePermissions()){
-            writeData("User-app permissions granting successful");
             gotPermissions();
         }
-
-        FirebaseMessaging.getInstance().subscribeToTopic("wqc-2.0");
     }
 
-    private void toggleControls(boolean bResume){
+    @Override
+    public void toggleControls(boolean bResume){
+        runOnUiThread(() -> {
+            try {
+                (findViewById(R.id.buttonQrScan)).setEnabled(bResume);
+                if (bResume) {
+                    writeData("Enabling UI controls");
+                    (findViewById(R.id.pbWelcome)).setVisibility(View.INVISIBLE);
+                } else {
+                    writeData("Disabling UI controls");
+                    (findViewById(R.id.pbWelcome)).setVisibility(View.VISIBLE);
+                }
+            } catch (Exception ignored){}
+        });
+    }
 
-        (findViewById(R.id.buttonQrScan)).setEnabled(bResume);
-        (findViewById(R.id.btnConfig)).setEnabled(bResume);
-        if(bResume) {
-            writeData("Enabling UI controls");
-            (findViewById(R.id.pbWelcome)).setVisibility(View.INVISIBLE);
-        }
-        else {
-            writeData("Disabling UI controls");
-            (findViewById(R.id.pbWelcome)).setVisibility(View.VISIBLE);
-        }
+    @Override
+    public void onError() {
+        checkedForGenPictures = false;
+
     }
 
     private boolean handlePermissions(){
@@ -120,12 +145,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
             AlertDialog.Builder builder = new AlertDialog.Builder(WelcomeActivity.this);
             builder.setTitle(R.string.noPermissionsGrantedTitle);
             builder.setMessage(R.string.permissionsNeededMessage);
-            builder.setPositiveButton(R.string.okTag, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    finish();
-                }
-            });
+            builder.setPositiveButton(R.string.okTag, (dialog, which) -> finish());
             builder.show();
         } else {
             gotPermissions();
@@ -133,16 +153,14 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     }
 
     private void gotPermissions(){
-        restTemplateHelperQueue = new ArrayList<>();
-        writeData("Loading local configurations");
+        writeData("User-app permissions granting successful");
+        entityHelperQueue = new ArrayList<>();
+        fileHelperQueue = new ArrayList<>();
         Configurations conf = ConfigurationsManager.getLocalConfig();
-        if(conf.getServerPath().length() <= 0){
-            writeData("Configuration file not found");
-            writeData("Starting first run routine");
+        if(conf.getServerPath() != null && conf.getServerPath().length() <= 0){
             firstContact();
         } else {
-            writeData("Configuration file found. Starting identification routine");
-            identify();
+            getServerConfig();
         }
     }
 
@@ -167,7 +185,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
         writeData("Restoring layout to 'welcome' one");
         setContentView(R.layout.activity_welcome);
         setListeners();
-        setTextEditValue(DeviceManager.getCurrentDevice());
+        setTextEditValue(DeviceHelper.getCurrentDevice());
          tvStatus = findViewById(R.id.tvStatus);
     }
 
@@ -177,70 +195,38 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
         setContentView(mScannerView);
         mScannerView.setResultHandler(this);
         mScannerView.startCamera();
-        writeData("Started camera preview for qr scan");
     }
 
     private void setListeners(){
         writeData("Setting buttons listeners");
-        Button button = findViewById(R.id.btnConfig);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(WelcomeActivity.this,
-                        ConfigurationsActivity.class);
-                startActivityForResult(intent, CONFIG_SCREEN_KEY);
-            }
-        });
 
-        findViewById(R.id.buttonQrScan).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                qrCode = "17-1-435_Z_1_T_1";
-//                layoutRestore();
-//                startDataLoad();
-                QrScan();
-            }
-        });
+        findViewById(R.id.buttonQrScan).setOnClickListener(v -> QrScan());
 
-        button = findViewById(R.id.btnExit);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(WelcomeActivity.this);
-                builder.setTitle(R.string.confirmationNeeded);
-                builder.setMessage(R.string.closeMessage);
-                builder.setPositiveButton(R.string.yesTAG, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        finish();
-                    }
-                });
-                builder.setNegativeButton(R.string.noTag, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                    }
-                });
-                builder.show();
-            }
+        Button button = findViewById(R.id.btnExit);
+        button.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(WelcomeActivity.this);
+            builder.setTitle(R.string.confirmationNeeded);
+            builder.setMessage(R.string.closeQuestion);
+            builder.setPositiveButton(R.string.yesTAG, (dialogInterface, i) -> finish());
+            builder.setNegativeButton(R.string.noTag, (dialogInterface, i) -> {});
+            builder.show();
         });
-        writeData("Buttons listeners set finished");
     }
 
     private void exit(){
         writeData("Started exit routine");
-        if(restTemplateHelper != null && restTemplateHelper.getStatus() == AsyncTask.Status.RUNNING){
-            restTemplateHelper.cancel(true);
+        if(entityRestTemplateHelper != null && entityRestTemplateHelper.getStatus() == AsyncTask.Status.RUNNING){
+            entityRestTemplateHelper.cancel(true);
         }
         cancelPdfReportsGet();
-        writeData("Application finished");
         finish();
         super.onDestroy();
     }
 
     private void cancelPdfReportsGet(){
         writeData("Started routine to cancel http requests for pdf files");
-        if(restTemplateHelperQueue != null){
-            for(RestTemplateHelper r: restTemplateHelperQueue){
+        if(entityHelperQueue != null){
+            for(EntityRestTemplateHelper r: entityHelperQueue){
                 if(r != null && r.getStatus() == AsyncTask.Status.RUNNING){
                     r.cancel(true);
                 }
@@ -256,30 +242,25 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
             mScannerView.stopCamera();
         }
         layoutRestore();
-        startDataLoad();
+        projectLoad();
     }
 
-    private void startDataLoad(){
+    private void getServerConfig(){
         writeData("Started routine to get the configs from server");
-        restTemplateHelper = new RestTemplateHelper(this);
-        UriBuilder uriBuilder = new UriBuilder();
-        uriBuilder.setRequestCode(REST_CONFIGLOAD_KEY);
-        restTemplateHelper.execute(uriBuilder);
-        toggleControls(false);
+        ParamConfigurationsRequestParametersResolver resolver = new ParamConfigurationsRequestParametersResolver(REST_CONFIGLOAD_KEY, null, true);
+        resolver.getEntity(new ParamConfigurations(), this);
     }
 
     private void projectLoad(){
-        writeData("Started routine to get the project from server");
-        restTemplateHelper = new RestTemplateHelper(this);
-        UriBuilder uriBuilder = new UriBuilder();
-        uriBuilder.setRequestCode(REST_QRPROJECTLOAD_KEY);
-        uriBuilder.getParameters().add(qrCode);
-        restTemplateHelper.execute(uriBuilder);
         toggleControls(false);
+        writeData("Started routine to get the project from server");
+        ProjectRequestParametersResolver resolver = new ProjectRequestParametersResolver(REST_QRPROJECTLOAD_KEY, conf, true);
+        resolver.getEntity(ProjectHelper.getProject(qrCode, conf), this);
     }
 
     private void startProjectEdit(){
         if(!projectEditStarted) {
+            FirebaseMessaging.getInstance().subscribeToTopic("wqc-2.0");
             writeData("Started routine to open the project edit screen");
             Intent intent = new Intent(WelcomeActivity.this, ProjectEditActivity.class);
             intent.putExtra(PROJECT_KEY, project);
@@ -290,291 +271,54 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
-        writeData("Started routine to handle activity's result");
         if(requestCode == PROJECT_EDIT_SCREEN_KEY) {
             projectEditStarted = false;
-            if (requestCode == RESULT_CANCELED) {
-                ProjectHelper.reportFilesErase(project);
-                startDataLoad();
-            } else {
-                writeData("Close app request received from the user");
-                exit();
-            }
+            writeData("Close app request received from the user");
+            exit();
         }
     }
 
-    private boolean needsPictures(boolean request){
+    private boolean requestPicturesIfNeeded(){
         tvStatus.setText(R.string.retrievingReportPicturesTag);
-        writeData("Started routine to check if item pictures download is necessary");
-        List<Item> items = ProjectHelper.itemsWithMissingPictures(project);
+        List<Item> items = ProjectHelper.itemsWithMissingPictures(project, true);
         if(items.size() == 0){
             writeData("No pictures download is needed");
             return false;
         } else {
-            if(request) {
-                writeData("Pictures missing. Started routine to download them from the server");
-                (new ReportHelper()).requestPictures(this, items, project);
-//                for (Item item : missingPictures){
-//                    (new ReportHelper()).getPictures(this, missingPictures, restTemplateHelperQueue);
-//                }
+            writeData("Pictures missing. Started routine to download them from the server");
+            for (Item item : items){
+                FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_PICTUREDOWNLOAD_KEY, this);
+                FileRestTemplateHelper helper = resolver.getPicture(item.getPicture().getFileName(), qrCode);
+                fileHelperQueue.add(helper);
             }
             return true;
         }
     }
 
-    private boolean needsPdfFiles(boolean request){
+    private boolean requestPdfsIfNeeded(){
         tvStatus.setText(R.string.retrievingPdfsTag);
-        writeData("Started routine to check if pdf files download is necessary");
-        if(ProjectHelper.hasAllReportFiles(project)) {
+        if(ProjectHelper.validReportFilesCount(project) > 0) {
             writeData("No pdf files are needed at all");
             return false;
         } else {
-            if(request) {
-                writeData("Pdf files missing. Started routine to download them from the server");
-                for (Report r : project.getDrawingRefs().get(0).getReports()) {
-                    if (r instanceof CheckReport) {
-                        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(this);
-                        restTemplateHelperQueue.add(restTemplateHelper);
-                        (new ReportHelper()).getPdfFilesPath((CheckReport) r, restTemplateHelper);
-                    }
+            writeData("Pdf files missing. Started routine to download them from the server");
+            for (Report _r : project.getDrawingRefs().get(0).getReports()) {
+                if (_r instanceof CheckReport) {
+                    CheckReport r = (CheckReport) _r;
+                    FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_PDFREPORTDOWNLOAD_KEY, this);
+                    FileRestTemplateHelper helper = resolver.getPdf(r, StringHelper.getQrText(project));
+                    fileHelperQueue.add(helper);
                 }
             }
             return true;
-        }
-    }
-
-    private void dataLoadError(String customMessage, String buttons, final boolean finish, final boolean justIdentityAgain) {
-        writeData("Started routine to show error message to the user");
-        try {
-            toggleControls(true);
-            cancelPdfReportsGet();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        String message;
-        if(finish){
-            builder.setCancelable(false);
-        }
-        if (customMessage != null && !customMessage.equals("")) {
-            message = customMessage;
-        } else {
-            if(!finish) {
-                message = getResources().getString(R.string.unknownErrorMessage)
-                        .concat(". ")
-                        .concat(getResources().getString(R.string.tryAgainMessage));
-            } else {
-                message = getResources().getString(R.string.unknownErrorMessage);
-            }
-        }
-        builder.setMessage(message);
-        builder.setPositiveButton((buttons.equals(YES_NO) ? R.string.yesTAG : R.string.okTag), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if(finish){
-                    exit();
-                } else {
-                    if (justIdentityAgain) {
-                        identify();
-                    } else {
-                        firstContact();
-                    }
-                }
-            }
-        });
-        if (buttons.equals(YES_NO)){
-            if(!finish) {
-                builder.setNegativeButton(R.string.noTag, null);
-            } else {
-                builder.setNegativeButton(R.string.noTag, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                });
-            }
-        }
-        builder.show();
-        if(tvStatus != null) {
-            tvStatus.setText(message);
         }
     }
 
     private void checkForGenPictures(){
         tvStatus.setText(R.string.retrievingGeneralPicturesTag);
         if(!checkedForGenPictures) {
-            (new ProjectHelper()).checkForGenPictures(this, project, true);
+            ProjectHelper.getGenPicturesList(this, project, true);
             checkedForGenPictures = true;
-        }
-    }
-
-    @Override
-    public void RestTemplateCallback(String requestCode, String result) {
-        boolean needsPdfFiles,
-                needsPictures;
-        writeData("Started routine to handle the http response got from the server");
-        if (result != null) {
-            if (!result.equals(App.getContext().getResources().getString(R.string.drawingLockedMessage))) {
-                switch (requestCode) {
-                    case REST_CONFIGLOAD_KEY:
-                        writeData("The response was a configuration object");
-                        ConfigurationsManager.setServerConfig(JsonHelper.toObject(result, ParamConfigurations.class));
-                        projectLoad();
-                        break;
-                    case REST_QRPROJECTLOAD_KEY:
-                        writeData("The response was a project");
-                        if (!result.equals("")) {
-                            project = ProjectHelper.fromJson(result);
-                            if (project == null) {
-                                writeData("Invalid project got from the server");
-                                dataLoadError(null, YES_NO, false, true);
-                                return;
-                            }
-                            needsPdfFiles = needsPdfFiles(true);
-                            needsPictures = needsPictures(true);
-                            if (!(needsPdfFiles || needsPictures)) {
-                                checkForGenPictures();
-                            }
-                        }
-                        break;
-                    case REST_PDFREPORTREQUEST_KEY:
-                        writeData("The response was a Pdf file");
-                        if(!ProjectHelper.hasPendingTasks(restTemplateHelperQueue, true)){
-                            checkForGenPictures();
-                        }
-                        break;
-                    case REST_PICTURESREQUEST_KEY:
-                        writeData("Got existing item pictures list from server");
-                        List<Item> items = JsonHelper.toList(result, Item.class);
-                        if(items.size() > 0) {
-                            for(int i = 0; i < items.size(); i++){
-                                Item item = items.get(i);
-                                items.set(i, ProjectHelper.getItemReferences(project, item));
-                            }
-                            ReportHelper reportHelper = new ReportHelper();
-                            reportHelper.getPictures(this, items, restTemplateHelperQueue);
-                        } else {
-                            if(!checkedForGenPictures) {
-                                checkForGenPictures();
-                            } else {
-                                startProjectEdit();
-                            }
-                        }
-                        break;
-                    case REST_PICTUREDOWNLOAD_KEY:
-                        writeData("The response was a JPG file");
-                        if (!ProjectHelper.hasPendingTasks(restTemplateHelperQueue, true)) {
-                            if(!checkedForGenPictures) {
-                                checkForGenPictures();
-                            } else {
-                                startProjectEdit();
-                            }
-                        }
-                        break;
-                    case REST_GENPICTURESREQUEST_KEY:
-                        writeData("Got existing general pictures list from server");
-                        List<String> pictures = JsonHelper.toList(result, String.class);
-                        if(pictures.size() > 0) {
-                            ProjectHelper projectHelper = new ProjectHelper();
-                            projectHelper.getGenPictures(this, pictures, restTemplateHelperQueue, project);
-                        } else {
-                            startProjectEdit();
-                        }
-                        break;
-                    case REST_GENPICTUREDOWNLOAD_KEY:
-                        writeData("The response was a JPG file");
-                        if( !ProjectHelper.hasPendingTasks(restTemplateHelperQueue, true)){
-                            startProjectEdit();
-                        } else {
-                            String text = getResources().getString(R.string.retrievingGeneralPicturesTag)
-                                    .concat(" - ")
-                                    .concat(getResources().getString(R.string.remainingTag, restTemplateHelperQueue.size() - 1));
-                            tvStatus.setText(text);
-                        }
-                        break;
-                    case REST_PROJECTSAVE_KEY:
-                        writeData("The response was a result from a project save request");
-                        startProjectEdit();
-                        break;
-                    case REST_FIRSTCONNECTIONTEST_KEY:
-                        writeData("The response was a result from a first connection request");
-                        if (result.toLowerCase().equals("success")) {
-                            identify();
-                        } else {
-                            dataLoadError(getResources().getString(R.string.serverConnectErrorMessage), YES_NO, false, false);
-                        }
-                        break;
-                    case REST_IDENTIFY_KEY:
-                        writeData("The response was a result from a identify request");
-                        Device device;
-                        try {
-                            writeData("Trying to parse result to device entity");
-                            device = JsonHelper.toObject(result, Device.class);
-                            writeData("Parse successful");
-
-                            writeData("Starting local local configuration update");
-                            Configurations conf = ConfigurationsManager.getLocalConfig();
-                            conf.setUserId(device.getId());
-                            conf.setUsername(device.getName());
-                            conf.setRole(device.getRole());
-                            conf.setDeviceId(device.getDeviceid());
-
-                            if(conf.getRole() == null || conf.getRole().equals("")){
-                                writeData("Invalid role returned from the server");
-                            } else if(conf.getUsername() == null || conf.getUsername().equals("")){
-                                writeData("Invalid username returned from the server");
-                            } else if (!device.isEnabled()){
-                                writeData("Disabled device returned from the server");
-                            }
-
-                            if (conf.getRole() == null || conf.getUsername() == null || !device.isEnabled()
-                                    || conf.getRole().equals("") || conf.getUsername().equals("")) {
-                                writeData("No authorization found for this device - based on the retrieved configuration");
-//                            requestServerAuthorization();
-                                dataLoadError(getResources().getString(R.string.deviceNotAuthorizedMessage).concat("\n(").concat(App.getUniqueId()).concat(")"), OK, true, true);
-                            } else {
-                                writeData("Updating local configuration");
-                                ConfigurationsManager.setLocalConfig(conf);
-                                writeData("Device authorized");
-                                hasAuthorization = true;
-                                layoutRestore();
-                            }
-                        } catch (Exception ex) {
-                            writeData("General error when trying to retrieve an authorization for this device - based on the retrieved configuration");
-                            ex.printStackTrace();
-                            writeData("Starting authorization request routine");
-                            requestServerAuthorization();
-                            dataLoadError(getResources().getString(R.string.deviceNotAuthorizedMessage).concat("\n(").concat(App.getUniqueId()).concat(")"), OK, true, true);
-                        }
-                        break;
-                }
-            } else {
-                writeData("A write operation request was made but the current drawing is locked by another user. Aborting write operation.");
-                toggleControls(false);
-                projectLoad();
-                dataLoadError(App.getContext().getResources().getString(R.string.drawingLockedMessage), OK, false, true);
-            }
-        } else {
-            switch (requestCode) {
-                case REST_FIRSTCONNECTIONTEST_KEY:
-                    writeData("A first connection request was made but no valid response was received. Maybe the server is in shutdown state, inaccessible or the informed ip address is wrong");
-                    dataLoadError(getResources().getString(R.string.serverConnectErrorMessage), YES_NO, false, false);
-                    break;
-                case REST_IDENTIFY_KEY:
-                    writeData("An identify request was made but an empty response was received. Maybe this device is not yet authorized to use the app.");
-                    requestServerAuthorization();
-                    dataLoadError(getResources().getString(R.string.deviceNotAuthorizedMessage).concat("\n(").concat(App.getUniqueId()).concat(")"), OK, true, true);
-                    break;
-                default:
-                    if (!hasAuthorization) {
-                        writeData("Empty response was received");
-                        dataLoadError(null, OK, true, true);
-                    } else {
-                        writeData("Empty response was received");
-                        dataLoadError(null, YES_NO, false, true);
-                    }
-                    break;
-            }
         }
     }
 
@@ -583,7 +327,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
         tv.setText(
                 device.getName()
                         .concat(" - ")
-                        .concat(device.getRole())
+                        .concat(device.getRoles().stream().map(Role::getDescription).collect(Collectors.joining(", ")))
                         .concat(" (")
                         .concat(device.getDeviceid())
                         .concat(")")
@@ -592,78 +336,255 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
 
     private void requestServerAuthorization(){
         writeData("Started authorization request routine");
-        Device device = new Device();
-        device.setDeviceid(App.getUniqueId());
-        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(this);
-        UriBuilder uriBuilder = new UriBuilder();
-        uriBuilder.setRequestCode(REST_ASKAUTHORIZATION_KEY);
-        uriBuilder.setDevice(device);
-        restTemplateHelper.execute(uriBuilder);
+
+        DeviceRequestParameterResolver resolver = new DeviceRequestParameterResolver(REST_ASKAUTHORIZATION_KEY, conf, true);
+        resolver.postEntity(new Device(), this);
     }
 
     private void firstContact(){
-        writeData("Started first contact request routine");
+        writeData("Configuration file not found, starting first run routine");
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(getResources().getString(R.string.serverPathRequestMessage));
         final EditText input = new EditText(this);
-//        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         builder.setView(input);
 
-        builder.setPositiveButton(getResources().getString(R.string.okTag),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        restTemplateHelper = new RestTemplateHelper(WelcomeActivity.this);
-                        Configurations conf = new Configurations();
-                        conf.setServerPath(input.getText().toString());
-                        ConfigurationsManager.setLocalConfig(conf);
-                        UriBuilder uriBuilder = new UriBuilder();
-                        uriBuilder.setRequestCode(REST_FIRSTCONNECTIONTEST_KEY);
-                        restTemplateHelper.execute(uriBuilder);
-                    }
-                });
+        builder.setPositiveButton(getResources().getString(R.string.okTag), (dialog, which) -> {
+            String path = input.getText().toString();
+            Configurations conf = ConfigurationsManager.getLocalConfig();
+            conf.setServerPath(path);
+            ConfigurationsManager.setLocalConfig(conf);
+            getServerConfig();
+        });
         builder.show();
     }
 
     private void identify(){
         writeData("Started identify request routine");
-        List<String> parameters = new ArrayList<>();
-        parameters.add(App.getUniqueId());
-        UriBuilder uriBuilder = new UriBuilder();
-        uriBuilder.setRequestCode(REST_IDENTIFY_KEY);
-        uriBuilder.setParameters(parameters);
-        restTemplateHelper = new RestTemplateHelper(this);
-        restTemplateHelper.execute(uriBuilder);
+        DeviceRequestParameterResolver resolver = new DeviceRequestParameterResolver(REST_IDENTIFY_KEY, conf, true);
+        resolver.getEntity(new Device(), this);
     }
 
-    /*
-    private void authenticate(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getResources().getString(R.string.passwordProtectedTitle));
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        builder.setView(input);
+    private <T extends DomainEntity> void identificationResponse(EntityRestResult<T> result){
+        Device device;
+        try {
+            writeData("Trying to parse result to device entity");
+            device = (Device) result.getEntities().get(0);
 
-        builder.setPositiveButton(getResources().getString(R.string.okTag),
-                new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                Configurations config;
-                config = ConfigurationsManager.getLocalConfig(WelcomeActivity.this);
-                String password;
-                password = input.getText().toString();
-                if(config.getAppPassword().equals(password)){
-                    Intent intent = new Intent(WelcomeActivity.this,
-                            ConfigurationsActivity.class);
-                    startActivityForResult(intent, CONFIG_SCREEN_KEY);
-                }
-                else{
-                    Toast.makeText(WelcomeActivity.this,
-                            R.string.invalidPasswordMessage, Toast.LENGTH_LONG).show();
-                }
+            writeData("Starting local local configuration update");
+            Configurations conf = ConfigurationsManager.getLocalConfig();
+            conf.setUserId(device.getId());
+            conf.setUsername(device.getName());
+            conf.setRoles(device.getRoles().stream().map(Role::getDescription).collect(Collectors.toList()));
+            conf.setDeviceId(device.getDeviceid());
+
+            if (!device.isEnabled()) {
+                writeData("Access is disabled for this device - at the server user/device config");
+                MessageboxHelper.showMessage(this,
+                        getResources().getString(R.string.accessDisabledMessage),
+                        getResources().getString(R.string.okTag),
+                        this::finish);
+            } else if (conf.getUsername() == null || conf.getUsername().equals("")) {
+                writeData("Invalid device's username - at the server user/device config");
+                MessageboxHelper.showMessage(this,
+                        getResources().getString(R.string.invalidUsernameMessage),
+                        getResources().getString(R.string.okTag),
+                        this::finish);
+            } else if (conf.getRoles() == null || conf.getRoles().size() == 0 ){
+                writeData("Device's role list is empty - at the server user/device config");
+                MessageboxHelper.showMessage(this,
+                        getResources().getString(R.string.noRolesMessage),
+                        getResources().getString(R.string.okTag),
+                        this::finish);
+            } else {
+                ConfigurationsManager.setLocalConfig(conf);
+                writeData("Device authorized");
+                hasAuthorization = true;
+                layoutRestore();
             }
-        });
-        builder.show();
+        } catch (Exception ex) {
+            writeData("General error when trying to retrieve an authorization for this device - based on the retrieved configuration");
+            writeData(ex.getMessage());
+            MessageboxHelper.showMessage(this,
+                    getResources().getString(R.string.deviceNotAuthorizedMessage).concat("\n(").concat(App.getUniqueId()).concat(")"),
+                    getResources().getString(R.string.okTag),
+                    this::finish);
+        }
     }
-    */
+
+    @Override
+    public <T extends DomainEntity> void EntityRestCallback(EntityRestResult<T> result) {
+        if ((result.getStatus() == HttpStatus.OK || result.getStatus() == HttpStatus.CREATED)){
+            switch (result.getRequestCode()) {
+                case REST_CONFIGLOAD_KEY:
+                    writeData("The response was a configuration object");
+                    ParamConfigurations c = (ParamConfigurations) result.getEntities().get(0);
+                    ConfigurationsManager.setServerConfig(c);
+                    conf = c;
+                    identify();
+                    break;
+                case REST_IDENTIFY_KEY:
+                    writeData("The response was a result from a identify request");
+                    identificationResponse(result);
+                    break;
+                case REST_QRPROJECTCREATE_KEY:
+                    projectLoad();
+                    break;
+                case REST_QRPROJECTLOAD_KEY:
+                    project = (Project) result.getEntities().get(0);
+                    if(project == null){
+                        MessageboxHelper.showMessage(this,
+                                getResources().getString(R.string.unableToProcced),
+                                getResources().getString(R.string.noDataTag),
+                                getResources().getString(R.string.yesTAG),
+                                getResources().getString(R.string.noTag),
+                                null,null);
+                        return;
+                    }
+                    new ProjectHelper(qrCode, conf);
+                    boolean needsPdfFiles = requestPdfsIfNeeded();
+                    boolean needsPictures = requestPicturesIfNeeded();
+                    if (!(needsPdfFiles || needsPictures)) {
+                        checkForGenPictures();
+                    }
+                    break;
+                case REST_PROJECTSAVE_KEY:
+                    writeData("The response was a result from a project save request");
+                    startProjectEdit();
+                    break;
+            }
+        } else {
+            if(result.getMessage() != null && result.getMessage().length() > 0 ){
+                writeData(result.getMessage());
+            } else {
+                writeData("An unexpected error has occurred while trying to retrieve data from server with request code '" + result.getRequestCode() + "'");
+            }
+            switch (result.getRequestCode()) {
+                case REST_CONFIGLOAD_KEY:
+                    MessageboxHelper.showMessage(this,
+                            getResources().getString(R.string.unableToProcced),
+                            getResources().getString(R.string.serverConnectErrorMessage),
+                            getResources().getString(R.string.yesTAG),
+                            getResources().getString(R.string.noTag),
+                            this::firstContact,
+                            null);
+                    break;
+                case REST_IDENTIFY_KEY:
+                    writeData("An identify request was made but an empty response was received. Maybe this device is not yet authorized to use the app.");
+                    requestServerAuthorization();
+                    MessageboxHelper.showMessage(this,
+                            getResources().getString(R.string.deviceNotAuthorizedMessage).concat(" (").concat(App.getUniqueId()).concat(")"),
+                            getResources().getString(R.string.okTag),
+                            this::finish);
+                    break;
+                case REST_QRPROJECTCREATE_KEY:
+                    MessageboxHelper.showMessage(this,
+                            getResources().getString(R.string.dataRecoverError),
+                            getResources().getString(R.string.okTag),
+                            null);
+                    break;
+                case REST_QRPROJECTLOAD_KEY:
+                    if(result.getStatus() == HttpStatus.NOT_FOUND){
+                        writeData(result.getStatus().getReasonPhrase());
+                        if(result.getMessage() != null){
+                            writeData(result.getMessage());
+                        }
+                        ProjectRequestParametersResolver resolver = new ProjectRequestParametersResolver(REST_QRPROJECTCREATE_KEY, conf, true);
+                        resolver.postEntity(ProjectHelper.getProject(qrCode, conf), this);
+                    } else {
+                        String msg = result.getStatus().getReasonPhrase();
+                        if(result.getMessage() != null) {
+                            msg = msg.concat(result.getMessage());
+                        }
+                        writeData(msg);
+                        MessageboxHelper.showMessage(this,
+                                getResources().getString(R.string.unknownErrorMessage),
+                                getResources().getString(R.string.okTag),
+                                null);
+                        break;
+                    }
+                    break;
+                default:
+                    MessageboxHelper.showMessage(this,
+                            getResources().getString(R.string.unknownErrorMessage),
+                            getResources().getString(R.string.okTag),
+                            null);
+                    break;
+            }
+        }
+    }
+
+    @Override
+    public void FileRestCallback(FileRestResult result) {
+        if ((result.getStatus() == HttpStatus.OK || result.getStatus() == HttpStatus.CREATED)) {
+            switch (result.getRequestCode()) {
+                case REST_GENPICTURESREQUEST_KEY:
+                    writeData("Got existing general pictures list from server");
+                    List<String> pictures = result.getExistingContent();
+                    if (pictures.size() > 0) {
+                        fileHelperQueue.clear();
+                        ProjectHelper.getGenPictures(this, pictures, fileHelperQueue, project);
+                        String text = getResources().getString(R.string.retrievingGeneralPicturesTag)
+                                .concat(" - ")
+                                .concat(getResources().getString(R.string.remainingTag, pictures.size()));
+                        tvStatus.setText(text);
+                    } else {
+                        startProjectEdit();
+                    }
+                    break;
+                case REST_GENPICTUREDOWNLOAD_KEY:
+                    writeData("The response was a JPG file");
+                    continueIfPossible(getResources().getString(R.string.retrievingGeneralPicturesTag));
+                    break;
+                case REST_PDFREPORTDOWNLOAD_KEY:
+                    writeData("The response was a Pdf file");
+                    continueIfPossible(null);
+                    break;
+                case REST_PICTUREDOWNLOAD_KEY:
+                    writeData("The response was a JPG file");
+                    continueIfPossible(null);
+                    break;
+            }
+        } else {
+            switch(result.getRequestCode()){
+                case REST_PDFREPORTDOWNLOAD_KEY:
+                    writeData("A pdf file cannot be found or accessed at this time.");
+                    continueIfPossible(null);
+                    break;
+                case REST_PICTUREDOWNLOAD_KEY:
+                case REST_GENPICTUREDOWNLOAD_KEY:
+                    writeData("A picture file cannot be found or accessed at this time.");
+                    continueIfPossible(null);
+                    break;
+                default:
+                    MessageboxHelper.showMessage(this,
+                            getResources().getString(R.string.unknownErrorMessage),
+                            getResources().getString(R.string.okTag),
+                            null);
+                    break;
+            }
+            if(!ProjectHelper.hasPendingTasks(entityHelperQueue, fileHelperQueue, true)){
+                toggleControls(true);
+            }
+        }
+    }
+
+    private void continueIfPossible(String message){
+        if (message == null){
+            message = getResources().getString(R.string.retrievingFilesTag);
+        }
+        if (!ProjectHelper.hasPendingTasks(entityHelperQueue, fileHelperQueue, true)) {
+            if(!checkedForGenPictures) {
+                checkForGenPictures();
+            } else {
+                startProjectEdit();
+            }
+        } else {
+            int remaining = 0;
+            remaining += fileHelperQueue.size() - 1;
+            String text = message.concat(" - ")
+                    .concat(getResources().getString(R.string.remainingTag, remaining));
+            runOnUiThread(() -> tvStatus.setText(text));
+        }
+    }
+
 }

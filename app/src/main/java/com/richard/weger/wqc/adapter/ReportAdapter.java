@@ -17,13 +17,16 @@ import com.richard.weger.wqc.domain.ItemReport;
 import com.richard.weger.wqc.domain.Report;
 import com.richard.weger.wqc.helper.ReportHelper;
 
+import java.util.Comparator;
 import java.util.List;
+
+import static com.richard.weger.wqc.appconstants.AppConstants.*;
 
 public class ReportAdapter extends ArrayAdapter<Report> {
 
     private final List<Report> reportList;
     private final Context context;
-    private boolean enabled;
+    private boolean enabled = true;
 
     private ChangeListener listener;
 
@@ -32,7 +35,7 @@ public class ReportAdapter extends ArrayAdapter<Report> {
     }
 
     public interface ChangeListener {
-        void reportListClick(Report report, int position);
+        void reportListClick(Long id);
     }
 
     public void setEnabled(boolean enabled){
@@ -47,36 +50,29 @@ public class ReportAdapter extends ArrayAdapter<Report> {
 
     @Override
     public View getView(@NonNull final int position, @NonNull View convertView, @NonNull ViewGroup parent){
+
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View rowView = inflater.inflate(R.layout.report_row_layout, parent, false);
+
+        reportList.sort(Comparator.comparing(Report::getType).reversed().thenComparing(Report::getId));
 
         TextView textView = rowView.findViewById(R.id.tvRep);
         CheckBox checkBox = rowView.findViewById(R.id.chkRep);
         ConstraintLayout constraintLayout = rowView.findViewById(R.id.conRep);
         LinearLayout linearLayout = rowView.findViewById(R.id.linRep);
 
-        textView.setEnabled(enabled);
-        constraintLayout.setEnabled(enabled);
-        linearLayout.setEnabled(enabled);
+        textView.setEnabled(this.enabled);
+        constraintLayout.setEnabled(this.enabled);
+        linearLayout.setEnabled(this.enabled);
 
         final Report report = reportList.get(position);
 
-        textView.setText((new ReportHelper()).getReportLabel(report.getReference())); //.concat(" - Z").concat(String.valueOf(report.getDrawingref().getNumber()))
+        textView.setText(report.toString()); //.concat(" - Z").concat(String.valueOf(report.getParent().getNumber()))
         checkBox.setText("");
 
-        if (report instanceof ItemReport){
-            checkBox.setChecked(((ItemReport) report).getPendingItemsCount() == 0);
-        } else if (report instanceof CheckReport){
-            int marks = ((CheckReport)report).getMarksCount();
-            checkBox.setChecked(marks > 0);
-        }
+        checkBox.setChecked(report.isFinished());
 
-        final View.OnClickListener l = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                listener.reportListClick(report, position);
-            }
-        };
+        final View.OnClickListener l = v -> listener.reportListClick(report.getId());
 
         constraintLayout.setOnClickListener(l);
         linearLayout.setOnClickListener(l);

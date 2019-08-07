@@ -3,7 +3,6 @@ package com.richard.weger.wqc.activity;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
@@ -11,37 +10,59 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.domain.CheckReport;
+import com.richard.weger.wqc.domain.DomainEntity;
 import com.richard.weger.wqc.domain.Mark;
+import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
+import com.richard.weger.wqc.domain.Role;
 import com.richard.weger.wqc.firebird.FirebirdMessagingService;
+import com.richard.weger.wqc.helper.FileHelper;
+import com.richard.weger.wqc.helper.MessageboxHelper;
+import com.richard.weger.wqc.helper.PdfHelper;
 import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.helper.WQCDocumentHelper;
-import com.richard.weger.wqc.rest.RestTemplateHelper;
-import com.richard.weger.wqc.rest.UriBuilder;
-import com.richard.weger.wqc.util.App;
-import com.richard.weger.wqc.util.DeviceManager;
-import com.richard.weger.wqc.helper.JsonHelper;
-import com.richard.weger.wqc.helper.PdfHelper;
+import com.richard.weger.wqc.rest.entity.EntityRestResult;
+import com.richard.weger.wqc.rest.entity.EntityRestTemplateHelper;
+import com.richard.weger.wqc.service.ErrorResponseHandler;
+import com.richard.weger.wqc.service.MarkRequestParametersResolver;
+import com.richard.weger.wqc.service.ProjectRequestParametersResolver;
+import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
+import com.richard.weger.wqc.service.ReportRequestParametersResolver;
 import com.richard.weger.wqc.util.TouchImageView;
+
+import org.springframework.http.HttpStatus;
 
 import java.io.File;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import static com.richard.weger.wqc.constants.AppConstants.*;
+import static com.richard.weger.wqc.appconstants.AppConstants.PARAMCONFIG_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REPORT_ID_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_MARKREMOVE_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_MARKSAVE_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_REPORTUPLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.SDF;
 import static com.richard.weger.wqc.helper.LogHelper.writeData;
 
 public class CheckReportEditActivity extends Activity implements TouchImageView.ChangeListener,
-        RestTemplateHelper.RestHelperResponse, FirebirdMessagingService.FirebaseListener {
+        EntityRestTemplateHelper.EntityRestResponse,
+        FirebirdMessagingService.FirebaseListener {
 
     CheckReport report;
+    ParamConfigurations conf;
     Bitmap originalBitmap = null,
             currentBitmap = null;
     int currentPage = 0,
@@ -56,36 +77,36 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
     Runnable runnable;
     Handler handler = new Handler();
     boolean paused = false;
+    boolean canRun = false;
 
     private void setRunnable(){
         final int interval = 1000;
-        runnable = new Runnable(){
-            public void run(){
-                if(!checkInternetConnection()){
-                    setWaitingLayout();
-                    paused = true;
-                } else {
-                    inflateActivityLayout();
-                    if(paused){
-                        projectLoad();
-                        paused = false;
+        if(canRun) {
+            if(runnable == null) {
+                runnable = () -> {
+                    if (!checkInternetConnection()) {
+                        setWaitingLayout();
+                        paused = true;
+                    } else {
+                        inflateActivityLayout();
+                        if (paused) {
+                            projectLoad();
+                            paused = false;
+                        }
                     }
-                }
+                };
+                handler.postAtTime(runnable, System.currentTimeMillis() + interval);
+                handler.postDelayed(runnable, interval);
             }
-        };
-        handler.postAtTime(runnable, System.currentTimeMillis() + interval);
-        handler.postDelayed(runnable, interval);
+        }
     }
 
     private void setWaitingLayout(){
         setContentView(R.layout.activity_wait);
         (findViewById(R.id.pbWelcome)).setVisibility(View.VISIBLE);
-        ((findViewById(R.id.btnExit))).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-                onDestroy();
-            }
+        ((findViewById(R.id.btnExit))).setOnClickListener(v -> {
+            finish();
+            onDestroy();
         });
     }
 
@@ -106,7 +127,9 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
     protected void onPause(){
         super.onPause();
         close(false);
-        handler.removeCallbacks(runnable);
+        if(runnable != null) {
+            handler.removeCallbacks(runnable);
+        }
     }
 
     @Override
@@ -122,122 +145,161 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
 
         String folder;
 
-        writeData("Getting intent data");
+        writeData("Retrieving intent data");
         Intent intent = getIntent();
-        int id;
-        id = intent.getIntExtra(REPORT_ID_KEY, -1);
+        Long id;
+        id = intent.getLongExtra(REPORT_ID_KEY, -1);
         if(id < 0){
             writeData("Invalid id found at the recovered data. Aborting");
             setResult(RESULT_CANCELED);
             finish();
         }
-        writeData("Getting project from intent data");
+        conf = (ParamConfigurations) intent.getSerializableExtra(PARAMCONFIG_KEY);
         Project project = (Project) intent.getSerializableExtra(PROJECT_KEY);
-        writeData("Linking project references");
         ProjectHelper.linkReferences(project);
-        writeData("Getting report from project");
-        report = (CheckReport) project.getDrawingRefs().get(0).getReports().get(id);
-
-        writeData("Generating original documents folder name");
-        folder = StringHelper.getProjectFolderPath(project).concat("Originals/");
+        report = (CheckReport) project.getDrawingRefs().get(0).getReports().stream().filter(r -> r.getId().equals(id)).findFirst().orElse(null);
+        folder = StringHelper.getPdfsFolderPath(project);
 
         filePath = folder.concat(File.separator).concat(report.getFileName());
 
-        writeData("Starting activity start from check report edit screen");
-        inflateActivityLayout();
+        if(!FileHelper.isValidFile(filePath)){
+            setWaitingLayout();
+            MessageboxHelper.showMessage(
+                    this,
+                    getResources().getString(R.string.fileNotFoundMessage),
+                    getResources().getString(R.string.okTag),
+                    () -> {
+                        setResult(RESULT_OK);
+                        finish();
+                    }
+            );
+        } else {
+            writeData("Starting activity start from check report edit screen");
+            canRun = true;
+            inflateActivityLayout();
+            if(runnable == null){
+                setRunnable();
+            }
+        }
     }
 
-    private void configImageView(int id){
-        writeData("Started configuring image view");
-        imageView = findViewById(id);
+    private void configImageView(){
+        writeData("Started image view config");
+        imageView = findViewById(R.id.ivDocument);
         imageView.setMaxZoom(12f);
         imageView.setChangeListener(this);
         imageView.setTag(mode);
 
-        writeData("Getting document pages count");
         pageCount = PdfHelper.getPageCount(filePath);
         if(pageCount == 0 || pageCount != report.getPages().size()){
-            // Toast.makeText(this, R.string.dataRecoverError, Toast.LENGTH_LONG).show();
             setResult(RESULT_CANCELED);
             finish();
         }
 
-        writeData("Getting current page bitmap");
         originalBitmap = WQCDocumentHelper.pageLoad(currentPage, filePath, getResources());
 
-        writeData("Updating image view with current page bitmap");
         if(originalBitmap != null) {
             currentBitmap = WQCDocumentHelper.bitmapCopy(originalBitmap);
-            init();
+            updateButtonState();
             setListeners();
             updatePointsDrawing();
         } else {
             writeData("Image view update error");
             Toast.makeText(this, R.string.unknownErrorMessage, Toast.LENGTH_LONG).show();
-//            dataLoadError();
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void inflateActivityLayout(){
         writeData("Setting content view");
         setContentView(R.layout.activity_check_report_edit);
 
-        if(DeviceManager.getCurrentDevice().getRole().equals("TE") || report.getDrawingref().isFinished()){
+        if(DeviceHelper.isOnlyRole("TE") || report.isFinished()){
             findViewById(R.id.btnAddMark).setVisibility(View.INVISIBLE);
             findViewById(R.id.btnUndo).setVisibility(View.INVISIBLE);
+            (findViewById(R.id.cmbRole)).setVisibility(View.INVISIBLE);
         }
 
-        configImageView(R.id.ivDocument);
-    }
+        if(DeviceHelper.isOnlyRole("TE")){
+            (findViewById(R.id.chkFinished)).setEnabled(false);
+            (findViewById(R.id.chkFinished)).setClickable(false);
+        }
 
-    private void init(){
-        writeData("Updating buttons state");
-        updateButtonState();
+        Spinner cmbRoles = findViewById(R.id.cmbRole);
+        ArrayAdapter rolesAdapter = new ArrayAdapter(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                Objects.requireNonNull(DeviceHelper.getCurrentDevice().getRoles().stream().map(Role::getDescription).toArray()));
+        cmbRoles.setAdapter(rolesAdapter);
+
+        configImageView();
     }
 
     private void setListeners(){
         writeData("Setting buttons listeners");
         Button btn = findViewById(R.id.btnNext);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                nextPage();
-            }
-        });
+        btn.setOnClickListener(view -> nextPage());
 
         btn = findViewById(R.id.btnPrevious);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                previousPage();
-            }
-        });
+        btn.setOnClickListener(view -> previousPage());
 
         btn = findViewById(R.id.btnAddMark);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                toggleMarkAdd();
-            }
-        });
+        btn.setOnClickListener(view -> toggleMarkAdd());
 
         btn = findViewById(R.id.btnUndo);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                undo();
-            }
-        });
+        btn.setOnClickListener(view -> undo());
 
         btn = findViewById(R.id.btnExit);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                close(false);
+        btn.setOnClickListener(view -> close(false));
+
+        CheckBox chkFinished = findViewById(R.id.chkFinished);
+        chkFinished.setChecked(report.isFinished());
+        chkFinished.setOnClickListener((view) ->
+        {
+            toggleControls(false);
+            if(report.getMarksCount() > 0 || report.isFinished()) {
+                shouldChangeReportState();
+            } else {
+                MessageboxHelper.showMessage(this,
+                        getResources().getString(R.string.noMarksMessage),
+                        getResources().getString(R.string.okTag),
+                        this::cancelReportFinish);
             }
         });
     }
 
+    private void shouldChangeReportState(){
+        if(!report.isFinished()) {
+            MessageboxHelper.showMessage(this,
+                    getResources().getString(R.string.confirmationNeeded),
+                    getResources().getString(R.string.reportFinishMessage),
+                    getResources().getString(R.string.yesTAG),
+                    getResources().getString(R.string.noTag),
+                    () -> reportFinish(true),
+                    this::cancelReportFinish);
+        } else {
+            MessageboxHelper.showMessage(this,
+                    getResources().getString(R.string.confirmationNeeded),
+                    getResources().getString(R.string.reportUnfinishMessage),
+                    getResources().getString(R.string.yesTAG),
+                    getResources().getString(R.string.noTag),
+                    () -> reportFinish(false),
+                    this::cancelReportFinish);
+        }
+    }
+
+    private void cancelReportFinish(){
+        toggleControls(true);
+        ((CheckBox) findViewById(R.id.chkFinished)).setChecked(report.isFinished());
+    }
+
+    private void reportFinish(boolean finish){
+        report.setFinished(finish);
+        ReportRequestParametersResolver resolver = new ReportRequestParametersResolver(REST_REPORTUPLOAD_KEY, conf, false);
+        resolver.postEntity(report, this);
+    }
+
+    @SuppressWarnings("deprecation")
     private void toggleMarkAdd(){
         writeData("Toggling mark add state");
         Button btn = findViewById(R.id.btnAddMark);
@@ -252,6 +314,7 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
         imageView.setTag(mode);
     }
 
+    @SuppressWarnings("deprecation")
     private void notAddingMark(){
         writeData("Exiting mark add state");
         Button btn = findViewById(R.id.btnAddMark);
@@ -263,35 +326,21 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
     private void save(Mark mark){
         writeData("Started mark save request routine");
 
-        toggleControls(false);
+        mark.setDevice(DeviceHelper.getCurrentDevice());
 
-        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(this);
-
-        mark.setDevice(DeviceManager.getCurrentDevice());
-
-        UriBuilder uriBuilder = new UriBuilder();
-        uriBuilder.setRequestCode(REST_MARKSAVE_KEY);
-        uriBuilder.setMark(mark);
-        uriBuilder.setProject(report.getDrawingref().getProject());
-        uriBuilder.setPage(report.getPages().get(currentPage));
-        restTemplateHelper.execute(uriBuilder);
-        writeData("Finished mark save request routine");
+        MarkRequestParametersResolver resolver = new MarkRequestParametersResolver(REST_MARKSAVE_KEY, conf, false);
+        mark.getParent().setId(report.getPages().get(currentPage).getId());
+        resolver.postEntity(mark, this);
     }
 
     private void remove(Mark mark){
         writeData("Started mark remove request routine");
-        toggleControls(false);
 
-        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(this);
-        UriBuilder uriBuilder = new UriBuilder();
-        uriBuilder.setRequestCode(REST_MARKREMOVE_KEY);
-        uriBuilder.setMark(mark);
-        uriBuilder.setProject(report.getDrawingref().getProject());
-        uriBuilder.setPage(report.getPages().get(currentPage));
-        restTemplateHelper.execute(uriBuilder);
+        MarkRequestParametersResolver resolver = new MarkRequestParametersResolver(REST_MARKREMOVE_KEY, conf, false);
+        resolver.deleteEntity(mark, this);
+
         List<Mark> marks = report.getPages().get(currentPage).getMarks();
         marks.remove(mark);
-        writeData("Finished mark remove request routine");
     }
 
     private void close(boolean error){
@@ -304,7 +353,6 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
         finish();
         finishAndRemoveTask();
         stopLockTask();
-        writeData("Check report activity closed");
         super.onDestroy();
     }
 
@@ -314,7 +362,6 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
             originalBitmap = WQCDocumentHelper.pageLoad(++currentPage, filePath, getResources());
             currentBitmap = WQCDocumentHelper.bitmapCopy(originalBitmap);
             updatePointsDrawing();
-            writeData("Finished next page rendering routine");
         }
         updateButtonState();
     }
@@ -325,7 +372,6 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
             originalBitmap = WQCDocumentHelper.pageLoad(--currentPage, filePath, getResources());
             currentBitmap = WQCDocumentHelper.bitmapCopy(originalBitmap);
             updatePointsDrawing();
-            writeData("Finished previous page rendering routine");
         }
         updateButtonState();
     }
@@ -334,53 +380,51 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
         writeData("Started buttons state update routine");
         findViewById(R.id.btnNext).setEnabled(!(currentPage == pageCount - 1));
         findViewById(R.id.btnPrevious).setEnabled(!(currentPage == 0));
-        findViewById(R.id.btnUndo).setEnabled(canUndo());
-        writeData("Finished buttons state update routine");
+        findViewById(R.id.btnUndo).setEnabled(getLastPlacedUserMark() != null);
     }
 
     private void updateImageView(Bitmap bitmap){
         writeData("Started image view update routine");
         imageView.setImageBitmap(bitmap);
-        writeData("Finished image view update routine");
     }
 
     private void addMark(float[] touchPoint){
+        Spinner cmbRoles = findViewById(R.id.cmbRole);
+        String roleToShow = cmbRoles.getSelectedItem().toString();
         writeData("Started on-touch mark add routine");
         List<Mark> markList = report.getPages().get(currentPage).getMarks();
         Mark mark = new Mark();
         mark.setX(touchPoint[0]);
         mark.setY(touchPoint[1]);
-        mark.setDevice(DeviceManager.getCurrentDevice());
-
+        mark.setDevice(DeviceHelper.getCurrentDevice());
         mark.setAddedOn(SDF.format(Calendar.getInstance().getTime()));
+        mark.setRoleToShow(roleToShow);
 
         markList.add(mark);
         notAddingMark();
         updateButtonState();
         save(mark);
-        writeData("Finished on-touch mark add routine");
     }
 
     private void undo(){
         Mark mark;
-        mark = getLastContextMark();
+        mark = getLastPlacedUserMark();
         if(mark != null) {
             writeData("Started mark undo routine");
             updateButtonState();
             notAddingMark();
             remove(mark);
-            writeData("Finished mark undo routine");
         }
     }
 
-    private Mark getLastContextMark(){
+    private Mark getLastPlacedUserMark(){
         writeData("Started get last context mark routine");
         List<Mark> markList = report.getPages().get(currentPage).getMarks();
         Mark mark;
         if(markList != null && markList.size() > 0){
             for(int i = markList.size() - 1; i >= 0; i--) {
                 mark = markList.get(i);
-                if (mark.getDevice().getRole().equals(DeviceManager.getCurrentDevice().getRole())) {
+                if (mark.getDevice().getDeviceid().equals(DeviceHelper.getCurrentDevice().getDeviceid())) {
                     writeData("Found a mark added by the current user");
                     return mark;
                 }
@@ -404,19 +448,6 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
         }
     }
 
-    private boolean canUndo(){
-        writeData("Started can undo routine");
-        List<Mark> marks = report.getPages().get(currentPage).getMarks();
-        for(int i = 0; i < marks.size(); i++){
-            if(marks.get(i).getDevice().getRole().equals(DeviceManager.getCurrentDevice().getRole())){
-                writeData("There are marks added by the current user so he is able to remove them");
-                return true;
-            }
-        }
-        writeData("No marks added by the current user were found so he cant remove any existing mark");
-        return false;
-    }
-
     @Override
     public void onTouch(float[] touchPoint) {
         Mark m = touchOnExistingMark(touchPoint);
@@ -435,43 +466,31 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         String positiveButtonTag, negativeButtonTag;
         boolean canRemove = false;
-        final String markRole = m.getDevice().getRole();
+        final String markRole = m.getRoleToShow();
 
         builder.setMessage(String.format("%s: %s \n%s: %s \n%s: %s",
                 getResources().getString(R.string.usernameTag),
                 m.getDevice().getName(),
                 getResources().getString(R.string.roleTag),
-                m.getDevice().getRole(),
+                markRole,
                 getResources().getString(R.string.addeddateTag),
                 m.getAddedOn()));
-        if (!DeviceManager.getCurrentDevice().getRole().equals("TE") &&
-                m.getDevice().getRole().equals(DeviceManager.getCurrentDevice().getRole())) {
+        if (!DeviceHelper.isOnlyRole("TE") &&
+                m.getDevice().getDeviceid().equals(DeviceHelper.getCurrentDevice().getDeviceid())
+                && !report.isFinished()) {
             canRemove = true;
         }
         if (canRemove){
             positiveButtonTag = getResources().getString(R.string.removeTag);
             negativeButtonTag = getResources().getString(R.string.cancelTag);
 
-            builder.setNegativeButton(negativeButtonTag, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
+            builder.setNegativeButton(negativeButtonTag, (dialog, which) -> {
 
-                }
             });
-            builder.setPositiveButton(positiveButtonTag, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    if (markRole.equals(DeviceManager.getCurrentDevice().getRole())){
-                        remove(lastTouchedMark);
-                    }
-                }
-            });
+            builder.setPositiveButton(positiveButtonTag, (dialog, which) -> remove(lastTouchedMark));
         } else {
             positiveButtonTag = getResources().getString(R.string.okTag);
-            builder.setPositiveButton(positiveButtonTag, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                }
+            builder.setPositiveButton(positiveButtonTag, (dialog, which) -> {
             });
         }
 
@@ -496,127 +515,130 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
         return null;
     }
 
-    private void toggleControls(boolean bResume){
-        writeData("Started controls toggle routine");
-        (findViewById(R.id.btnAddMark)).setEnabled(bResume);
+    @Override
+    public <T extends DomainEntity> void EntityRestCallback(EntityRestResult<T> result) {
+        writeData("Started server http response handler");
+        toggleControls(true);
+        if(result.getStatus() == HttpStatus.OK || result.getStatus() == HttpStatus.CREATED) {
+            switch (result.getRequestCode()) {
+                case REST_MARKSAVE_KEY:
+                    writeData("The response was got from a mark save request, started mark id update commands");
+                    if(result.getMessage() != null){
+                        List<Mark> marks = report.getPages().get(currentPage).getMarks();
+                        Long id = Long.valueOf(result.getMessage().substring(result.getMessage().lastIndexOf("/") + 1));
+                        marks.stream().filter(m -> m.getId() == 0L).findFirst().ifPresent(m -> m.setId(id));
+                    }
+                    /*Toast.makeText(this, R.string.changesSavedMessage, Toast.LENGTH_SHORT).show();*/
+                    break;
+                case REST_MARKREMOVE_KEY:
+                    /*
+                    writeData("The response was got from a mark remove request");
+                    Toast.makeText(this, R.string.changesSavedMessage, Toast.LENGTH_SHORT).show();
+                    */
+                    break;
+                case REST_QRPROJECTLOAD_KEY:
+                    writeData("The response was got from a qr project load request, trying to parse result to project entity");
+                    Project project = (Project) result.getEntities().get(0);
 
-        if(bResume) {
-            (findViewById(R.id.btnUndo)).setEnabled(canUndo());
+                    writeData("Parse successful, getting report from project");
+                    report = (CheckReport) project.getDrawingRefs().get(0).getReports().stream()
+                            .filter(r -> r.getId().equals(report.getId()))
+                            .findFirst()
+                            .orElse(null);
+                    if (report == null) {
+                        dataLoadError();
+                    }
+                    updatePointsDrawing();
+                    toggleControls(true);
+                    break;
+                case REST_REPORTUPLOAD_KEY:
+                    /*
+                    toggleControls(true );
+                    MessageboxHelper.showMessage(this,
+                            getResources().getString(R.string.changesSavedMessage),
+                            getResources().getString(R.string.okTag),
+                            null);
+                            */
+            }
+            updatePointsDrawing();
         } else {
-            (findViewById(R.id.btnUndo)).setEnabled(false);
+            ErrorResponseHandler.handle(result, this, this::projectLoad);
         }
+    }
 
-        (findViewById(R.id.btnNext)).setEnabled(currentPage < report.getPagesCount());
-        (findViewById(R.id.btnPrevious)).setEnabled(currentPage > 0);
-        (findViewById(R.id.btnExit)).setEnabled(bResume);
-        if(!bResume) {
-            (findViewById(R.id.pbCheckReportEdit)).setVisibility(View.VISIBLE);
-        } else {
-            (findViewById(R.id.pbCheckReportEdit)).setVisibility(View.INVISIBLE);
-        }
-        writeData("Finished controls toggle routine");
+    @Override
+    public void toggleControls(boolean bResume){
+        runOnUiThread(() ->
+                {
+                    writeData("Started controls toggle routine");
+                    (findViewById(R.id.btnAddMark)).setEnabled(bResume && !DeviceHelper.isOnlyRole("TE"));
+
+                    if (bResume) {
+                        (findViewById(R.id.btnUndo)).setEnabled(getLastPlacedUserMark() != null);
+                    } else {
+                        (findViewById(R.id.btnUndo)).setEnabled(false);
+                    }
+
+                    (findViewById(R.id.btnNext)).setEnabled(currentPage < (report.getPagesCount() - 1) && bResume);
+                    (findViewById(R.id.btnPrevious)).setEnabled(currentPage > 0 && bResume);
+                    (findViewById(R.id.btnExit)).setEnabled(bResume);
+                    if (!bResume) {
+                        (findViewById(R.id.pbCheckReportEdit)).setVisibility(View.VISIBLE);
+                    } else {
+                        (findViewById(R.id.pbCheckReportEdit)).setVisibility(View.INVISIBLE);
+                    }
+                    (findViewById(R.id.chkFinished)).setEnabled(bResume && !DeviceHelper.isOnlyRole("TE"));
+                    (findViewById(R.id.cmbRole)).setEnabled(bResume && !DeviceHelper.isOnlyRole("TE"));
+
+                    if(DeviceHelper.isOnlyRole("TE") || report.isFinished()){
+                        findViewById(R.id.btnAddMark).setVisibility(View.INVISIBLE);
+                        findViewById(R.id.btnUndo).setVisibility(View.INVISIBLE);
+                        (findViewById(R.id.cmbRole)).setVisibility(View.INVISIBLE);
+                    } else {
+                        findViewById(R.id.btnAddMark).setVisibility(View.VISIBLE);
+                        findViewById(R.id.btnUndo).setVisibility(View.VISIBLE);
+                        (findViewById(R.id.cmbRole)).setVisibility(View.VISIBLE);
+                    }
+
+                    CheckBox chkFinished = findViewById(R.id.chkFinished);
+                    chkFinished.setChecked(report.isFinished());
+
+                }
+        );
+    }
+
+    @Override
+    public void onError() {
+
     }
 
     private void dataLoadError(){
+        toggleControls(true);
+
         writeData("Showing default error message");
         toggleControls(true);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        String message = getResources().getString(R.string.dataRecoverError);
-        builder.setMessage(message);
-        builder.setCancelable(false);
-        builder.setPositiveButton(R.string.okTag, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                close(true);
-            }
-        });
-        builder.show();
-    }
-
-    private void dataLoadError(String customMessage){
-        writeData("Showing custom error message");
-        toggleControls(true);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(customMessage);
-        builder.setCancelable(false);
-        builder.setPositiveButton(R.string.okTag, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-            }
-        });
-        builder.show();
+        MessageboxHelper.showMessage(this,
+                getResources().getString(R.string.dataRecoverError),
+                getResources().getString(R.string.okTag),
+                () -> close(true)
+        );
     }
 
     private void projectLoad(){
         writeData("Started project load request routine");
-        RestTemplateHelper restTemplateHelper = new RestTemplateHelper(this);
-        UriBuilder uriBuilder = new UriBuilder();
-        uriBuilder.setRequestCode(REST_QRPROJECTLOAD_KEY);
-        uriBuilder.getParameters().add(StringHelper.getQrText(report.getDrawingref().getProject()));
-        restTemplateHelper.execute(uriBuilder);
-        toggleControls(false);
-        writeData("Finished project load request routine");
-    }
-
-    @Override
-    public void RestTemplateCallback(String requestCode, String result) {
-        writeData("Started server http response handler");
-        toggleControls(true);
-        if(result != null) {
-            writeData("A not null response was received");
-            if (!result.equals(App.getContext().getResources().getString(R.string.drawingLockedMessage))) {
-                writeData("The current drawing is not locked");
-                if (requestCode.equals(REST_MARKSAVE_KEY)) {
-                    writeData("The response was got from a mark save request");
-                    writeData("Started mark id update commands");
-                    List<Mark> marks = report.getPages().get(currentPage).getMarks();
-                    marks.get(marks.size() - 1).setId(JsonHelper.toObject(result, Mark.class).getId());
-                    writeData("Finished mark id update commands");
-                } else if (requestCode.equals(REST_MARKREMOVE_KEY)) {
-                    writeData("The response was got from a mark remove request");
-//                    writeData("Started mark remove commands processing");
-//                    List<Mark> markList = report.getPages().get(currentPage).getMarks();
-//                    markList.remove(getLastContextMark());
-//                    writeData("Finished mark remove commands processing");
-                } else if (requestCode.equals(REST_QRPROJECTLOAD_KEY)) {
-                    writeData("The response was got from a qr project load request");
-                    writeData("Trying to parse result to project entity");
-                    Project project = ProjectHelper.fromJson(result);
-                    writeData("Parse successful");
-                    writeData("Getting report from project");
-
-                    report = (CheckReport) project.getDrawingRefs().get(0).getReport(report.getId());
-                    if(report == null){
-                        dataLoadError();
-                    }
-                    writeData("Report got successful");
-                    updatePointsDrawing();
-                    toggleControls(true);
-                }
-            } else {
-                writeData("The current drawing is locked by another user. Write attempt aborted");
-                toggleControls(false);
-                projectLoad();
-                dataLoadError(App.getContext().getResources().getString(R.string.drawingLockedMessage));
-            }
-            updatePointsDrawing();
-        } else {
-            writeData("A generic error occurred while trying to get a response from the server. The requestCode was:" + requestCode);
-            dataLoadError();
-        }
-
+        ProjectRequestParametersResolver resolver = new ProjectRequestParametersResolver(REST_QRPROJECTLOAD_KEY, conf, true);
+        resolver.getEntity(ProjectHelper.getProject(), this);
     }
 
     @Override
     public void messageReceived(Map<String, String> data) {
         String qrCode = data.get("qrCode");
-        if(StringHelper.getQrText(report.getDrawingref().getProject()).equals(qrCode)){
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    projectLoad();
-                }
-            });
+        if(qrCode != null) {
+//            qrCode = data.replace("\\", "");
+            if (ProjectHelper.getQrCode().equals(qrCode)) {
+                writeData("Project changed by another user/device. Data reload triggered");
+                runOnUiThread(this::projectLoad);
+            }
         }
     }
 }

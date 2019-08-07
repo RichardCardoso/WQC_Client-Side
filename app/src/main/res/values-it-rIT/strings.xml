@@ -26,7 +26,7 @@
     <string name="btnErasePicture">Cancella foto</string>
     <string name="saveButton">Salvare</string>
     <string name="dataRecoverError">Impossibile recuperare i dati richiesti. Per favore riprova più tardi.</string>
-    <string name="pendingItems">Articoli in sospeso</string>
+    <string name="pendingItemsLabel">Articoli in sospeso</string>
     <string name="btnContinueProject">Continua il progetto esistente</string>
     <string name="btnGetProjectFromServer">Ottieni il progetto finito dal server</string>
     <string name="projectFinishConfirmation">Sei sicuro di voler finire il progetto?</string>
@@ -70,7 +70,7 @@
     <string name="passwordProtectedTitle">Si prega di inserire la password</string>
     <string name="invalidPasswordMessage">Password non valida!</string>
     <string name="invalidQrCodeString">Il formato del codice qr specificato non è valido</string>
-    <string name="closeMessage">Vuoi chiudere l\'app?</string>
+    <string name="closeQuestion">Vuoi chiudere l\'app?</string>
     <string name="confirmationNeeded">Per favore conferma la tua azione</string>
     <string name="btnAddMark">Aggiungi un segno</string>
     <string name="btnUndo">Disfare</string>
@@ -110,11 +110,26 @@
     <string name="getMorePicturesTag">Vuoi fare altre foto?</string>
     <string name="noDataTag">Nessun dato</string>
     <string name="picturesListTag">Elenco delle foto generali</string>
-    <string name="retrievingGeneralPicturesTag">" Recupero di foto generali"</string>
+    <string name="retrievingGeneralPicturesTag">Recupero di foto generali</string>
     <string name="retrievingPdfsTag">" Recupero di file PDF"</string>
     <string name="retrievingReportPicturesTag">Recupero delle immagini della scheda di controllo</string>
     <string name="remainingTag">" Oggetti rimanenti: %d"</string>
     <string name="finishedTag">Finito</string>
     <string name="mustWaitCompletion">Si prega di attendere fino al termine dell\'attività corrente</string>
     <string name="picturesUploadTag">Carica foto</string>
+    <string name="fileNotFoundMessage">Questo file non può essere trovato o consultato in questo momento. Si prega di contattare l\'amministratore di sistema!</string>
+    <string name="staleDataMessage">I tuoi dati sono obsoleti. Per favore riprova. Questo errore si verifica perché qualcuno potrebbe aver cambiato qualcosa e non hai ottenuto l\'ultima copia.</string>
+    <string name="noRolesMessage">L\'elenco dei ruoli di questo dispositivo è vuoto. Si prega di contattare l\'amministratore di sistema.</string>
+    <string name="accessDisabledMessage">L\'accesso al sistema per questo dispositivo è disabilitato. Si prega di contattare l\'amministratore di sistema.</string>
+    <string name="invalidUsernameMessage">Il nome utente di questo dispositivo non è valido. Si prega di contattare l\'amministratore di sistema.</string>
+    <string name="retrievingFilesTag">Recupero di file dal server</string>
+    <string name="commentsLabel">Commenti qui ...</string>
+    <string name="reportFinishMessage">Vuoi impostare questo rapporto come finito? Nessuna modifica è consentita mentre il report è impostato come finito!</string>
+    <string name="reportUnfinishMessage">Vuoi impostare questo rapporto come non finito? Ciò consentirà la modifica del report!</string>
+    <string name="noMarksMessage">Non è possibile impostare un rapporto finito senza segni!</string>
+    <string name="pendingItemsMessage">Non è possibile impostare come finito un rapporto che ha ancora elementi \"non controllati\"!</string>
+    <string name="changesSavedMessage">Modifiche salvate con successo!</string>
+    <string name="clientNameInformMessage">Si prega di informare il nome del cliente</string>
+    <string name="qrScanQuestion">Ti piacerebbe fare una nuova scansione del codice qr?</string>
+    <string name="invalidPictureFilenameMessage">Impossibile salvare le modifiche a causa di un nome file non valido!</string>
 </resources>

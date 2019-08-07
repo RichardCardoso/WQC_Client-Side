@@ -1,11 +1,18 @@
 package com.richard.weger.wqc.util;
 
+import com.richard.weger.wqc.domain.Role;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class Configurations {
+
     private String serverPath = "";
-    private int userId = 0;
+    private Long userId = 0L;
     private String username = "";
-    private String role = "";
+    private List<String> roles = new ArrayList<>();
     private String deviceId = "";
+
 
     public String getServerPath() {
         return serverPath;
@@ -15,11 +22,11 @@ public class Configurations {
         this.serverPath = serverPath;
     }
 
-    public int getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 
@@ -31,12 +38,12 @@ public class Configurations {
         this.username = username;
     }
 
-    public String getRole() {
-        return role;
+    public List<String> getRoles() {
+        return roles;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
     }
 
     public String getDeviceId() {
@@ -46,4 +53,5 @@ public class Configurations {
     public void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
     }
+
 }

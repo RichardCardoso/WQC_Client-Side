@@ -5,11 +5,14 @@ import android.content.SharedPreferences.*;
 import android.preference.PreferenceManager;
 
 import com.google.gson.Gson;
-import com.richard.weger.wqc.paramconfigs.ParamConfigurations;
+import com.richard.weger.wqc.domain.ParamConfigurations;
 
 import static com.richard.weger.wqc.helper.LogHelper.writeData;
 
 public class ConfigurationsManager{
+
+    private static boolean firstTimeGet = true;
+    private static boolean firstTimeSet = true;
 
     private static SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(App.getContext());
     private static ParamConfigurations pConfigs;
@@ -23,27 +26,39 @@ public class ConfigurationsManager{
     }
 
     public static void setLocalConfig(Configurations config){
-        writeData("Starting configurations's json export");
+        if(firstTimeSet) {
+            writeData("Starting configs json export");
+        }
         Editor prefsEditor = mPrefs.edit();
         Gson gson = new Gson();
         String json = gson.toJson(config);
         prefsEditor.putString(Configurations.class.getName(), json);
         prefsEditor.apply();
-        writeData("Finished configurations's json export");
+        if(firstTimeSet){
+            writeData("Finished configs json export");
+            firstTimeSet = false;
+        }
     }
 
     public static Configurations getLocalConfig(){
-        writeData("Starting configurations json load");
+        if(firstTimeGet) {
+            writeData("Starting configurations json load");
+        }
         Gson gson = new Gson();
         String json = mPrefs.getString(Configurations.class.getName(), "");
-        if(json.equals("")){
-            writeData("Project's json file not found. The app will create and use a file with the default configurations.");
-            setLocalConfig(new Configurations());
-            return new Configurations();
-        }
-        writeData("Finished configurations json load");
-        return gson.fromJson(json, Configurations.class);
-    }
 
+        if(json == null || json.isEmpty()){
+            writeData("Configs json file not found. The app will create and use a file with the default configurations.");
+            Configurations conf = new Configurations();
+            setLocalConfig(conf);
+            return conf;
+        }
+        Configurations conf = gson.fromJson(json, Configurations.class);
+        if(firstTimeGet) {
+            writeData("Finished configs  json load");
+            firstTimeGet = false;
+        }
+        return conf;
+    }
 
 }

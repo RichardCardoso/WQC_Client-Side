@@ -2,36 +2,42 @@ package com.richard.weger.wqc.activity;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.adapter.GeneralPictureAdapter;
 import com.richard.weger.wqc.domain.Project;
-import com.richard.weger.wqc.helper.JsonHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.StringHelper;
-import com.richard.weger.wqc.rest.RestTemplateHelper;
+import com.richard.weger.wqc.rest.file.FileRestResult;
+import com.richard.weger.wqc.rest.file.FileRestTemplateHelper;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.richard.weger.wqc.constants.AppConstants.*;
+import static com.richard.weger.wqc.appconstants.AppConstants.GENERAL_PICTURE_MODE;
+import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_CAPTURE_MODE;
+import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_FILEPATH_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_VIEWER_SCREEN_ID;
+import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREDOWNLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTURESREQUEST_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREUPLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.TAKEN_PICTURES_KEY;
 import static com.richard.weger.wqc.helper.LogHelper.writeData;
 
-public class PicturesListActivity extends ListActivity implements GeneralPictureAdapter.ChangeListener, RestTemplateHelper.RestHelperResponse {
+public class PicturesListActivity extends ListActivity implements GeneralPictureAdapter.ChangeListener, FileRestTemplateHelper.FileRestResponse {
 
     Project project;
     List<String> files = new ArrayList<>();
     List<String> filePaths = new ArrayList<>();
-    List<RestTemplateHelper> queue = new ArrayList<>();
+    List<FileRestTemplateHelper> queue = new ArrayList<>();
     GeneralPictureAdapter adapter;
 
     @Override
@@ -48,12 +54,12 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
         project = (Project) intent.getSerializableExtra(PROJECT_KEY);
         ProjectHelper.linkReferences(project);
 
-        (new ProjectHelper()).checkForGenPictures(this, project, false);
+        ProjectHelper.getGenPicturesList(this, project, false);
 
     }
 
     private void exit(){
-        if(!ProjectHelper.hasPendingTasks(queue, true)) {
+        if(!ProjectHelper.hasPendingTasks(null, queue, true)) {
             setResult(RESULT_OK);
             finish();
         } else {
@@ -96,7 +102,7 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
         if(folder.exists() && folder.listFiles().length > 0) {
             for (File f : folder.listFiles()) {
                 String fName = f.getName();
-                if (fName.contains("QP") && !files.contains(fName)) {
+                if (fName.contains("QP") && !files.contains(fName) && !fName.contains("_new")) {
                     files.add(fName);
                     filePaths.add(f.getAbsolutePath());
                 }
@@ -106,19 +112,18 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode){
-            case PICTURE_VIEWER_SCREEN_ID:
-                List<String> takenPictures;
-                if(data != null && data.hasExtra(TAKEN_PICTURES_KEY)) {
-                    takenPictures = data.getStringArrayListExtra(TAKEN_PICTURES_KEY);
-                    for (String picName : takenPictures) {
-                        ProjectHelper.generalPictureUpload(this, project, picName.substring(picName.lastIndexOf("/")), queue);
-                        findViewById(R.id.takeButton).setVisibility(View.INVISIBLE);
-                    }
-                    if(takenPictures.size() > 0){
-                        findViewById(R.id.pbPicturesList).setVisibility(View.VISIBLE);
-                    }
+        if (requestCode == PICTURE_VIEWER_SCREEN_ID) {
+            List<String> takenPictures;
+            if (data != null && data.hasExtra(TAKEN_PICTURES_KEY)) {
+                takenPictures = data.getStringArrayListExtra(TAKEN_PICTURES_KEY);
+                for (String picName : takenPictures) {
+                    ProjectHelper.generalPictureUpload(this, project, picName.substring(picName.lastIndexOf("/")), queue);
+                    findViewById(R.id.takeButton).setVisibility(View.INVISIBLE);
                 }
+                if (takenPictures.size() > 0) {
+                    findViewById(R.id.pbPicturesList).setVisibility(View.VISIBLE);
+                }
+            }
         }
     }
 
@@ -159,7 +164,7 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
                 adapter.notifyDataSetChanged();
             }
 
-            if(ProjectHelper.hasPendingTasks(queue, true)){
+            if(ProjectHelper.hasPendingTasks(null, queue, true)){
                 TextView tvMessage = findViewById(R.id.tvMessage);
                 if(tvMessage != null){
                     tvMessage.setText(
@@ -193,22 +198,21 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
     }
 
     @Override
-    public void RestTemplateCallback(String requestCode, String result) {
-        if(result != null) {
-            switch (requestCode) {
+    public void FileRestCallback(FileRestResult result) {
+        try {
+            switch (result.getRequestCode()) {
                 case REST_GENPICTUREUPLOAD_KEY:
-                    addFileToList(result);
+                    addFileToList(result.getMessage());
                     break;
                 case REST_GENPICTUREDOWNLOAD_KEY:
-                    addFileToList(result);
+                    addFileToList(result.getMessage());
                     break;
                 case REST_GENPICTURESREQUEST_KEY:
                     writeData("Got existing general pictures list from server");
-                    List<String> pictures = JsonHelper.toList(result, String.class);
+                    List<String> pictures = result.getExistingContent();
                     if (pictures.size() > 0) {
-                        ProjectHelper projectHelper = new ProjectHelper();
-                        projectHelper.getGenPictures(this, pictures, queue, project);
-                        if(!ProjectHelper.hasPendingTasks(queue, true)){
+                        ProjectHelper.getGenPictures(this, pictures, queue, project);
+                        if (!ProjectHelper.hasPendingTasks(null, queue, true)) {
                             inflateActivityLayout();
                         }
                     } else {
@@ -216,8 +220,18 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
                     }
                     break;
             }
-        } else {
-            Toast.makeText(this, R.string.unknownErrorMessage, Toast.LENGTH_LONG).show();
+        } catch (Exception ex){
+            ex.printStackTrace();
         }
+    }
+
+    @Override
+    public void toggleControls(boolean resume) {
+
+    }
+
+    @Override
+    public void onError() {
+
     }
 }

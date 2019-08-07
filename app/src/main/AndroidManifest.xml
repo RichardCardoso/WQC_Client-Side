@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
+        android:usesCleartextTraffic="true"
+
         android:name=".util.App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -28,7 +30,6 @@
             android:label="@string/app_name"></activity>
         <activity android:name=".activity.ItemReportEditActivity" />
         <activity android:name=".activity.PictureViewerActivity" />
-        <activity android:name=".activity.FileSelectActivity" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"
@@ -54,6 +55,11 @@
         </service>
 
         <activity android:name=".activity.PicturesListActivity"></activity>
+
+        <meta-data
+            android:name="com.google.android.gms.ads.AD_MANAGER_APP"
+            android:value="true" />
+
     </application>
 
 </manifest>
