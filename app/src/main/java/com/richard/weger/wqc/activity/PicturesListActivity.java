@@ -1,6 +1,5 @@
 package com.richard.weger.wqc.activity;
 
-import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,10 +11,16 @@ import android.widget.TextView;
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.adapter.GeneralPictureAdapter;
 import com.richard.weger.wqc.domain.Project;
+import com.richard.weger.wqc.domain.dto.FileDTO;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.StringHelper;
-import com.richard.weger.wqc.rest.file.FileRestResult;
+import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.rest.file.FileRestTemplateHelper;
+import com.richard.weger.wqc.result.AbstractResult;
+import com.richard.weger.wqc.result.ErrorResult;
+import com.richard.weger.wqc.result.ResultService;
+import com.richard.weger.wqc.result.SuccessResult;
+import com.richard.weger.wqc.service.ErrorResponseHandler;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,9 +35,8 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREDOW
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTURESREQUEST_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREUPLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.TAKEN_PICTURES_KEY;
-import static com.richard.weger.wqc.helper.LogHelper.writeData;
 
-public class PicturesListActivity extends ListActivity implements GeneralPictureAdapter.ChangeListener, FileRestTemplateHelper.FileRestResponse {
+public class PicturesListActivity extends ListActivity implements GeneralPictureAdapter.ChangeListener, RestTemplateHelper.RestTemplateResponse {
 
     Project project;
     List<String> files = new ArrayList<>();
@@ -63,16 +67,12 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
             setResult(RESULT_OK);
             finish();
         } else {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setCancelable(false);
-            builder.setPositiveButton(R.string.okTag, (dialog, which) -> {});
-            builder.setMessage(
-                    getResources().getString(R.string.mustWaitCompletion)
+            String message = getResources().getString(R.string.mustWaitCompletion)
                     .concat("( ")
                     .concat(getResources().getString(R.string.picturesUploadTag))
-                    .concat(") ")
-            );
-            builder.show();
+                    .concat(") ");
+            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_MUST_WAIT_WARNING, message, ErrorResult.ErrorLevel.WARNING, getClass());
+            ErrorResponseHandler.handle(err, this, null);
         }
     }
 
@@ -154,7 +154,7 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
     }
 
     private void addFileToList(String result){
-        if(!files.contains(result)){
+        if(!files.contains(result) && result != null){
             if(!result.endsWith(".jpg")){
                 result = result.concat(".jpg");
             }
@@ -198,18 +198,16 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
     }
 
     @Override
-    public void FileRestCallback(FileRestResult result) {
-        try {
+    public void RestTemplateCallback(AbstractResult result) {
+        if(result instanceof SuccessResult) {
             switch (result.getRequestCode()) {
                 case REST_GENPICTUREUPLOAD_KEY:
-                    addFileToList(result.getMessage());
-                    break;
                 case REST_GENPICTUREDOWNLOAD_KEY:
-                    addFileToList(result.getMessage());
+                    String filename = ResultService.getSingleResult(result, String.class);
+                    addFileToList(filename);
                     break;
                 case REST_GENPICTURESREQUEST_KEY:
-                    writeData("Got existing general pictures list from server");
-                    List<String> pictures = result.getExistingContent();
+                    List<FileDTO> pictures = ResultService.getMultipleResult(result, FileDTO.class);
                     if (pictures.size() > 0) {
                         ProjectHelper.getGenPictures(this, pictures, queue, project);
                         if (!ProjectHelper.hasPendingTasks(null, queue, true)) {
@@ -220,8 +218,9 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
                     }
                     break;
             }
-        } catch (Exception ex){
-            ex.printStackTrace();
+        } else {
+            ErrorResult err = ResultService.getErrorResult(result);
+            ErrorResponseHandler.handle(err, this, null);
         }
     }
 
@@ -231,7 +230,7 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
     }
 
     @Override
-    public void onError() {
+    public void onFatalError() {
 
     }
 }

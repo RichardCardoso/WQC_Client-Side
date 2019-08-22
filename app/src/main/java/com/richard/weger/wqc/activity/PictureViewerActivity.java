@@ -1,7 +1,6 @@
 package com.richard.weger.wqc.activity;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -9,35 +8,48 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
-import android.provider.MediaStore;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
+import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.helper.FileHelper;
 import com.richard.weger.wqc.helper.ImageHelper;
 import com.richard.weger.wqc.helper.MessageboxHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.StringHelper;
-import com.richard.weger.wqc.helper.DeviceHelper;
+import com.richard.weger.wqc.result.ErrorResult;
+import com.richard.weger.wqc.service.ErrorResponseHandler;
+import com.richard.weger.wqc.util.LoggerManager;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.logging.Logger;
 
 import uk.co.senab.photoview.PhotoViewAttacher;
 
-import static com.richard.weger.wqc.appconstants.AppConstants.*;
+import static com.richard.weger.wqc.appconstants.AppConstants.GENERAL_PICTURE_MODE;
+import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_ID_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_PICTURE_MODE;
+import static com.richard.weger.wqc.appconstants.AppConstants.PICTURES_AUTHORITY;
+import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_CAPTURE_MODE;
+import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_FILEPATH_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REPORT_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REQUEST_IMAGE_CAPTURE_ACTION;
+import static com.richard.weger.wqc.appconstants.AppConstants.SDF;
+import static com.richard.weger.wqc.appconstants.AppConstants.TAKEN_PICTURES_KEY;
 
 public class PictureViewerActivity extends Activity{
 
@@ -50,6 +62,7 @@ public class PictureViewerActivity extends Activity{
     Report report;
     String mode;
     ArrayList<String> takenPictures = new ArrayList<>();
+    Logger logger;
 
     @Override
     public void onBackPressed(){}
@@ -57,6 +70,9 @@ public class PictureViewerActivity extends Activity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        logger = LoggerManager.getLogger(getClass());
+
         setContentView(R.layout.activity_picture_viewer);
 
         imageView = findViewById(R.id.ivItem);
@@ -73,8 +89,10 @@ public class PictureViewerActivity extends Activity{
                 item = (Item) intent.getSerializableExtra(ITEM_KEY);
                 position = intent.getIntExtra(ITEM_ID_KEY, -1);
                 if(position == -1){
-                    Toast.makeText(this, R.string.dataRecoverError, Toast.LENGTH_LONG).show();
-                    resultCanceled();
+                    String message = getResources().getString(R.string.invalidItemIdError).concat("\n(").concat(getResources().getString(R.string.invalidEntityError));
+                    ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_INVALID_ITEM_ID_EXCEPTION, message, ErrorResult.ErrorLevel.SEVERE, getClass());
+                    ErrorResponseHandler.handle(err, this, this::resultCanceled);
+                    return;
                 }
 
                 if(item != null){
@@ -100,15 +118,11 @@ public class PictureViewerActivity extends Activity{
                                 imageView.setImageBitmap(bitmap);
                             }
                         } else {
-                            MessageboxHelper.showMessage(
-                                    this,
-                                    getResources().getString(R.string.fileNotFoundMessage),
-                                    getResources().getString(R.string.okTag),
-                                    () -> {
-                                        setResult(RESULT_OK);
-                                        finish();
-                                    }
-                            );
+                            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_FILE_ACCESS_EXCEPTION, getResources().getString(R.string.fileNotFoundMessage), ErrorResult.ErrorLevel.SEVERE, getClass());
+                            ErrorResponseHandler.handle(err, this, () ->{
+                                setResult(RESULT_OK);
+                                finish();
+                            });
                             return;
                         }
                     } else {
@@ -141,8 +155,9 @@ public class PictureViewerActivity extends Activity{
             try {
                 photoFile = createImageFile();
             } catch (Exception ex) {
-                Toast.makeText(this, "Error when trying to create the image file",
-                        Toast.LENGTH_LONG).show();
+                String message = getResources().getString(R.string.photoCaptureError).concat("\n(").concat(getResources().getString(R.string.tryAgainLaterMessage));
+                ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_PHOTO_CAPTURE_SETTING_EXCEPTION, message, ErrorResult.ErrorLevel.SEVERE, getClass());
+                ErrorResponseHandler.handle(err, this, null);
                 return;
             }
             if (photoFile != null) {
@@ -155,21 +170,23 @@ public class PictureViewerActivity extends Activity{
         }
     }
 
-    private File createImageFile(){
+    private File createImageFile() {
         // Create an image file name
         // String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName;
-        if(mode.equals(ITEM_PICTURE_MODE)) {
+        if (mode.equals(ITEM_PICTURE_MODE)) {
             imageFileName = item.getPicture().getFileName();
         } else {
-            SimpleDateFormat sdf = new SimpleDateFormat("MMM-dd-yyyy_hh:mm:ss");
             imageFileName = project.getReference()
                     .concat("Z").concat(String.valueOf(project.getDrawingRefs().get(0).getDnumber()))
                     .concat("T").concat(String.valueOf(project.getDrawingRefs().get(0).getParts().get(0).getNumber()))
                     .concat("QP").concat(String.valueOf(ProjectHelper.getCurrentPicNumber(project)))
                     .concat(".jpg");
         }
-        String folderPath = StringHelper.getProjectFolderPath(project).concat("Pictures/");
+        String folderPath = StringHelper.getProjectFolderPath(project);
+        if (folderPath != null){
+            folderPath = folderPath.concat("Pictures/");
+        }
         File storageDir = new File(folderPath);
         if(!storageDir.exists()){
             storageDir.mkdirs();
@@ -201,7 +218,7 @@ public class PictureViewerActivity extends Activity{
                 );
             }
             catch (IOException e2) {
-                e2.printStackTrace();
+                logger.warning(e.toString());
                 return null;
             }
         }
@@ -229,27 +246,25 @@ public class PictureViewerActivity extends Activity{
                 takenPictures.add(futurePath);
 
             } catch (Exception ex){
-                ex.printStackTrace();
+                logger.warning(ex.toString());
             }
 
             if(mode.equals(GENERAL_PICTURE_MODE)) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage(R.string.getMorePicturesTag);
-                builder.setCancelable(false);
-                builder.setNegativeButton(R.string.noTag, (dialog, which) -> finishTakingPictures());
-                builder.setPositiveButton(R.string.yesTAG, (dialog, which) -> takePicture());
-                builder.show();
+                MessageboxHelper.showMessage(this, "",
+                        getResources().getString(R.string.getMorePicturesTag),
+                        getResources().getString(R.string.yesTAG),
+                        getResources().getString(R.string.noTag),
+                        this::takePicture, this::finishTakingPictures);
             } else {
                 finishTakingPictures();
             }
         } else {
             if(mode.equals(GENERAL_PICTURE_MODE)){
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage(R.string.getMorePicturesTag);
-                builder.setCancelable(false);
-                builder.setNegativeButton(R.string.noTag, (dialog, which) -> finishTakingPictures());
-                builder.setPositiveButton(R.string.yesTAG, (dialog, which) -> takePicture());
-                builder.show();
+                MessageboxHelper.showMessage(this, "",
+                        getResources().getString(R.string.getMorePicturesTag),
+                        getResources().getString(R.string.yesTAG),
+                        getResources().getString(R.string.noTag),
+                        this::takePicture, this::finishTakingPictures);
             } else {
                 File file = new File(futurePath);
                 if (file.exists()) {
@@ -307,7 +322,7 @@ public class PictureViewerActivity extends Activity{
         try {
             dest.compress(Bitmap.CompressFormat.JPEG, 100, new FileOutputStream(new File(futurePath)));
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            logger.warning(e.toString());
         }
     }
 }

@@ -131,4 +131,11 @@
     <string name="clientNameInformMessage">Please inform the customer name</string>
     <string name="qrScanQuestion">Would you like to do a new qr code scan?</string>
     <string name="invalidPictureFilenameMessage">Unable to save the changes due to invalid picture filename!</string>
+    <string name="errorMsgMalformedRequest">There is a problem with the current request.</string>
+    <string name="tryAgainLaterMessage">Please try again later.</string>
+    <string name="projectCreationRequestFailed">A request for a project creation has failed.</string>
+    <string name="invalidEntityError">Unable to get a project/report data.</string>
+    <string name="invalidItemIdError">Unable to get the selected item\'s data.</string>
+    <string name="reportPageLoadFailed">Failed to load this report\'s page!</string>
+    <string name="photoCaptureError">Error setting photo capture!</string>
 </resources>

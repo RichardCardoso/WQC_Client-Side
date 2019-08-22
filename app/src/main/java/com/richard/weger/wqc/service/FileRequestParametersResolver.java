@@ -2,20 +2,22 @@ package com.richard.weger.wqc.service;
 
 import com.richard.weger.wqc.domain.CheckReport;
 import com.richard.weger.wqc.rest.RequestParameter;
+import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.rest.file.FileRequest;
 import com.richard.weger.wqc.rest.file.FileRequestHelper;
 import com.richard.weger.wqc.rest.file.FileRestTemplateHelper;
 import com.richard.weger.wqc.rest.file.FileReturnType;
 import com.richard.weger.wqc.rest.file.RawFileRequest;
 
-import static com.richard.weger.wqc.appconstants.AppConstants.*;
+import static com.richard.weger.wqc.appconstants.AppConstants.GET_METHOD;
+import static com.richard.weger.wqc.appconstants.AppConstants.POST_METHOD;
 
 public class FileRequestParametersResolver {
 
-    FileRestTemplateHelper.FileRestResponse delegate;
+    RestTemplateHelper.RestTemplateResponse delegate;
     String requestCode;
 
-    public FileRequestParametersResolver(String requestCode, FileRestTemplateHelper.FileRestResponse delegate){
+    public FileRequestParametersResolver(String requestCode, FileRestTemplateHelper.RestTemplateResponse delegate){
         this.delegate = delegate;
         this.requestCode = requestCode;
     }
@@ -51,7 +53,7 @@ public class FileRequestParametersResolver {
 
         RawFileRequest request = new RawFileRequest();
         request.setRequestCode(requestCode);
-        request.setFileReturnType(FileReturnType.StringlistReturn);
+        request.setFileReturnType(FileReturnType.ListReturn);
         request.setRequestMethod(GET_METHOD);
 
         RequestParameter param = new RequestParameter();
@@ -77,7 +79,7 @@ public class FileRequestParametersResolver {
 
         RawFileRequest request = new RawFileRequest();
         request.setRequestCode(requestCode);
-        request.setFileReturnType(FileReturnType.StringlistReturn);
+        request.setFileReturnType(FileReturnType.ListReturn);
         request.setRequestMethod(GET_METHOD);
 
         RequestParameter param = new RequestParameter();

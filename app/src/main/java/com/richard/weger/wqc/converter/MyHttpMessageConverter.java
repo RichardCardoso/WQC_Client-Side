@@ -2,7 +2,7 @@ package com.richard.weger.wqc.converter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.richard.weger.wqc.adapter.ReportTypeAdapter;
+import com.richard.weger.wqc.converter.typeadapter.ReportTypeAdapter;
 import com.richard.weger.wqc.appconstants.AppConstants;
 import com.richard.weger.wqc.domain.Report;
 

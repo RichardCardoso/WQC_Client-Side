@@ -5,11 +5,16 @@ import android.graphics.Bitmap;
 import android.graphics.pdf.PdfRenderer;
 import android.os.ParcelFileDescriptor;
 
+import com.richard.weger.wqc.util.LoggerManager;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public abstract class PdfHelper {
+
+    private static Logger logger = LoggerManager.getLogger(PdfHelper.class);
 
     public static Bitmap pdf2Bitmap(String filePath, int pageNumber, Resources resources){
         File file = new File(filePath);
@@ -18,7 +23,7 @@ public abstract class PdfHelper {
         try{
             mFileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
         } catch (FileNotFoundException e){
-            e.printStackTrace();
+            logger.warning(e.toString());
             return null;
         }
 
@@ -26,7 +31,7 @@ public abstract class PdfHelper {
         try{
             mPdfRenderer = new PdfRenderer(mFileDescriptor);
         } catch (IOException e){
-            e.printStackTrace();
+            logger.warning(e.toString());
             FileHelper.fileDelete(filePath);
             return null;
         }
@@ -42,7 +47,7 @@ public abstract class PdfHelper {
         try{
             mFileDescriptor.close();
         } catch (IOException e){
-            e.printStackTrace();
+            logger.warning(e.toString());
         }
         return bitmap;
     }
@@ -57,7 +62,7 @@ public abstract class PdfHelper {
         try{
             mFileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
         } catch (FileNotFoundException e){
-            e.printStackTrace();
+            logger.warning(e.toString());
             return 0;
         }
 
@@ -65,7 +70,7 @@ public abstract class PdfHelper {
         try{
             mPdfRenderer = new PdfRenderer(mFileDescriptor);
         } catch (IOException e){
-            e.printStackTrace();
+            logger.warning(e.toString());
             return 0;
         }
 

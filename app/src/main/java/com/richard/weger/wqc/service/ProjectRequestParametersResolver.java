@@ -18,13 +18,13 @@ public class ProjectRequestParametersResolver extends AbstractEntityRequestParam
 
     @Override
     protected void entityGetStrategy(Project entity, RawEntityRequest<Project> request) {
-        if(request.getRequestCode().equals(REST_QRPROJECTLOAD_KEY)) {
+        if(request.getRequestCode().equals(REST_QRPROJECTLOAD_KEY) && request.getParameters().stream().noneMatch(p -> p.getName().equals("qrcode"))) {
             RequestParameter param = new RequestParameter();
             param.setName("qrcode");
             param.setValue(StringHelper.getQrText(entity));
             request.getParameters().add(param);
-            request.setOverriddenResource("/qrcode/projects");
         }
+        request.setOverriddenResource("/qrcode/projects");
     }
 
     @Override
@@ -39,13 +39,13 @@ public class ProjectRequestParametersResolver extends AbstractEntityRequestParam
 
     @Override
     protected void entityPostStrategy(Project entity, RawEntityRequest<Project> request) {
-        if(request.getRequestCode().equals(REST_QRPROJECTCREATE_KEY)) {
+        if(request.getRequestCode().equals(REST_QRPROJECTCREATE_KEY) && request.getParameters().stream().noneMatch(p -> p.getName().equals("qrcode"))) {
             RequestParameter param = new RequestParameter();
             param.setName("qrcode");
             param.setValue(StringHelper.getQrText(entity));
             request.getParameters().add(param);
-            request.setOverriddenResource("/qrcode/projects");
         }
+        request.setOverriddenResource("/qrcode/projects");
     }
 
     @Override

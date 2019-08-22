@@ -13,13 +13,22 @@ import android.provider.MediaStore;
 import android.util.Log;
 
 import com.richard.weger.wqc.util.App;
+import com.richard.weger.wqc.util.LoggerManager;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class ImageHelper {
+
+    private Logger logger;
+
+    public ImageHelper(){
+        logger = LoggerManager.getLogger(getClass());
+    }
+
     // https://stackoverflow.com/questions/28424942/decrease-image-size-without-losing-its-quality-in-android
     public String compressImage(String imageUri) {
 
@@ -79,14 +88,13 @@ public class ImageHelper {
         try {
 //          load the bitmap from its path
             bmp = BitmapFactory.decodeFile(filePath, options);
-        } catch (OutOfMemoryError exception) {
-            exception.printStackTrace();
-
+        } catch (OutOfMemoryError e) {
+            logger.warning(e.toString());
         }
         try {
             scaledBitmap = Bitmap.createBitmap(actualWidth, actualHeight, Bitmap.Config.ARGB_8888);
-        } catch (OutOfMemoryError exception) {
-            exception.printStackTrace();
+        } catch (OutOfMemoryError e) {
+            logger.warning(e.toString());
         }
 
         float ratioX = actualWidth / (float) options.outWidth;
@@ -124,7 +132,7 @@ public class ImageHelper {
                     scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix,
                     true);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.warning(e.toString());
         }
 
         FileOutputStream out = null;
@@ -136,7 +144,7 @@ public class ImageHelper {
             scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
 
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            logger.warning(e.toString());
         }
 
         return filename;

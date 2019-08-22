@@ -1,6 +1,5 @@
 package com.richard.weger.wqc.activity;
 
-import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -20,29 +19,31 @@ import com.richard.weger.wqc.domain.Report;
 import com.richard.weger.wqc.firebird.FirebirdMessagingService;
 import com.richard.weger.wqc.helper.MessageboxHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
-import com.richard.weger.wqc.rest.entity.EntityRestResult;
 import com.richard.weger.wqc.rest.entity.EntityRestTemplateHelper;
+import com.richard.weger.wqc.result.AbstractResult;
+import com.richard.weger.wqc.result.ErrorResult;
+import com.richard.weger.wqc.result.ResultService;
+import com.richard.weger.wqc.result.SuccessResult;
 import com.richard.weger.wqc.service.AbstractEntityRequestParametersResolver;
+import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.service.ProjectRequestParametersResolver;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 
-import static com.richard.weger.wqc.helper.LogHelper.*;
-
 import com.richard.weger.wqc.helper.ReportHelper;
 import com.richard.weger.wqc.helper.DeviceHelper;
-
-import org.springframework.http.HttpStatus;
+import com.richard.weger.wqc.util.LoggerManager;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.*;
 
 public class ProjectEditActivity extends ListActivity
         implements ReportAdapter.ChangeListener,
-                    EntityRestTemplateHelper.EntityRestResponse,
+        EntityRestTemplateHelper.RestTemplateResponse,
                     FirebirdMessagingService.FirebaseListener {
 
     ParamConfigurations conf;
@@ -55,6 +56,8 @@ public class ProjectEditActivity extends ListActivity
     Handler handler = new Handler();
     boolean paused = false;
     boolean resumed = true;
+
+    Logger logger;
 
     private void setRunnable(){
         final int interval = 1000;
@@ -103,7 +106,7 @@ public class ProjectEditActivity extends ListActivity
     @Override
     public void onResume(){
         super.onResume();
-        writeData("Activity resumed. Starting project load routine");
+        logger.info("Activity resumed. Starting project load routine");
         projectLoad();
         if (FirebirdMessagingService.delegate != this) {
             FirebirdMessagingService.delegate = this;
@@ -114,8 +117,11 @@ public class ProjectEditActivity extends ListActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        logger = LoggerManager.getLogger(getClass());
+
         inflateActivityLayout();
-        writeData("Getting project data from previous activity intent");
+        logger.info("Getting project data from previous activity intent");
         Intent intent = getIntent();
         project = (Project) intent.getSerializableExtra(PROJECT_KEY);
         reports = project.getDrawingRefs().get(0).getReports();
@@ -125,7 +131,7 @@ public class ProjectEditActivity extends ListActivity
     }
 
     private void inflateActivityLayout(){
-        writeData("Started layout inflate activity");
+        logger.info("Started layout inflate activity");
         setContentView(R.layout.activity_project_edit);
 
         if(DeviceHelper.isOnlyRole("TE")){
@@ -140,7 +146,7 @@ public class ProjectEditActivity extends ListActivity
     }
 
     private void init(){
-        writeData("Started init routine from project edit screen");
+        logger.info("Started init routine from project edit screen");
         setFields();
         setConf();
         setAdapter();
@@ -148,7 +154,7 @@ public class ProjectEditActivity extends ListActivity
 
     @Override
     public void toggleControls(boolean bResume){
-        writeData("Started toggle controls routine");
+        logger.info("Started toggle controls routine");
         getListView().setClickable(bResume);
         reportAdapter.setEnabled(bResume);
         reportAdapter.notifyDataSetChanged();
@@ -163,7 +169,7 @@ public class ProjectEditActivity extends ListActivity
     }
 
     @Override
-    public void onError() {
+    public void onFatalError() {
 
     }
 
@@ -172,19 +178,19 @@ public class ProjectEditActivity extends ListActivity
     }
 
     private void setAdapter(){
-        writeData("Started adapters set routine");
+        logger.info("Started adapters set routine");
         reportAdapter = new ReportAdapter(this, reports);
         setListAdapter(reportAdapter);
         reportAdapter.setChangeListener(this);
     }
 
     private void setListeners(){
-        writeData("Started listeners set routine");
+        logger.info("Started listeners set routine");
         Button button;
 
         button = findViewById(R.id.btnCustomPictures);
         button.setOnClickListener(v -> {
-            writeData("Started general pictures list activity");
+            logger.info("Started general pictures list activity");
             Intent intent = new Intent(ProjectEditActivity.this, PicturesListActivity.class);
             intent.putExtra(PROJECT_KEY, project);
             startActivityForResult(intent, PICTURE_LIST_SCREEN_ID);
@@ -221,7 +227,7 @@ public class ProjectEditActivity extends ListActivity
     }
 
     private void setFields(){
-        writeData("Started trial to set the Project main activity's fields values.");
+        logger.info("Started trial to set the Project main activity's fields values.");
         String projectNumber = project.getReference();
         String drawingNumber = String.valueOf(project.getDrawingRefs().get(0).getDnumber());
         String partNumber = String.valueOf(project.getDrawingRefs().get(0).getParts().get(0).getNumber());
@@ -246,14 +252,14 @@ public class ProjectEditActivity extends ListActivity
     }
 
     private void startReportEdit(Long id) {
-        writeData("Starting report edit activity");
+        logger.info("Starting report edit activity");
         Report report = project.getDrawingRefs().get(0).getReports().stream().filter(r -> r.getId().equals(id)).findFirst().orElse(null);
         if(report != null) {
             ReportHelper helper = new ReportHelper();
             toggleControls(false);
             Class targetActivityClass;
             targetActivityClass = helper.getTargetActivityClass(report);
-            writeData("Starting report edit screen (class: " + targetActivityClass.getSimpleName() + ")");
+            logger.info("Starting report edit screen (class: " + targetActivityClass.getSimpleName() + ")");
             Intent intent = new Intent(ProjectEditActivity.this, targetActivityClass);
             intent.putExtra(REPORT_KEY, report);
             intent.putExtra(PROJECT_KEY, project);
@@ -261,11 +267,9 @@ public class ProjectEditActivity extends ListActivity
             intent.putExtra(PARAMCONFIG_KEY, conf);
             startActivityForResult(intent, helper.getTargetActivityKey(report));
         } else {
-            writeData("Report with id " + id + " not found. Edit activity will not start");
-            MessageboxHelper.showMessage(this,
-                    getResources().getString(R.string.unknownErrorMessage),
-                    getResources().getString(R.string.okTag),
-                    null);
+            String message = "Report with id " + id + " not found. Edit activity will not start";
+            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.ENTITY_NOT_FOUND, message, ErrorResult.ErrorLevel.SEVERE, getClass());
+            ErrorResponseHandler.handle(err, this, null);
         }
     }
 
@@ -275,49 +279,31 @@ public class ProjectEditActivity extends ListActivity
     }
 
     private void projectLoad(){
-        writeData("Started project download from server routine");
+        logger.info("Started project download from server routine");
         toggleControls(false);
         AbstractEntityRequestParametersResolver<Project> resolver = new ProjectRequestParametersResolver(REST_QRPROJECTLOAD_KEY, conf, true);
         resolver.getEntity(project, this);
     }
 
     @Override
-    public void EntityRestCallback(EntityRestResult result) {
-        writeData("Started server response handling routine");
+    public void RestTemplateCallback(AbstractResult result) {
+        logger.info("Started server response handling routine");
         toggleControls(true);
-        if (result.getRequestCode().equals(REST_QRPROJECTLOAD_KEY)) {
-            writeData("The request was a qr project load one");
-            if (result.getStatus() == HttpStatus.OK) {
-                writeData("Started trial to parse the result to a project entity");
-                project = (Project) result.getEntities().get(0);
+        if (result instanceof SuccessResult) {
+            logger.info("The request was a qr project load one");
+            if (result.getRequestCode().equals(REST_QRPROJECTLOAD_KEY)) {
+                logger.info("Started trial to parse the result to a project entity");
+                project = ResultService.getSingleResult(result, Project.class);
                 ProjectHelper.linkReferences(project);
-                if (project == null) {
-                    writeData("Error while trying to parse result to project");
-                    dataLoadError();
-                } else {
-                    writeData("Parse successful");
-                    reports.clear();
-                    reports.addAll(project.getDrawingRefs().get(0).getReports());
-                    reportAdapter.notifyDataSetChanged();
-                }
+                logger.info("Parse successful");
+                reports.clear();
+                reports.addAll(project.getDrawingRefs().get(0).getReports());
+                reportAdapter.notifyDataSetChanged();
             }
+        } else {
+            ErrorResult err = ResultService.getErrorResult(result);
+            ErrorResponseHandler.handle(err, this, null);
         }
-    }
-
-    private void dataLoadError(){
-        writeData("Started error message show routine");
-        toggleControls(true);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        String message = getResources().getString(R.string.unknownErrorMessage)
-                .concat(". ")
-                .concat(getResources().getString(R.string.tryAgainMessage));
-        builder.setMessage(message);
-        builder.setPositiveButton(R.string.yesTAG, (dialog, which) -> {
-            setResult(RESULT_OK);
-            finish();
-        });
-        builder.setNegativeButton(R.string.noTag, null);
-        builder.show();
     }
 
     @Override

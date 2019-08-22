@@ -5,13 +5,17 @@ import com.richard.weger.wqc.rest.RequestParameter;
 import com.richard.weger.wqc.rest.entity.EntityReturnType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RawEntityRequest<T extends DomainEntity> {
     private String requestCode;
     private String requestMethod;
     private String resource;
-    private List<RequestParameter> parameters;
+    private Set<RequestParameter> parameters;
     private List<T> entitiesList;
     private T singleEntity;
     private EntityReturnType entityReturnType;
@@ -19,7 +23,7 @@ public class RawEntityRequest<T extends DomainEntity> {
 
     public RawEntityRequest(T entity){
         this.setSingleEntity(entity);
-        setParameters(new ArrayList<>());
+        setParameters(new HashSet<>());
         setEntitiesList(new ArrayList<>());
     }
 
@@ -47,11 +51,11 @@ public class RawEntityRequest<T extends DomainEntity> {
         this.resource = resource;
     }
 
-    public List<RequestParameter> getParameters() {
+    public Set<RequestParameter> getParameters() {
         return parameters;
     }
 
-    public void setParameters(List<RequestParameter> parameters) {
+    public void setParameters(Set<RequestParameter> parameters) {
         this.parameters = parameters;
     }
 

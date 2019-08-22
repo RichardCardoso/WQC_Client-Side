@@ -5,7 +5,6 @@ import com.richard.weger.wqc.domain.Device;
 import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.ParentAwareEntity;
 import com.richard.weger.wqc.helper.ProjectHelper;
-import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.rest.RequestParameter;
 import com.richard.weger.wqc.rest.entity.EntityRequest;
 import com.richard.weger.wqc.rest.entity.EntityRequestHelper;
@@ -14,7 +13,6 @@ import com.richard.weger.wqc.rest.entity.EntityReturnType;
 import com.richard.weger.wqc.rest.entity.RawEntityRequest;
 import com.richard.weger.wqc.helper.DeviceHelper;
 
-import java.util.Calendar;
 import java.util.Date;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.*;
@@ -32,7 +30,7 @@ public abstract class AbstractEntityRequestParametersResolver<T extends Auditabl
     }
 
     @Override
-    public final EntityRestTemplateHelper<T> getEntity(T entity, EntityRestTemplateHelper.EntityRestResponse delegate) {
+    public final EntityRestTemplateHelper<T> getEntity(T entity, EntityRestTemplateHelper.RestTemplateResponse delegate) {
         EntityRestTemplateHelper<T> template = new EntityRestTemplateHelper<>(delegate, toggleControlsOnCompletion);
 
         if(entity == null){
@@ -55,7 +53,7 @@ public abstract class AbstractEntityRequestParametersResolver<T extends Auditabl
     }
 
     @Override
-    public final EntityRestTemplateHelper<T> getEntities(T entity, EntityRestTemplateHelper.EntityRestResponse delegate) {
+    public final EntityRestTemplateHelper<T> getEntities(T entity, EntityRestTemplateHelper.RestTemplateResponse delegate) {
         EntityRestTemplateHelper<T> template = new EntityRestTemplateHelper<>(delegate, toggleControlsOnCompletion);
 
         if(entity == null){
@@ -78,7 +76,7 @@ public abstract class AbstractEntityRequestParametersResolver<T extends Auditabl
     }
 
     @Override
-    public EntityRestTemplateHelper<T> getEntitiesFromParent(T entity, EntityRestTemplateHelper.EntityRestResponse delegate) {
+    public EntityRestTemplateHelper<T> getEntitiesFromParent(T entity, EntityRestTemplateHelper.RestTemplateResponse delegate) {
         EntityRestTemplateHelper<T> template = new EntityRestTemplateHelper<>(delegate, toggleControlsOnCompletion);
 
         if(!(entity instanceof ParentAwareEntity) || ((ParentAwareEntity) entity).getParent() == null){
@@ -106,7 +104,7 @@ public abstract class AbstractEntityRequestParametersResolver<T extends Auditabl
     }
 
     @Override
-    public final EntityRestTemplateHelper<T> postEntity(T entity, EntityRestTemplateHelper.EntityRestResponse delegate) {
+    public final EntityRestTemplateHelper<T> postEntity(T entity, EntityRestTemplateHelper.RestTemplateResponse delegate) {
         EntityRestTemplateHelper<T> template = new EntityRestTemplateHelper<>(delegate, toggleControlsOnCompletion);
 
         RawEntityRequest<T> request = new RawEntityRequest<>(entity);
@@ -133,7 +131,7 @@ public abstract class AbstractEntityRequestParametersResolver<T extends Auditabl
     }
 
     @Override
-    public EntityRestTemplateHelper<T> deleteEntity(T entity, EntityRestTemplateHelper.EntityRestResponse delegate) {
+    public EntityRestTemplateHelper<T> deleteEntity(T entity, EntityRestTemplateHelper.RestTemplateResponse delegate) {
         EntityRestTemplateHelper<T> template = new EntityRestTemplateHelper<>(delegate, toggleControlsOnCompletion);
 
         RawEntityRequest<T> request = new RawEntityRequest<>(entity);

@@ -17,7 +17,6 @@ import android.widget.Toast;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.adapter.ItemAdapter;
-import com.richard.weger.wqc.domain.DomainEntity;
 import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.ItemReport;
 import com.richard.weger.wqc.domain.ParamConfigurations;
@@ -28,18 +27,20 @@ import com.richard.weger.wqc.helper.FileHelper;
 import com.richard.weger.wqc.helper.MessageboxHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.StringHelper;
-import com.richard.weger.wqc.rest.entity.EntityRestResult;
-import com.richard.weger.wqc.rest.entity.EntityRestTemplateHelper;
-import com.richard.weger.wqc.rest.file.FileRestResult;
-import com.richard.weger.wqc.rest.file.FileRestTemplateHelper;
+import com.richard.weger.wqc.rest.RestTemplateHelper;
+import com.richard.weger.wqc.result.AbstractResult;
+import com.richard.weger.wqc.result.ErrorResult;
+import com.richard.weger.wqc.result.ResultService;
+import com.richard.weger.wqc.result.SuccessResult;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.service.ItemRequestParametersResolver;
 import com.richard.weger.wqc.service.ProjectRequestParametersResolver;
 import com.richard.weger.wqc.service.ReportRequestParametersResolver;
-
-import org.springframework.http.HttpStatus;
+import com.richard.weger.wqc.util.App;
+import com.richard.weger.wqc.util.LoggerManager;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_ID_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_KEY;
@@ -56,11 +57,9 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTUREDOWNLO
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTUREUPLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_REPORTUPLOAD_KEY;
-import static com.richard.weger.wqc.helper.LogHelper.writeData;
 
 public class ItemReportEditActivity extends ListActivity implements ItemAdapter.ChangeListener,
-        EntityRestTemplateHelper.EntityRestResponse,
-        FileRestTemplateHelper.FileRestResponse,
+        RestTemplateHelper.RestTemplateResponse,
         FirebirdMessagingService.FirebaseListener {
 
     ItemReport report;
@@ -75,6 +74,8 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     Runnable runnable;
     Handler handler = new Handler();
     boolean paused = false;
+
+    Logger logger;
 
     private void setRunnable(){
         final int interval = 1000;
@@ -138,13 +139,15 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        writeData("Started intent data get");
+        logger = LoggerManager.getLogger(getClass());
+
+        logger.info("Started intent data get");
         Intent intent = getIntent();
         if(intent != null) {
             Long id;
             id = intent.getLongExtra(REPORT_ID_KEY, -1);
             if(id < 0){
-                writeData("Invalid id got from intent. Aborting");
+                logger.severe("Invalid id got from intent. Aborting");
                 setResult(RESULT_CANCELED);
                 finish();
             }
@@ -154,9 +157,9 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
             report = (ItemReport) project.getDrawingRefs().get(0).getReports().stream().filter(r -> r.getId().equals(id)).findFirst().orElse(null);
         }
         if(report == null || project == null){
-            writeData("Invalid project and / or report. Closing report edit screen.");
-            Toast.makeText(this, R.string.dataRecoverError,Toast.LENGTH_LONG).show();
-            finish();
+            String message = getResources().getString(R.string.invalidEntityError).concat("\n(").concat(getResources().getString(R.string.tryAgainLaterMessage));
+            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_INVALID_ENTITY_EXCEPTION, message, ErrorResult.ErrorLevel.SEVERE, getClass());
+            ErrorResponseHandler.handle(err, this, this::finish);
             return;
         }
 
@@ -165,7 +168,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
 
     private void inflateActivityLayout(){
         setContentView(R.layout.activity_item_report_edit);
-        writeData("Setting item adapter");
+        logger.info("Setting item adapter");
         itemAdapter = new ItemAdapter(this, report.getItems(), project);
         setListAdapter(itemAdapter);
         itemAdapter.setChangeListener(this);
@@ -188,7 +191,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     }
 
     private void setTextViews(){
-        writeData("Setting text views");
+        logger.info("Setting text views");
         ((TextView)findViewById(R.id.tvProjectInfo)).setText(
                 String.format(getResources().getConfiguration().getLocales().get(0),
                         "%s - Z%d",
@@ -204,7 +207,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     }
 
     private void setListeners(){
-        writeData("Setting listeners");
+        logger.info("Setting listeners");
         Button btn = findViewById(R.id.btnCancel);
         btn.setOnClickListener(v -> close(false));
 
@@ -215,10 +218,8 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
             if(report.getItems().stream().noneMatch(i -> i.getStatus() == ITEM_NOT_CHECKED_KEY) || report.isFinished()) {
                 shouldChangeReportState();
             } else {
-                MessageboxHelper.showMessage(this,
-                        getResources().getString(R.string.pendingItemsMessage),
-                        getResources().getString(R.string.okTag),
-                        this::cancelReportFinish);
+                ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_UNFINISHED_ITEMREPORT_WARNING, getResources().getString(R.string.pendingItemsMessage), ErrorResult.ErrorLevel.WARNING, getClass());
+                ErrorResponseHandler.handle(err, this, this::cancelReportFinish);
             }
         });
     }
@@ -256,10 +257,8 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
                     report.setClient(content);
                     reportFinish(!report.isFinished());
                 } else {
-                    MessageboxHelper.showMessage(this,
-                            getResources().getString(R.string.emptyFieldsError),
-                            getResources().getString(R.string.okTag),
-                            () -> toggleControls(true));
+                    ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_EMPTY_FIELDS_WARNING, getResources().getString(R.string.emptyFieldsError), ErrorResult.ErrorLevel.WARNING, getClass());
+                    ErrorResponseHandler.handle(err, this, () -> toggleControls(true));
                 }
             });
         } else {
@@ -272,7 +271,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        writeData("Started activity result handling");
+        logger.info("Started activity result handling");
         if(resultCode == RESULT_OK){
             if(requestCode == PICTURE_VIEWER_SCREEN_ID){
                 Item newItem = (Item) data.getSerializableExtra(ITEM_KEY);
@@ -295,7 +294,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     }
 
     public void updatePendingItemsCount(){
-        writeData("Updating pending items count");
+        logger.info("Updating pending items count");
         long pendingItems = report.getItems().stream().filter(i -> i.getStatus() == ITEM_NOT_CHECKED_KEY).count();
         ((TextView)findViewById(R.id.tvPendingItems)).setText(
                 String.format(getResources().getConfiguration().getLocales().get(0), "%s: %d",
@@ -305,7 +304,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
 
     @Override
     public void toggleControls(boolean bResume){
-        writeData("Toggling screen controls");
+        logger.info("Toggling screen controls");
         canEdit = bResume;
         itemAdapter.setEnabled(bResume && !report.isFinished() && !DeviceHelper.isOnlyRole("te"));
         itemAdapter.notifyDataSetChanged();
@@ -321,12 +320,12 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     }
 
     @Override
-    public void onError() {
+    public void onFatalError() {
 
     }
 
     private void save(Item item, boolean savePicture){
-        writeData("Started report save request");
+        logger.info("Started report save request");
         toggleControls(false);
 
         String fileName = StringHelper.getPicturesFolderPath(project).concat("/").concat(item.getPicture().getFileName());
@@ -335,6 +334,8 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
             resolver.postEntity(item, this);
             schedulePicSave = savePicture;
         } else {
+            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_INVALID_PICTURE_NAME_EXCEPTION, getResources().getString(R.string.invalidPictureFilenameMessage), ErrorResult.ErrorLevel.SEVERE, getClass());
+            ErrorResponseHandler.handle(err, this, () -> toggleControls(true));
             MessageboxHelper.showMessage(this,
                     getResources().getString(R.string.invalidPictureFilenameMessage),
                     getResources().getString(R.string.okTag),
@@ -346,7 +347,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
 
     @Override
     public void onChangeHappened(int position, View view) {
-        writeData("Started list's item change handler");
+        logger.info("Started list's item change handler");
         Item item = report.getItems().get(position);
         if(view instanceof ImageView) {
             view.setEnabled(false);
@@ -373,13 +374,13 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
         }
         finish();
         finishAndRemoveTask();
-        writeData("Closing item report edit activity");
+        logger.info("Closing item report edit activity");
         stopLockTask();
         super.onDestroy();
     }
 
     private void projectLoad(){
-        writeData("Started routine to load project from the server");
+        logger.info("Started routine to load project from the server");
         toggleControls(false);
         ProjectRequestParametersResolver resolver = new ProjectRequestParametersResolver(REST_QRPROJECTLOAD_KEY, conf, true);
         resolver.getEntity(ProjectHelper.getProject(), this);
@@ -398,12 +399,12 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     }
 
     @Override
-    public <T extends DomainEntity> void EntityRestCallback(EntityRestResult<T> result) {
-        writeData("Started server response handler");
-        if(result.getStatus() == HttpStatus.OK || result.getStatus() == HttpStatus.CREATED) {
+    public void RestTemplateCallback(AbstractResult result) {
+        logger.info("Started server response handler");
+        if(result instanceof SuccessResult){
             switch (result.getRequestCode()) {
                 case REST_ITEMSAVE_KEY:
-                    writeData("The response was got from an item save request");
+                    logger.info("The response was got from an item save request");
                     /*
                     Item item;
                     item = (Item) result.getEntities().get(0);
@@ -425,8 +426,8 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
                     */
                     break;
                 case REST_QRPROJECTLOAD_KEY:
-                    writeData("The response was got from a project load request");
-                    Project project = (Project) result.getEntities().get(0);
+                    logger.info("The response was got from a project load request");
+                    Project project = ResultService.getSingleResult(result, Project.class);
                     report = (ItemReport) project.getDrawingRefs().get(0).getReports().stream().filter(r -> r.getId().equals(report.getId())).findFirst().orElse(null);
                     if (report != null) {
                         itemAdapter.setItemList(report.getItems());
@@ -445,26 +446,21 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
                             });
                             */
                     break;
+                case REST_PICTUREDOWNLOAD_KEY:
+                    inflateActivityLayout();
+                    toggleControls(true);
+                    Toast.makeText(this, R.string.changesSavedMessage, Toast.LENGTH_SHORT).show();
+                    break;
+                case REST_PICTUREUPLOAD_KEY:
+                    logger.info("The response was got from a picture save request");
+                    updatePendingItemsCount();
+                    projectLoad();
+                    Toast.makeText(this, R.string.changesSavedMessage, Toast.LENGTH_SHORT).show();
+                    break;
             }
         } else {
-            ErrorResponseHandler.handle(result, this, () -> close(true));
-        }
-    }
-
-    @Override
-    public void FileRestCallback(FileRestResult result) {
-        if(result.getStatus() == HttpStatus.OK || result.getStatus() == HttpStatus.CREATED) {
-            if (result.getRequestCode().equals(REST_PICTUREDOWNLOAD_KEY)) {
-                inflateActivityLayout();
-                toggleControls(true);
-            } else if (result.getRequestCode().equals(REST_PICTUREUPLOAD_KEY)) {
-                writeData("The response was got from a picture save request");
-                updatePendingItemsCount();
-                projectLoad();
-            }
-            Toast.makeText(this, R.string.changesSavedMessage, Toast.LENGTH_SHORT).show();
-        } else {
-            ErrorResponseHandler.handle(result, this, () -> close(true));
+            ErrorResult err = ResultService.getErrorResult(result);
+            ErrorResponseHandler.handle(err, this, () -> close(true));
         }
     }
 

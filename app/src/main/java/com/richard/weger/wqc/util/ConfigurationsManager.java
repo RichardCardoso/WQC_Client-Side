@@ -7,7 +7,7 @@ import android.preference.PreferenceManager;
 import com.google.gson.Gson;
 import com.richard.weger.wqc.domain.ParamConfigurations;
 
-import static com.richard.weger.wqc.helper.LogHelper.writeData;
+import java.util.logging.Logger;
 
 public class ConfigurationsManager{
 
@@ -16,6 +16,8 @@ public class ConfigurationsManager{
 
     private static SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(App.getContext());
     private static ParamConfigurations pConfigs;
+
+    private static Logger logger = LoggerManager.getLogger(ConfigurationsManager.class);
 
     public static void setServerConfig(ParamConfigurations pConfigs){
         ConfigurationsManager.pConfigs = pConfigs;
@@ -27,7 +29,7 @@ public class ConfigurationsManager{
 
     public static void setLocalConfig(Configurations config){
         if(firstTimeSet) {
-            writeData("Starting configs json export");
+            logger.info("Starting configs json export");
         }
         Editor prefsEditor = mPrefs.edit();
         Gson gson = new Gson();
@@ -35,27 +37,27 @@ public class ConfigurationsManager{
         prefsEditor.putString(Configurations.class.getName(), json);
         prefsEditor.apply();
         if(firstTimeSet){
-            writeData("Finished configs json export");
+            logger.info("Finished configs json export");
             firstTimeSet = false;
         }
     }
 
     public static Configurations getLocalConfig(){
         if(firstTimeGet) {
-            writeData("Starting configurations json load");
+            logger.info("Starting configurations json load");
         }
         Gson gson = new Gson();
         String json = mPrefs.getString(Configurations.class.getName(), "");
 
         if(json == null || json.isEmpty()){
-            writeData("Configs json file not found. The app will create and use a file with the default configurations.");
+            logger.warning("Configs json file not found. The app will create and use a file with the default configurations.");
             Configurations conf = new Configurations();
             setLocalConfig(conf);
             return conf;
         }
         Configurations conf = gson.fromJson(json, Configurations.class);
         if(firstTimeGet) {
-            writeData("Finished configs  json load");
+            logger.info("Finished configs  json load");
             firstTimeGet = false;
         }
         return conf;

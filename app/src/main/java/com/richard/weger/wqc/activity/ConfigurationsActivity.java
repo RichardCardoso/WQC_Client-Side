@@ -10,18 +10,21 @@ import android.widget.Toast;
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.util.Configurations;
 import com.richard.weger.wqc.util.ConfigurationsManager;
+import com.richard.weger.wqc.util.LoggerManager;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
-import static com.richard.weger.wqc.helper.LogHelper.writeData;
+import java.util.logging.Logger;
 
 public class ConfigurationsActivity extends Activity {
+
+    private static Logger logger = LoggerManager.getLogger(ConfigurationsManager.class);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_configurations);
 
         fillFields();
@@ -35,13 +38,13 @@ public class ConfigurationsActivity extends Activity {
         textView = findViewById(R.id.editServerPath);
         textView.setText(conf.getServerPath());
 
-        writeData("Finished filling configurations activity fields");
+        logger.info("Finished filling configurations activity fields");
     }
 
     private void setListeners(){
         Button btn;
 
-        writeData("Started setting configurations activity listeners");
+        logger.info("Started setting configurations activity listeners");
         btn = findViewById(R.id.btnSave);
         btn.setOnClickListener(view -> saveConfig());
 
@@ -50,7 +53,7 @@ public class ConfigurationsActivity extends Activity {
             setResult(RESULT_CANCELED);
             finish();
         });
-        writeData("Finished setting configurations activity listeners");
+        logger.info("Finished setting configurations activity listeners");
     }
 
     private void saveConfig(){
@@ -58,12 +61,12 @@ public class ConfigurationsActivity extends Activity {
         TextView textView;
         int i = 0;
 
-        writeData("Retrieving configurations activity fields values");
+        logger.info("Retrieving configurations activity fields values");
 
         textView = findViewById(R.id.editServerPath);
         conf.setServerPath(textView.getText().toString());
 
-        writeData("Validating configurations activity fields values");
+        logger.info("Validating configurations activity fields values");
         for(Field f:conf.getClass().getDeclaredFields()){
             f.setAccessible(true);
             String fieldValue = (String)runGetter(f, new Configurations());
@@ -71,18 +74,17 @@ public class ConfigurationsActivity extends Activity {
                 if (fieldValue.equals("")) {
                     i++;
                 }
-            }
-            else{
+            } else {
                 if(f.getClass().isAssignableFrom(String.class)) {
                     Toast.makeText(this, R.string.unknownErrorMessage, Toast.LENGTH_LONG).show();
                     return;
                 }
             }
         }
-        writeData("Finished validating configurations activity fields values");
+        logger.info("Finished validating configurations activity fields values");
 
         if(i == 0) {
-            writeData("Requesting project's json export");
+            logger.info("Requesting project's json export");
             ConfigurationsManager.setLocalConfig(conf);
             Toast.makeText(this, R.string.valuesSavedMessage, Toast.LENGTH_LONG).show();
         }
@@ -111,7 +113,7 @@ public class ConfigurationsActivity extends Activity {
                     }
                     catch (IllegalAccessException | InvocationTargetException e)
                     {
-                        e.printStackTrace();
+                        logger.warning(e.toString());
                     }
 
                 }

@@ -64,7 +64,7 @@ public class ReportHelper {
         }
     }
 
-    public void picturesDownload(FileRestTemplateHelper.FileRestResponse delegate, Project project, List<String> files, List<FileRestTemplateHelper> queue) {
+    public void picturesDownload(FileRestTemplateHelper.RestTemplateResponse delegate, Project project, List<String> files, List<FileRestTemplateHelper> queue) {
         if (files != null) {
             for (String fileName : files) {
                 if (fileName.length() > 0) {

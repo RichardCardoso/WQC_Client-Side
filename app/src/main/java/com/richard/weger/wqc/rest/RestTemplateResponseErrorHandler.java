@@ -1,32 +1,25 @@
 package com.richard.weger.wqc.rest;
 
 import com.richard.weger.wqc.R;
-import com.richard.weger.wqc.domain.Project;
-import com.richard.weger.wqc.exception.DataRecoverException;
-import com.richard.weger.wqc.exception.NotFoundException;
-import com.richard.weger.wqc.exception.StaleDataException;
-import com.richard.weger.wqc.rest.entity.EntityRequest;
-import com.richard.weger.wqc.rest.entity.EntityRestTemplateHelper;
+import com.richard.weger.wqc.exception.ServerException;
+import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.util.App;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.ResponseErrorHandler;
 
 import java.io.IOException;
-import java.util.List;
-
-import static com.richard.weger.wqc.appconstants.AppConstants.*;
 
 public class RestTemplateResponseErrorHandler implements ResponseErrorHandler {
 
-    private RestResult result;
+    private String requestCode;
+    private String resource;
 
-    public RestTemplateResponseErrorHandler(RestResult result){
+    public RestTemplateResponseErrorHandler(String requestCode, String resource){
         super();
-        this.result = result;
+        this.requestCode = requestCode;
+        this.resource = resource;
     }
 
     @Override
@@ -36,13 +29,45 @@ public class RestTemplateResponseErrorHandler implements ResponseErrorHandler {
     }
 
     @Override
-    public void handleError(ClientHttpResponse response) throws ResourceAccessException, IOException {
-        if(response.getStatusCode() == HttpStatus.CONFLICT){
-            throw new StaleDataException(response.getHeaders().getFirst("message"));
-        } else if (response.getStatusCode() == HttpStatus.NOT_FOUND){
-            throw new NotFoundException(response.getHeaders().getFirst("message"));
-        } else {
-            throw new DataRecoverException(response.getHeaders().getFirst("message"));
+    public void handleError(ClientHttpResponse response) throws ServerException {
+        ErrorResult err;
+        String sCode;
+        String sLevel;
+        ErrorResult.ErrorCode code;
+        String description;
+        ErrorResult.ErrorLevel level;
+        HttpStatus responseStatus;
+
+        sCode = null;
+        sLevel = null;
+        responseStatus = null;
+        description = App.getContext().getResources().getString(R.string.unknownErrorMessage);
+
+        try{
+            responseStatus = response.getStatusCode();
+        } catch (Exception ignored) {}
+
+        if(responseStatus == HttpStatus.INTERNAL_SERVER_ERROR) {
+            sCode = response.getHeaders().getFirst("code");
+            sLevel = response.getHeaders().getFirst("level");
+            description = response.getHeaders().getFirst("description");
+        } else if (responseStatus == HttpStatus.NOT_FOUND){
+            sCode = ErrorResult.ErrorCode.ENTITY_NOT_FOUND.toString();
+            sLevel = ErrorResult.ErrorLevel.LOG.toString();
+            description = "Resource: " + resource + ", request code: " + requestCode;
         }
+
+        if(sCode != null && sLevel != null) {
+            code = ErrorResult.ErrorCode.valueOf(sCode);
+            level = ErrorResult.ErrorLevel.valueOf(sLevel);
+        } else {
+            code = ErrorResult.ErrorCode.UNKNOWN_ERROR;
+            level = ErrorResult.ErrorLevel.SEVERE;
+        }
+
+        err = new ErrorResult(code, description, level, getClass());
+        err.setRequestCode(requestCode);
+
+        throw new ServerException(err);
     }
 }

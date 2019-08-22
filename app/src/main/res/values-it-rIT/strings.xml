@@ -132,4 +132,11 @@
     <string name="clientNameInformMessage">Si prega di informare il nome del cliente</string>
     <string name="qrScanQuestion">Ti piacerebbe fare una nuova scansione del codice qr?</string>
     <string name="invalidPictureFilenameMessage">Impossibile salvare le modifiche a causa di un nome file non valido!</string>
+    <string name="errorMsgMalformedRequest">Si è verificato un problema con la richiesta corrente.</string>
+    <string name="tryAgainLaterMessage">Per favore riprova più tardi.</string>
+    <string name="projectCreationRequestFailed">Una richiesta per la creazione di un progetto non è riuscita.</string>
+    <string name="invalidEntityError">Impossibile ottenere i dati di un progetto / report.</string>
+    <string name="invalidItemIdError">Impossibile ottenere i dati dell\'elemento selezionato.</string>
+    <string name="reportPageLoadFailed">Impossibile caricare la pagina di questo rapporto!</string>
+    <string name="photoCaptureError">Errore durante l\'impostazione dell\'acquisizione di foto!</string>
 </resources>

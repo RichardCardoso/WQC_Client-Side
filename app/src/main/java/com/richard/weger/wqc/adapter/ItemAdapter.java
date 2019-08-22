@@ -1,7 +1,6 @@
 package com.richard.weger.wqc.adapter;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v4.content.res.ResourcesCompat;
@@ -9,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.TextView;
@@ -20,6 +18,7 @@ import com.richard.weger.wqc.domain.DomainEntity;
 import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.helper.FileHelper;
+import com.richard.weger.wqc.helper.MessageboxHelper;
 import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.util.App;
 
@@ -151,21 +150,14 @@ public class ItemAdapter extends ArrayAdapter<Item> {
         imageView.setOnClickListener(v -> listener.onChangeHappened(position, imageView));
 
         tvComments.setOnClickListener(v -> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setMessage(itemList.get(position).getDescription());
-            final EditText input = new EditText(context);
-            input.setText(itemList.get(position).getComments());
-            builder.setView(input);
-
-            builder.setPositiveButton(App.getContext().getResources().getString(R.string.okTag), (dialog, which) -> {
-            if (!input.getText().toString().equals(App.getContext().getResources().getString(R.string.editCommentsHint))) {
-                itemList.get(position).setComments(input.getText().toString());
-                tvComments.setText(input.getText().toString());
-                listener.onChangeHappened(position, tvComments);
-            }
+            String message = itemList.get(position).getDescription();
+            MessageboxHelper.getString(context, message, (content) -> {
+                if (!content.equals(App.getContext().getResources().getString(R.string.editCommentsHint))) {
+                    itemList.get(position).setComments(content);
+                    tvComments.setText(content);
+                    listener.onChangeHappened(position, tvComments);
+                }
             });
-            builder.show();
-
         });
 
         rdAproved.setOnCheckedChangeListener((buttonView, isChecked) -> {

@@ -47,13 +47,13 @@ public class FileRequestHelper {
                     case REST_PICTUREDOWNLOAD_KEY:
                     case REST_GENPICTUREDOWNLOAD_KEY:
                         url += "rest/picture";
-                        headers.setAccept(Collections.singletonList(MediaType.IMAGE_JPEG));
+                        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_OCTET_STREAM));
                         request.setFileReturnType(FileReturnType.PictureReturn);
                         break;
                     case REST_PICTURESREQUEST_KEY:
                     case REST_GENPICTURESREQUEST_KEY:
                         url += "rest/pictures";
-                        request.setFileReturnType(FileReturnType.StringlistReturn);
+                        request.setFileReturnType(FileReturnType.ListReturn);
                         break;
                 }
                 entity = new HttpEntity<>(headers);

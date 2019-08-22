@@ -1,33 +1,38 @@
 package com.richard.weger.wqc.service;
 
-import android.app.Activity;
+import android.content.Context;
 
+import com.google.android.gms.common.util.Strings;
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.helper.MessageboxHelper;
-import com.richard.weger.wqc.rest.RestResult;
-
-import org.springframework.http.HttpStatus;
-
-import static com.richard.weger.wqc.helper.LogHelper.writeData;
+import com.richard.weger.wqc.result.ErrorResult;
+import com.richard.weger.wqc.util.App;
+import com.richard.weger.wqc.util.LoggerManager;
 
 public abstract class ErrorResponseHandler {
-    public static void handle(RestResult result, Activity delegate, MessageboxHelper.Method method){
-        HttpStatus status = result.getStatus();
-        if(result != null && result.getMessage() != null){
-            writeData(result.getMessage());
+
+    private static String handle(ErrorResult result){
+        String message;
+        if (!Strings.isEmptyOrWhitespace(result.getDescription())){
+            message = result.getDescription();
         } else {
-            writeData("Unknown error");
+            message = App.getContext().getResources().getString(R.string.unknownErrorMessage);
         }
-        if(status == HttpStatus.CONFLICT) {
-            MessageboxHelper.showMessage(delegate,
-                    delegate.getResources().getString(R.string.staleDataMessage),
-                    delegate.getResources().getString(R.string.okTag),
-                    method);
-        } else {
-            MessageboxHelper.showMessage(delegate,
-                    delegate.getResources().getString(R.string.dataRecoverError),
-                    delegate.getResources().getString(R.string.okTag),
-                    method);
-        }
+        message += "\n\nError code: " + result.getCode();
+        message += "\nError level: " + result.getLevel();
+        LoggerManager.log(ErrorResponseHandler.class, result);
+        return message;
+    }
+
+    public static void handle(ErrorResult result, Context delegate, MessageboxHelper.Method method){
+        String message;
+        message = handle(result);
+        MessageboxHelper.showMessage(delegate, message, delegate.getResources().getString(R.string.okTag), method);
+    }
+
+    public static void handle(ErrorResult result, Context delegate, String positiveTag, String negativeTag, MessageboxHelper.Method positiveMethod, MessageboxHelper.Method negativeMethod){
+        String message;
+        message = handle(result);
+        MessageboxHelper.showMessage(delegate, null, message, positiveTag, negativeTag, positiveMethod, negativeMethod);
     }
 }

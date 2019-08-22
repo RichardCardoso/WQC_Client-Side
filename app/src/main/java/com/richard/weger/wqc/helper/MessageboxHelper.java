@@ -1,12 +1,13 @@
 package com.richard.weger.wqc.helper;
 
-import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.android.gms.common.util.Strings;
 import com.richard.weger.wqc.R;
 
 public class MessageboxHelper {
@@ -18,7 +19,11 @@ public class MessageboxHelper {
         void processInputboxResult(String content);
     }
 
-    public static void getString(Activity delegate, String message, InputBoxContentHandler handler){
+    public static void getString(Context delegate, String message, InputBoxContentHandler handler){
+        getString(delegate, message, handler, null);
+    }
+
+    public static void getString(Context delegate, String message, InputBoxContentHandler handler, String defaultText){
         LayoutInflater li = LayoutInflater.from(delegate);
         View view = li.inflate(R.layout.input_box, null);
 
@@ -28,6 +33,10 @@ public class MessageboxHelper {
 
         final EditText txtContent = view.findViewById(R.id.editContent);
         final TextView tvMessage = view.findViewById(R.id.tvMessage);
+
+        if(!Strings.isEmptyOrWhitespace(defaultText)){
+            txtContent.setText(defaultText);
+        }
 
         tvMessage.setText(message);
         builder
@@ -42,7 +51,7 @@ public class MessageboxHelper {
         }
     }
 
-    public static void showMessage(Activity delegate, String title, String message, String positiveTag, String negativeTag, Method positiveCallback, Method negativeCallback){
+    public static void showMessage(Context delegate, String title, String message, String positiveTag, String negativeTag, Method positiveCallback, Method negativeCallback){
         AlertDialog.Builder builder = new AlertDialog.Builder(delegate);
         builder.setCancelable(false);
         if(title != null){
@@ -70,7 +79,7 @@ public class MessageboxHelper {
         } catch (Exception ignored){}
     }
 
-    public static void showMessage(Activity delegate, String message, String positiveTag, Method method){
+    public static void showMessage(Context delegate, String message, String positiveTag, Method method){
         AlertDialog.Builder builder = new AlertDialog.Builder(delegate);
         builder.setCancelable(false);
         if(message != null){

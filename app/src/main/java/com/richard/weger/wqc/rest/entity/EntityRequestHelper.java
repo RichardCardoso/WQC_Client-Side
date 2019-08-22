@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.*;
@@ -62,7 +63,7 @@ public class EntityRequestHelper {
             if (entity != null) {
                 request.setEntity(entity);
             }
-            request.setParameters(rawEntityRequest.getParameters());
+            request.setParameters(new ArrayList<>(rawEntityRequest.getParameters()));
             request.setRequestMethod(rawEntityRequest.getRequestMethod());
             request.setClazz((Class<T>) e.getClass());
         }

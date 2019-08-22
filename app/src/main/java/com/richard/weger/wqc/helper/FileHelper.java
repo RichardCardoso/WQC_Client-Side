@@ -3,18 +3,23 @@ package com.richard.weger.wqc.helper;
 import android.net.Uri;
 
 import com.richard.weger.wqc.domain.ParamConfigurations;
+import com.richard.weger.wqc.util.LoggerManager;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.logging.Logger;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.*;
 
 public class FileHelper {
+
+    private static Logger logger = LoggerManager.getLogger(FileHelper.class);
 
     public static boolean fileDelete(String fileName){
         File file = new File(fileName);
@@ -57,28 +62,49 @@ public class FileHelper {
         return result;
     }
 
-    public static void byteArray2File(String filePath, byte[] bytes) throws IOException {
+    static void byteArray2File(String filePath, byte[] bytes) {
         // Your ByteArrayInputStream here
         File rootPath = new File(filePath.substring(0, filePath.lastIndexOf("/")));
         if(!rootPath.exists()){
             rootPath.mkdirs();
         }
         InputStream in = new ByteArrayInputStream(bytes);
-        OutputStream out;
-        out = new FileOutputStream(filePath);
+        OutputStream out = null;
+        try {
+            out = new FileOutputStream(filePath);
 
-        // Transfer bytes from in to out
-        byte[] buf = new byte[1024];
-        int len;
-        while ((len = in.read(buf)) > 0) {
-            out.write(buf, 0, len);
+            // Transfer bytes from in to out
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                try {
+                    out.write(buf, 0, len);
+                } catch (IOException e) {
+                    logger.warning(e.getMessage());
+                }
+            }
+        } catch (FileNotFoundException e) {
+            logger.warning(e.getMessage());
+        } catch (IOException e) {
+            logger.warning(e.getMessage());
+        } finally {
+            try {
+                in.close();
+            } catch (IOException e) {
+                logger.warning(e.getMessage());
+            }
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException e) {
+                logger.warning(e.getMessage());
+            }
         }
-        in.close();
-        out.close();
     }
 
 
-    public static void fileCopy(File source, File dest) throws IOException {
+    public static void fileCopy(File source, File dest) {
         InputStream is = null;
         OutputStream os = null;
         try {
@@ -89,9 +115,25 @@ public class FileHelper {
             while ((length = is.read(buffer)) > 0) {
                 os.write(buffer, 0, length);
             }
+        } catch (FileNotFoundException e) {
+            logger.warning(e.getMessage());
+        } catch (IOException e) {
+            logger.warning(e.getMessage());
         } finally {
-            is.close();
-            os.close();
+            try {
+                if (is != null) {
+                    is.close();
+                }
+            } catch (IOException e) {
+                logger.warning(e.getMessage());
+            }
+            try {
+                if (os != null) {
+                    os.close();
+                }
+            } catch (IOException e) {
+                logger.warning(e.getMessage());
+            }
         }
     }
 

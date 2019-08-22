@@ -9,7 +9,7 @@ import static com.richard.weger.wqc.appconstants.AppConstants.INTRINSIC_PERMISSI
 
 public class PermissionsManager extends ActivityCompat {
 
-    public boolean checkPermission(String[] permissions, Activity activity, Boolean askIfDontHave) {
+    public static boolean checkPermission(String[] permissions, Activity activity, Boolean askIfDontHave) {
         boolean needToAsk = false;
         for(String s:permissions){
             if((ContextCompat.checkSelfPermission(activity, s) != PackageManager.PERMISSION_GRANTED)){
@@ -26,7 +26,7 @@ public class PermissionsManager extends ActivityCompat {
         }
     }
 
-    public void askPermission(String[] permissions, Activity activity){
+    public static void askPermission(String[] permissions, Activity activity){
         ActivityCompat.requestPermissions(activity, permissions, INTRINSIC_PERMISSIONS_CODE);
     }
 

@@ -1,4 +1,4 @@
-package com.richard.weger.wqc.adapter;
+package com.richard.weger.wqc.converter.typeadapter;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;

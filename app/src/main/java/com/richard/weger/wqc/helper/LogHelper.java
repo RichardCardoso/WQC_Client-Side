@@ -2,6 +2,7 @@ package com.richard.weger.wqc.helper;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.util.App;
+import com.richard.weger.wqc.util.LoggerManager;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,11 +13,15 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.SDF;
 
 public abstract class LogHelper {
+
+    private static Logger logger = LoggerManager.getLogger(LogHelper.class);
+
     public static boolean writeData(String data){
         File externalFilesDir = App.getContext().getExternalFilesDir(null);
         if(externalFilesDir == null){
@@ -29,7 +34,7 @@ public abstract class LogHelper {
         try {
             file.createNewFile();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.warning(e.toString());
         }
         if(file.exists()){
             try {
