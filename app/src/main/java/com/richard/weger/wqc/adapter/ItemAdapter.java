@@ -2,8 +2,6 @@ package com.richard.weger.wqc.adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.v4.content.res.ResourcesCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +9,9 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.activity.ItemReportEditActivity;
@@ -124,6 +125,7 @@ public class ItemAdapter extends ArrayAdapter<Item> {
 //            imageView.setImageBitmap(proxyBitmap.getBitmap());
 //        }
 
+        assert item != null;
         tvItemDesc.setText(String.valueOf(item.getNumber()).concat(" - ").concat(item.getDescription()));
 
         if(item.getComments() != null && item.getComments().length() > 0) {

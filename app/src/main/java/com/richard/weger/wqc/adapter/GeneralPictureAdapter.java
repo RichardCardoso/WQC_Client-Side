@@ -2,12 +2,13 @@ package com.richard.weger.wqc.adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 
 import com.richard.weger.wqc.R;
 
@@ -27,10 +28,6 @@ public class GeneralPictureAdapter extends ArrayAdapter<String> {
 
     public interface ChangeListener {
         void onTouch(int position, View view);
-    }
-
-    public void setEnabled(boolean enabled){
-        this.enabled = enabled;
     }
 
     public GeneralPictureAdapter(@NonNull Context context, @NonNull List<String> fileNames) {
@@ -55,12 +52,7 @@ public class GeneralPictureAdapter extends ArrayAdapter<String> {
         tvPictureName.setEnabled(enabled);
         tvPictureName.setText(picName);
 
-        tvPictureName.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                listener.onTouch(position, tvPictureName);
-            }
-        });
+        tvPictureName.setOnClickListener(v -> listener.onTouch(position, tvPictureName));
 
         return rowView;
     }

@@ -32,7 +32,7 @@
         <activity android:name=".activity.PictureViewerActivity" />
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="com.richard.weger.wqc.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -45,9 +45,6 @@
         <activity android:name=".activity.ConfigurationsActivity" />
         <activity android:name=".activity.CheckReportEditActivity" />
 
-        <service
-            android:name=".helper.FileHelper"
-            android:exported="false" />
         <service android:name=".firebird.FirebirdMessagingService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

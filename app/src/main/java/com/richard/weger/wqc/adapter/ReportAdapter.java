@@ -1,8 +1,6 @@
 package com.richard.weger.wqc.adapter;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,16 +9,14 @@ import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+
 import com.richard.weger.wqc.R;
-import com.richard.weger.wqc.domain.CheckReport;
-import com.richard.weger.wqc.domain.ItemReport;
 import com.richard.weger.wqc.domain.Report;
-import com.richard.weger.wqc.helper.ReportHelper;
 
 import java.util.Comparator;
 import java.util.List;
-
-import static com.richard.weger.wqc.appconstants.AppConstants.*;
 
 public class ReportAdapter extends ArrayAdapter<Report> {
 
