@@ -258,7 +258,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
 
     private void startProjectEdit(){
         if(!projectEditStarted) {
-            FirebaseMessaging.getInstance().subscribeToTopic("wqc-2.0");
+            FirebaseMessaging.getInstance().subscribeToTopic("WQC2-0");
             log("Started routine to open the project edit screen");
             Intent intent = new Intent(WelcomeActivity.this, ProjectEditActivity.class);
             intent.putExtra(PROJECT_KEY, project);
