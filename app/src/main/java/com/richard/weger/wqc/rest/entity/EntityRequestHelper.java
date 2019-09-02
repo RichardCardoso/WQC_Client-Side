@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.*;
@@ -28,6 +29,7 @@ public class EntityRequestHelper {
         } else {
             T e = rawEntityRequest.getSingleEntity();
             HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
             HttpEntity<T> entity = null;
 
             switch (rawEntityRequest.getRequestMethod()) {
