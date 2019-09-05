@@ -7,6 +7,10 @@ import android.provider.Settings;
 public class App extends Application {
     private static App context;
 
+    public static String getExpectedVersion() {
+        return "2.6.0.2";
+    }
+
     @Override
     public void onCreate(){
         super.onCreate();

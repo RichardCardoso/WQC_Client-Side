@@ -139,4 +139,5 @@
     <string name="invalidItemIdError">Die Daten des ausgewählten Elements können nicht abgerufen werden.</string>
     <string name="reportPageLoadFailed">Fehler beim Laden der Seite dieses Berichts!</string>
     <string name="photoCaptureError">Fehler beim Einstellen der Fotoaufnahme!</string>
+    <string name="invalidVersionMessage">Die Version des Servers stimmt nicht mit der Version des Clients überein!</string>
 </resources>

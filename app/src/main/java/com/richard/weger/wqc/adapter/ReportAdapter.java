@@ -50,7 +50,9 @@ public class ReportAdapter extends ArrayAdapter<Report> {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View rowView = inflater.inflate(R.layout.report_row_layout, parent, false);
 
-        reportList.sort(Comparator.comparing(Report::getType).reversed().thenComparing(Report::getId));
+        if (reportList.stream().filter(r -> r.getId() == null || r.getType() == null).count() == 0) {
+            reportList.sort(Comparator.comparing(Report::getType).reversed().thenComparing(Report::getId));
+        }
 
         TextView textView = rowView.findViewById(R.id.tvRep);
         CheckBox checkBox = rowView.findViewById(R.id.chkRep);

@@ -65,7 +65,8 @@ public class ErrorResult extends AbstractResult {
 		BASE_FILE_RETRIEVAL_FAILED,
 		BASE_FILE_IO_FAILED,
 		REST_OPERATION_ERROR,
-		UNKNOWN_ERROR
+		UNKNOWN_ERROR,
+		INVALID_APP_VERSION
 	}
 	
 	private String code;

@@ -235,7 +235,11 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     public void handleResult(Result rawResult) {
         log("Started routine to handle qr scan result");
         qrCode = rawResult.getText();
-        new ProjectHelper(qrCode, conf);
+        if(ProjectHelper.getQrCode() == null || ProjectHelper.getConf() == null) {
+            new ProjectHelper(qrCode, conf);
+        } else {
+            ProjectHelper.setQrCode(qrCode);
+        }
         if(mScannerView != null) {
             mScannerView.stopCamera();
         }
@@ -308,7 +312,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                     fileHelperQueue.add(helper);
                 }
             }
-            return true;
+            return project.getDrawingRefs().get(0).getReports().size() > 0;
         }
     }
 
@@ -330,6 +334,8 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                         .concat(device.getDeviceid())
                         .concat(")")
         );
+        tv = findViewById(R.id.tvVersion);
+        tv.setText(String.format("v%s", App.getExpectedVersion()));
     }
 
     private void requestServerAuthorization(){
@@ -437,6 +443,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                     projectLoad();
                     break;
                 case REST_QRPROJECTLOAD_KEY:
+                    toggleControls(false);
                     project = ResultService.getSingleResult(result, Project.class);
                     boolean needsPdfFiles = requestPdfsIfNeeded();
                     boolean needsPictures = requestPicturesIfNeeded();
@@ -487,6 +494,12 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
             } else {
                 warning("An unexpected error has occurred while trying to retrieve data from server with request code '" + err.getRequestCode() + "'");
             }
+
+            if(err.getCode() != null && err.getCode().equals(ErrorResult.ErrorCode.INVALID_APP_VERSION.toString())){
+                ErrorResponseHandler.handle(err,this, this::finish);
+                return;
+            }
+
             String message;
             ErrorResult err2;
             switch (result.getRequestCode()) {

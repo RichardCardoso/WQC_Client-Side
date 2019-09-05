@@ -139,4 +139,5 @@
     <string name="invalidItemIdError">Impossibile ottenere i dati dell\'elemento selezionato.</string>
     <string name="reportPageLoadFailed">Impossibile caricare la pagina di questo rapporto!</string>
     <string name="photoCaptureError">Errore durante l\'impostazione dell\'acquisizione di foto!</string>
+    <string name="invalidVersionMessage">La versione del server non corrisponde alla versione del client!</string>
 </resources>

@@ -138,4 +138,5 @@
     <string name="invalidItemIdError">Unable to get the selected item\'s data.</string>
     <string name="reportPageLoadFailed">Failed to load this report\'s page!</string>
     <string name="photoCaptureError">Error setting photo capture!</string>
+    <string name="invalidVersionMessage">The version of the server does not match the version of the client!</string>
 </resources>
