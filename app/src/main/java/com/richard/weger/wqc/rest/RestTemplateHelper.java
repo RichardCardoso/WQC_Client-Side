@@ -132,6 +132,12 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
         return responseEntity;
     }
 
+    protected final <E> URI getLocation(HttpEntity<E> entity, URI uri, RestTemplate restTemplate){
+        URI ret;
+        ret = restTemplate.postForLocation(uri, entity);
+        return ret;
+    }
+
     protected final <E, S> ResponseEntity<S> getResponseEntity(ParameterizedTypeReference<S> responseType, HttpEntity<E> entity, URI uri, HttpMethod method, RestTemplate restTemplate) {
         String url = "unknown";
         try{

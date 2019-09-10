@@ -8,7 +8,7 @@ public class App extends Application {
     private static App context;
 
     public static String getExpectedVersion() {
-        return "2.6.0.2";
+        return "2.6.0.3";
     }
 
     @Override

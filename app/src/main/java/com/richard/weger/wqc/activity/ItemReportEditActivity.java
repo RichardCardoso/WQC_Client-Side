@@ -69,6 +69,10 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     int lastItemId = -1;
     boolean canEdit = true;
 
+    boolean shouldRestoreListPosition = false;
+    int lastListIndex = -1;
+    int lastListTop = -1;
+
     boolean schedulePicSave = false;
 
     Runnable runnable;
@@ -389,13 +393,21 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
 
     @Override
     public void messageReceived(Map<String, String> data) {
-        String qrCode = data.get("qrCode");
-        if(qrCode != null) {
-//            qrCode = data.replace("\\", "");
-            if (ProjectHelper.getQrCode().equals(qrCode)) {
-                runOnUiThread(this::projectLoad);
-            }
-        }
+//        String qrCode = data.get("qrCode");
+//        if(qrCode != null) {
+////            qrCode = data.replace("\\", "");
+//            if (ProjectHelper.getQrCode().equals(qrCode)) {
+//
+//            }
+//        }
+        runOnUiThread(() -> {
+            ListView list = findViewById(android.R.id.list);
+            View v = list.getChildAt(0);
+            lastListIndex = list.getFirstVisiblePosition();
+            lastListTop = (v == null) ? 0 : (v.getTop() - list.getPaddingTop());
+            shouldRestoreListPosition = true;
+            projectLoad();
+        });
     }
 
     @Override
@@ -404,7 +416,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
         if(result instanceof SuccessResult){
             switch (result.getRequestCode()) {
                 case REST_ITEMSAVE_KEY:
-                    logger.info("The response was got from an item save request");
+//                    logger.info("The response was got from an item save request");
                     /*
                     Item item;
                     item = (Item) result.getEntities().get(0);
@@ -432,6 +444,11 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
                     if (report != null) {
                         itemAdapter.setItemList(report.getItems());
                         itemAdapter.notifyDataSetChanged();
+                    }
+                    if(shouldRestoreListPosition && lastListIndex >= 0 && lastListTop >=0){
+                        ListView list = findViewById(android.R.id.list);
+                        list.setSelectionFromTop(lastListIndex, lastListTop);
+                        shouldRestoreListPosition = false;
                     }
                     toggleControls(true);
                     break;

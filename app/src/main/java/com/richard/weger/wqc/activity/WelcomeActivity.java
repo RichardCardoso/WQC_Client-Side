@@ -235,10 +235,13 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     public void handleResult(Result rawResult) {
         log("Started routine to handle qr scan result");
         qrCode = rawResult.getText();
-        if(ProjectHelper.getQrCode() == null || ProjectHelper.getConf() == null) {
-            new ProjectHelper(qrCode, conf);
-        } else {
+        if(qrCode != null) {
+            ProjectHelper.setConf(conf);
             ProjectHelper.setQrCode(qrCode);
+        } else {
+            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.QR_TRANSLATION_FAILED, getResources().getString(R.string.invalidQrCodeString), ErrorResult.ErrorLevel.SEVERE, getClass());
+            ErrorResponseHandler.handle(err, this, this::finish);
+            return;
         }
         if(mScannerView != null) {
             mScannerView.stopCamera();

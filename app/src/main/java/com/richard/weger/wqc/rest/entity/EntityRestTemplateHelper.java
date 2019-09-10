@@ -16,6 +16,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.List;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.DELETE_METHOD;
@@ -54,15 +55,21 @@ public class EntityRestTemplateHelper<T extends DomainEntity> extends RestTempla
                 }
                 break;
             case POST_METHOD:
-                ResponseEntity<T> response = getResponseEntity(request.getClazz(), request.getEntity(), request.getUri(), HttpMethod.POST, restTemplate);
-
-                if (response.getBody() != null) {
-                    result = new SingleObjectResult<>(request.getClazz(), response.getBody());
+//                ResponseEntity<T> response = getResponseEntity(request.getClazz(), request.getEntity(), request.getUri(), HttpMethod.POST, restTemplate);
+//                if (response.getBody() != null) {
+//                    result = new SingleObjectResult<>(request.getClazz(), response.getBody());
+//                } else {
+//                    String location = response.getHeaders().getFirst("location");
+//                    if (location != null) {
+//                        result = new ResourceLocationResult(response.getHeaders().getFirst("location"));
+//                    }
+//                }
+                URI uri;
+                uri = getLocation(request.getEntity(), request.getUri(), restTemplate);
+                if(uri != null){
+                    result = new ResourceLocationResult(uri.toString());
                 } else {
-                    String location = response.getHeaders().getFirst("location");
-                    if (location != null) {
-                        result = new ResourceLocationResult(response.getHeaders().getFirst("location"));
-                    }
+                    result = new EmptyResult();
                 }
                 break;
             case DELETE_METHOD:

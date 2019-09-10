@@ -511,11 +511,11 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
         if(result instanceof SuccessResult) {
             switch (result.getRequestCode()) {
                 case REST_MARKSAVE_KEY:
-                    String res = ResultService.getLocationResult(result);
-                    logger.info("The response was got from a mark save request, started mark id update commands");
-                    List<Mark> marks = report.getPages().get(currentPage).getMarks();
-                    Long id = Long.valueOf(res.substring(res.lastIndexOf("/") + 1));
-                    marks.stream().filter(m -> m.getId() == 0L).findFirst().ifPresent(m -> m.setId(id));
+//                    String res = ResultService.getLocationResult(result);
+//                    logger.info("The response was got from a mark save request, started mark id update commands");
+//                    List<Mark> marks = report.getPages().get(currentPage).getMarks();
+//                    Long id = Long.valueOf(res.substring(res.lastIndexOf("/") + 1));
+//                    marks.stream().filter(m -> m.getId() == 0L).findFirst().ifPresent(m -> m.setId(id));
                     /*Toast.makeText(this, R.string.changesSavedMessage, Toast.LENGTH_SHORT).show();*/
                     break;
                 case REST_MARKREMOVE_KEY:

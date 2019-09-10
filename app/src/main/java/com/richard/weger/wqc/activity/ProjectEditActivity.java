@@ -213,6 +213,7 @@ public class ProjectEditActivity extends ListActivity
                 getResources().getString(R.string.noTag),
                 () -> {
                     Intent intent = new Intent(ProjectEditActivity.this, WelcomeActivity.class);
+                    ProjectHelper.setQrCode("");
                     startActivityForResult(intent, WELCOME_ACTIVITY_SCREEN_KEY);
                     finish();
                 },

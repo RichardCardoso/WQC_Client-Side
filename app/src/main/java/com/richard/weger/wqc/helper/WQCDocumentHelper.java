@@ -22,54 +22,54 @@ import java.util.Map;
 
 public abstract class WQCDocumentHelper {
 
-    public static int radius = 18;
+  public static int radius = 18;
 
 
-    public static Bitmap pageLoad(int pageNumber, String filePath, Resources resources){
-        return PdfHelper.pdf2Bitmap(filePath, pageNumber, resources);
+  public static Bitmap pageLoad(int pageNumber, String filePath, Resources resources){
+    return PdfHelper.pdf2Bitmap(filePath, pageNumber, resources);
+  }
+
+  public static Bitmap bitmapCopy(Bitmap originalBitmap){
+    return originalBitmap.copy(originalBitmap.getConfig(), true);
+  }
+
+  public static Bitmap updatePointsDrawing(List<Mark> markList, Bitmap originalBitmap, Resources resources) {
+    if (markList != null) {
+      Canvas canvas;
+
+      Bitmap currentBitmap = bitmapCopy(originalBitmap);
+      canvas = new Canvas(currentBitmap);
+
+      Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+      paint.setColor(Color.YELLOW);
+      paint.setTextSize(16);
+      paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD)); // Bold text
+      paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)); // Text over picture
+
+      canvas.drawBitmap(originalBitmap, 0, 0, paint);
+      for (Mark mark : markList) {
+        float x = mark.getX() * originalBitmap.getWidth(),
+                y = mark.getY() * originalBitmap.getHeight();
+        drawMark(mark, canvas, paint, x, y);
+      }
+      return currentBitmap;
     }
+    return null;
+  }
 
-    public static Bitmap bitmapCopy(Bitmap originalBitmap){
-        return originalBitmap.copy(originalBitmap.getConfig(), true);
-    }
+  private static void drawMark(Mark mark, Canvas canvas, Paint paint, float X, float Y) {
+    String text = mark.getRoleToShow();
+    Rect bounds = new Rect();
+    paint.getTextBounds(text,0, text.length(), bounds);
 
-    public static Bitmap updatePointsDrawing(List<Mark> markList, Bitmap originalBitmap, Resources resources) {
-        if (markList != null) {
-            Canvas canvas;
+    float[] touchPoint = new float[]{X, Y};
+    float tW = bounds.width(),
+            tH = bounds.height();
 
-            Bitmap currentBitmap = bitmapCopy(originalBitmap);
-            canvas = new Canvas(currentBitmap);
-
-            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            paint.setColor(Color.YELLOW);
-            paint.setTextSize(16);
-            paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD)); // Bold text
-            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)); // Text over picture
-
-            canvas.drawBitmap(originalBitmap, 0, 0, paint);
-            for (Mark mark : markList) {
-                float x = mark.getX() * originalBitmap.getWidth(),
-                        y = mark.getY() * originalBitmap.getHeight();
-                drawMark(mark, canvas, paint, x, y);
-            }
-            return currentBitmap;
-        }
-        return null;
-    }
-
-    private static void drawMark(Mark mark, Canvas canvas, Paint paint, float X, float Y) {
-        String text = mark.getRoleToShow();
-        Rect bounds = new Rect();
-        paint.getTextBounds(text,0, text.length(), bounds);
-
-        float[] touchPoint = new float[]{X, Y};
-        float tW = bounds.width(),
-                tH = bounds.height();
-
-        Paint circlePaint = new Paint();
-        circlePaint.setColor(Color.RED);
-        circlePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)); // Text over picture
-        canvas.drawCircle(touchPoint[0], touchPoint[1], radius, circlePaint);
-        canvas.drawText(text, touchPoint[0] - tW / 2, touchPoint[1] + tH / 2, paint);
-    }
+    Paint circlePaint = new Paint();
+    circlePaint.setColor(Color.RED);
+    circlePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)); // Text over picture
+    canvas.drawCircle(touchPoint[0], touchPoint[1], radius, circlePaint);
+    canvas.drawText(text, touchPoint[0] - tW / 2, touchPoint[1] + tH / 2, paint);
+  }
 }

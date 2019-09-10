@@ -125,18 +125,18 @@ public class TouchImageView extends ImageView {
                             performClick();
 
 //                        if(((int)v.getTag()) == 1){
-                            // Calculate the inverse matrix
-                            Matrix inverse = new Matrix();
-                            getImageMatrix().invert(inverse);
+                        // Calculate the inverse matrix
+                        Matrix inverse = new Matrix();
+                        getImageMatrix().invert(inverse);
 
-                            // map touch point from ImageView to Image
-                            float[] touchPoint = new float[] {event.getX(), event.getY()};
-                            inverse.mapPoints(touchPoint);
+                        // map touch point from ImageView to Image
+                        float[] touchPoint = new float[] {event.getX(), event.getY()};
+                        inverse.mapPoints(touchPoint);
 
-                            touchPoint[0] /= ((BitmapDrawable)getDrawable()).getBitmap().getWidth();
-                            touchPoint[1] /= ((BitmapDrawable)getDrawable()).getBitmap().getHeight();
+                        touchPoint[0] /= ((BitmapDrawable)getDrawable()).getBitmap().getWidth();
+                        touchPoint[1] /= ((BitmapDrawable)getDrawable()).getBitmap().getHeight();
 
-                            listener.onTouch(touchPoint);
+                        listener.onTouch(touchPoint);
 //                        }
 
                         break;
