@@ -4,7 +4,7 @@ import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -12,6 +12,7 @@ import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.adapter.GeneralPictureAdapter;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.dto.FileDTO;
+import com.richard.weger.wqc.helper.ActivityHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.rest.RestTemplateHelper;
@@ -25,6 +26,7 @@ import com.richard.weger.wqc.service.ErrorResponseHandler;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.GENERAL_PICTURE_MODE;
 import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_CAPTURE_MODE;
@@ -36,7 +38,7 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTURESRE
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREUPLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.TAKEN_PICTURES_KEY;
 
-public class PicturesListActivity extends ListActivity implements GeneralPictureAdapter.ChangeListener, RestTemplateHelper.RestTemplateResponse {
+public class PicturesListActivity extends ListActivity implements GeneralPictureAdapter.ChangeListener, RestTemplateHelper.RestResponseHandler {
 
     Project project;
     List<String> files = new ArrayList<>();
@@ -48,11 +50,7 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_wait);
-        ((TextView) findViewById(R.id.tvMessage)).setText(R.string.retrievingGeneralPicturesTag);
-        Button btn;
-        btn = findViewById(R.id.btnExit);
-        btn.setOnClickListener(v -> exit());
+        ActivityHelper.setWaitingLayout(this);
 
         Intent intent = getIntent();
         project = (Project) intent.getSerializableExtra(PROJECT_KEY);
@@ -62,39 +60,38 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
 
     }
 
-    private void exit(){
-        if(!ProjectHelper.hasPendingTasks(null, queue, true)) {
-            setResult(RESULT_OK);
-            finish();
-        } else {
-            String message = getResources().getString(R.string.mustWaitCompletion)
-                    .concat("( ")
-                    .concat(getResources().getString(R.string.picturesUploadTag))
-                    .concat(") ");
-            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_MUST_WAIT_WARNING, message, ErrorResult.ErrorLevel.WARNING, getClass());
-            ErrorResponseHandler.handle(err, this, null);
-        }
-    }
+//    private void exit(){
+//        if(!ProjectHelper.hasPendingTasks(null, queue, true)) {
+//            setResult(RESULT_OK);
+//            finish();
+//        } else {
+//            String message = getResources().getString(R.string.mustWaitCompletion)
+//                    .concat("( ")
+//                    .concat(getResources().getString(R.string.picturesUploadTag))
+//                    .concat(") ");
+//            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_MUST_WAIT_WARNING, message, ErrorResult.ErrorLevel.WARNING, getClass());
+//            ErrorResponseHandler.handle(err, this, null);
+//        }
+//    }
 
     private void inflateActivityLayout(){
         setContentView(R.layout.activity_pictures_list);
 
-        Button btn;
-        btn = findViewById(R.id.backButton);
-        btn.setOnClickListener(v -> exit());
-
         setListeners();
         setFilesList();
-        adapter = new GeneralPictureAdapter(this, files);
-        adapter.setChangeListener(this);
-        setListAdapter(adapter);
-
+        adapterConfig();
         TextView tv = findViewById(R.id.tvNodata);
         if(files.size() == 0){
             tv.setVisibility(View.VISIBLE);
         } else {
             tv.setVisibility(View.INVISIBLE);
         }
+    }
+
+    private void adapterConfig(){
+        adapter = new GeneralPictureAdapter(this, files);
+        adapter.setChangeListener(this);
+        setListAdapter(adapter);
     }
 
     private void setFilesList(){
@@ -104,10 +101,21 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
                 String fName = f.getName();
                 if (fName.contains("QP") && !files.contains(fName) && !fName.contains("_new")) {
                     files.add(fName);
-                    filePaths.add(f.getAbsolutePath());
+                } else if (fName.contains("_new")){
+                    try{
+                        f.delete();
+                    } catch (Exception ignored){}
                 }
             }
         }
+        formatFilesList();
+    }
+
+    private void formatFilesList(){
+        files = files.stream().sorted(this::fileNameCompare)
+                .collect(Collectors.toList());
+        filePaths = files.stream().map(f -> StringHelper.getPicturesFolderPath(project).concat(f)).collect(Collectors.toList());
+        files = files.stream().map(this::getFormattedFileName).collect(Collectors.toList());
     }
 
     @Override
@@ -116,19 +124,23 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
             List<String> takenPictures;
             if (data != null && data.hasExtra(TAKEN_PICTURES_KEY)) {
                 takenPictures = data.getStringArrayListExtra(TAKEN_PICTURES_KEY);
-                for (String picName : takenPictures) {
-                    ProjectHelper.generalPictureUpload(this, project, picName.substring(picName.lastIndexOf("/")), queue);
-                    findViewById(R.id.takeButton).setVisibility(View.INVISIBLE);
-                }
                 if (takenPictures.size() > 0) {
+                    ActivityHelper.disableActivityControls(this,true);
+                    findViewById(R.id.takeButton).setVisibility(View.INVISIBLE);
                     findViewById(R.id.pbPicturesList).setVisibility(View.VISIBLE);
+                    for (String picName : takenPictures) {
+                        ProjectHelper.generalPictureUpload(this, project, picName.substring(picName.lastIndexOf("/")), queue);
+                    }
+                } else {
+                    findViewById(R.id.takeButton).setVisibility(View.VISIBLE);
                 }
             }
         }
     }
 
     private void setListeners(){
-        Button btn;
+        ImageButton btn;
+
         btn = findViewById(R.id.takeButton);
         btn.setOnClickListener(v -> {
             Intent intent = new Intent(PicturesListActivity.this, PictureViewerActivity.class);
@@ -153,16 +165,55 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
         startActivityForResult(intent, PICTURE_VIEWER_SCREEN_ID);
     }
 
+    private int fileNameCompare(String f1, String f2){
+        String n1 = "";
+        String n2 = "";
+        String s1, s2;
+
+        try {
+            s1 = f1.substring(f1.toLowerCase().lastIndexOf("qp") + 2);
+            s2 = f2.substring(f2.toLowerCase().lastIndexOf("qp") + 2);
+            if(s1.contains(".")){
+                s1 = s1.substring(0, s1.indexOf("."));
+            }
+            if(s2.contains(".")){
+                s2 = s2.substring(0, s2.indexOf("."));
+            }
+            n1 = String.format(getResources().getConfiguration().getLocales().get(0), "%02d", Integer.valueOf(s1));
+            n2 = String.format(getResources().getConfiguration().getLocales().get(0), "%02d", Integer.valueOf(s2));
+        } catch (Exception ex) {
+        }
+
+        return n1.compareTo(n2);
+    }
+
+
+    private String getFormattedFileName(String rawName){
+        String ret;
+        try {
+            ret = rawName.substring(rawName.indexOf("Z"), rawName.indexOf("T"))
+                    + " " + rawName.substring(rawName.indexOf("T"), rawName.indexOf("QP"))
+                    + " " + rawName.substring(rawName.indexOf("QP"));
+            if (ret.contains(".")) {
+                ret = ret.substring(0, ret.lastIndexOf("."));
+            }
+            while(ret.contains("  ")){
+                ret = ret.replace("  ", " ");
+            }
+        } catch (Exception ex){
+            return rawName;
+        }
+        return ret;
+    }
+
     private void addFileToList(String result){
         if(!files.contains(result) && result != null){
             if(!result.endsWith(".jpg")){
                 result = result.concat(".jpg");
             }
             files.add(result);
-            filePaths.add(StringHelper.getPicturesFolderPath(project).concat(result));
-            if(adapter != null) {
-                adapter.notifyDataSetChanged();
-            }
+            formatFilesList();
+            adapterConfig();
 
             if(ProjectHelper.hasPendingTasks(null, queue, true)){
                 TextView tvMessage = findViewById(R.id.tvMessage);
@@ -177,7 +228,7 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
                 ProgressBar pbPicturesList = findViewById(R.id.pbPicturesList);
                 if(pbPicturesList != null) {
                     pbPicturesList.setVisibility(View.INVISIBLE);
-                    Button btn;
+                    ImageButton btn;
                     btn = findViewById(R.id.takeButton);
                     btn.setVisibility(View.VISIBLE);
                 }

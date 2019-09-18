@@ -4,7 +4,7 @@ import android.content.Context;
 
 import com.google.android.gms.common.util.Strings;
 import com.richard.weger.wqc.R;
-import com.richard.weger.wqc.helper.MessageboxHelper;
+import com.richard.weger.wqc.helper.AlertHelper;
 import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.LoggerManager;
@@ -24,15 +24,15 @@ public abstract class ErrorResponseHandler {
         return message;
     }
 
-    public static void handle(ErrorResult result, Context delegate, MessageboxHelper.Method method){
+    public static void handle(ErrorResult result, Context delegate, AlertHelper.Method method){
         String message;
         message = handle(result);
-        MessageboxHelper.showMessage(delegate, message, delegate.getResources().getString(R.string.okTag), method);
+        AlertHelper.showMessage(delegate, message, delegate.getResources().getString(R.string.okTag), method);
     }
 
-    public static void handle(ErrorResult result, Context delegate, String positiveTag, String negativeTag, MessageboxHelper.Method positiveMethod, MessageboxHelper.Method negativeMethod){
+    public static void handle(ErrorResult result, Context delegate, String positiveTag, String negativeTag, AlertHelper.Method positiveMethod, AlertHelper.Method negativeMethod){
         String message;
         message = handle(result);
-        MessageboxHelper.showMessage(delegate, null, message, positiveTag, negativeTag, positiveMethod, negativeMethod);
+        AlertHelper.showMessage(delegate, null, message, positiveTag, negativeTag, positiveMethod, negativeMethod);
     }
 }

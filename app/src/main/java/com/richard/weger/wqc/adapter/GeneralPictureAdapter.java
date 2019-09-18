@@ -7,12 +7,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.gms.common.util.Strings;
 import com.richard.weger.wqc.R;
 
+import java.io.Console;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GeneralPictureAdapter extends ArrayAdapter<String> {
 
@@ -32,8 +38,8 @@ public class GeneralPictureAdapter extends ArrayAdapter<String> {
 
     public GeneralPictureAdapter(@NonNull Context context, @NonNull List<String> fileNames) {
         super(context, R.layout.generalpicture_row_layout, fileNames);
-        this.fileNames = fileNames;
         this.context = context;
+        this.fileNames = fileNames;
     }
 
     @NonNull

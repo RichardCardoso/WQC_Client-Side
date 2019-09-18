@@ -8,6 +8,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -41,7 +42,26 @@ public class TouchImageView extends ImageView {
 
     ScaleGestureDetector mScaleDetector;
 
+    GestureDetector gestureDetector;
+
     Context context;
+
+    private SwipeHandler swipeHandler;
+
+    public SwipeHandler getSwipeHandler() {
+        return swipeHandler;
+    }
+
+    public void setSwipeHandler(SwipeHandler swipeHandler) {
+        this.swipeHandler = swipeHandler;
+    }
+
+    public interface SwipeHandler {
+        void onSwipeRight();
+        void onSwipeLeft();
+        void onSwipeTop();
+        void onSwipeBottom();
+    }
 
     public TouchImageView(Context context) {
         super(context);
@@ -51,6 +71,97 @@ public class TouchImageView extends ImageView {
     public TouchImageView(Context context, AttributeSet attrs) {
         super(context, attrs);
         sharedConstructing(context);
+    }
+
+    public boolean isZoomed(){
+        return saveScale != minScale;
+    }
+
+    private boolean touchEvent(View v, MotionEvent event){
+
+        mScaleDetector.onTouchEvent(event);
+
+        PointF curr = new PointF(event.getX(), event.getY());
+
+        switch (event.getAction()) {
+
+            case MotionEvent.ACTION_DOWN:
+
+                last.set(curr);
+
+                start.set(last);
+
+                mode = DRAG;
+
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+
+                if (mode == DRAG) {
+
+                    float deltaX = curr.x - last.x;
+
+                    float deltaY = curr.y - last.y;
+
+                    float fixTransX = getFixDragTrans(deltaX, viewWidth, origWidth * saveScale);
+
+                    float fixTransY = getFixDragTrans(deltaY, viewHeight, origHeight * saveScale);
+
+                    matrix.postTranslate(fixTransX, fixTransY);
+
+                    fixTrans();
+
+                    last.set(curr.x, curr.y);
+
+                }
+
+                break;
+
+            case MotionEvent.ACTION_UP:
+
+                mode = NONE;
+
+                int xDiff = (int) Math.abs(curr.x - start.x);
+
+                int yDiff = (int) Math.abs(curr.y - start.y);
+
+                if (xDiff < CLICK && yDiff < CLICK)
+
+                    performClick();
+
+//                        if(((int)v.getTag()) == 1){
+                // Calculate the inverse matrix
+                Matrix inverse = new Matrix();
+                getImageMatrix().invert(inverse);
+
+                // map touch point from ImageView to Image
+                float[] touchPoint = new float[] {event.getX(), event.getY()};
+                inverse.mapPoints(touchPoint);
+
+                touchPoint[0] /= ((BitmapDrawable)getDrawable()).getBitmap().getWidth();
+                touchPoint[1] /= ((BitmapDrawable)getDrawable()).getBitmap().getHeight();
+
+                listener.onTouch(touchPoint);
+//                        }
+
+                break;
+
+            case MotionEvent.ACTION_POINTER_UP:
+
+                mode = NONE;
+
+                break;
+
+        }
+
+        setImageMatrix(matrix);
+
+        invalidate();
+
+        return gestureDetector.onTouchEvent(event);
+
+//        return true; // indicate event was handled
+
     }
 
     private void sharedConstructing(Context context) {
@@ -69,95 +180,50 @@ public class TouchImageView extends ImageView {
 
         setScaleType(ScaleType.MATRIX);
 
-        setOnTouchListener(new OnTouchListener() {
+        setOnTouchListener(this::touchEvent);
 
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
+        gestureDetector = new GestureDetector(context, new GestureListener());
 
-                mScaleDetector.onTouchEvent(event);
+    }
 
-                PointF curr = new PointF(event.getX(), event.getY());
+    private final class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
-                switch (event.getAction()) {
+        private static final int SWIPE_THRESHOLD = 100;
+        private static final int SWIPE_VELOCITY_THRESHOLD = 100;
 
-                    case MotionEvent.ACTION_DOWN:
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return true;
+        }
 
-                        last.set(curr);
-
-                        start.set(last);
-
-                        mode = DRAG;
-
-                        break;
-
-                    case MotionEvent.ACTION_MOVE:
-
-                        if (mode == DRAG) {
-
-                            float deltaX = curr.x - last.x;
-
-                            float deltaY = curr.y - last.y;
-
-                            float fixTransX = getFixDragTrans(deltaX, viewWidth, origWidth * saveScale);
-
-                            float fixTransY = getFixDragTrans(deltaY, viewHeight, origHeight * saveScale);
-
-                            matrix.postTranslate(fixTransX, fixTransY);
-
-                            fixTrans();
-
-                            last.set(curr.x, curr.y);
-
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            boolean result = false;
+            try {
+                float diffY = e2.getY() - e1.getY();
+                float diffX = e2.getX() - e1.getX();
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                        if (diffX > 0) {
+                            getSwipeHandler().onSwipeRight();
+                        } else {
+                            getSwipeHandler().onSwipeLeft();
                         }
-
-                        break;
-
-                    case MotionEvent.ACTION_UP:
-
-                        mode = NONE;
-
-                        int xDiff = (int) Math.abs(curr.x - start.x);
-
-                        int yDiff = (int) Math.abs(curr.y - start.y);
-
-                        if (xDiff < CLICK && yDiff < CLICK)
-
-                            performClick();
-
-//                        if(((int)v.getTag()) == 1){
-                        // Calculate the inverse matrix
-                        Matrix inverse = new Matrix();
-                        getImageMatrix().invert(inverse);
-
-                        // map touch point from ImageView to Image
-                        float[] touchPoint = new float[] {event.getX(), event.getY()};
-                        inverse.mapPoints(touchPoint);
-
-                        touchPoint[0] /= ((BitmapDrawable)getDrawable()).getBitmap().getWidth();
-                        touchPoint[1] /= ((BitmapDrawable)getDrawable()).getBitmap().getHeight();
-
-                        listener.onTouch(touchPoint);
-//                        }
-
-                        break;
-
-                    case MotionEvent.ACTION_POINTER_UP:
-
-                        mode = NONE;
-
-                        break;
-
+                        result = true;
+                    }
+                } else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffY > 0) {
+                        getSwipeHandler().onSwipeBottom();
+                    } else {
+                        getSwipeHandler().onSwipeTop();
+                    }
+                    result = true;
                 }
-
-                setImageMatrix(matrix);
-
-                invalidate();
-
-                return true; // indicate event was handled
-
+            } catch (Exception exception) {
+                exception.printStackTrace();
             }
-
-        });
+            return result;
+        }
     }
 
     public void setMaxZoom(float x) {
@@ -202,7 +268,7 @@ public class TouchImageView extends ImageView {
 
             if (origWidth * saveScale <= viewWidth || origHeight * saveScale <= viewHeight)
 
-                matrix.postScale(mScaleFactor, mScaleFactor, viewWidth / 2, viewHeight / 2);
+                matrix.postScale(mScaleFactor, mScaleFactor, (float) viewWidth / 2, (float) viewHeight / 2);
 
             else
 

@@ -10,18 +10,20 @@ import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import androidx.core.content.FileProvider;
 import android.view.View;
 import android.widget.ImageView;
+
+import androidx.core.content.FileProvider;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
+import com.richard.weger.wqc.helper.ActivityHelper;
+import com.richard.weger.wqc.helper.AlertHelper;
 import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.helper.FileHelper;
 import com.richard.weger.wqc.helper.ImageHelper;
-import com.richard.weger.wqc.helper.MessageboxHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.result.ErrorResult;
@@ -106,6 +108,7 @@ public class PictureViewerActivity extends Activity{
                         }
                     }
                 }
+                findViewById(R.id.btnTakeNew).setVisibility(View.VISIBLE);
             } else {
                 if(intent.hasExtra(PICTURE_FILEPATH_KEY)){
                     String filePath = intent.getStringExtra(PICTURE_FILEPATH_KEY);
@@ -229,6 +232,7 @@ public class PictureViewerActivity extends Activity{
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        ActivityHelper.disableActivityControls(this,false);
         if(resultCode == RESULT_OK) {
             putTimeStamp();
 
@@ -250,7 +254,7 @@ public class PictureViewerActivity extends Activity{
             }
 
             if(mode.equals(GENERAL_PICTURE_MODE)) {
-                MessageboxHelper.showMessage(this, "",
+                AlertHelper.showMessage(this, "",
                         getResources().getString(R.string.getMorePicturesTag),
                         getResources().getString(R.string.yesTAG),
                         getResources().getString(R.string.noTag),
@@ -260,7 +264,7 @@ public class PictureViewerActivity extends Activity{
             }
         } else {
             if(mode.equals(GENERAL_PICTURE_MODE)){
-                MessageboxHelper.showMessage(this, "",
+                AlertHelper.showMessage(this, "",
                         getResources().getString(R.string.getMorePicturesTag),
                         getResources().getString(R.string.yesTAG),
                         getResources().getString(R.string.noTag),

@@ -45,7 +45,7 @@
         <activity android:name=".activity.ConfigurationsActivity" />
         <activity android:name=".activity.CheckReportEditActivity" />
 
-        <service android:name=".firebird.FirebirdMessagingService">
+        <service android:name=".firebird.FirebaseHelper">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>

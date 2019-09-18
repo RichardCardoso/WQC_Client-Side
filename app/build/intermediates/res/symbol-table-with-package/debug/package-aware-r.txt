@@ -1129,11 +1129,24 @@ drawable design_password_eye
 drawable design_snackbar_background
 drawable googleg_disabled_color_18
 drawable googleg_standard_color_18
+drawable ic_add
+drawable ic_cancel
+drawable ic_exit
+drawable ic_galery
+drawable ic_lamp
 drawable ic_launcher_background
 drawable ic_launcher_foreground
+drawable ic_logo
 drawable ic_mtrl_chip_checked_black
 drawable ic_mtrl_chip_checked_circle
 drawable ic_mtrl_chip_close_circle
+drawable ic_qrcode
+drawable ic_report
+drawable ic_return
+drawable ic_save
+drawable ic_takepic
+drawable ic_trash
+drawable ic_undo
 drawable mtrl_snackbar_background
 drawable mtrl_tabs_default_indicator
 drawable navigation_empty_icon
@@ -1233,8 +1246,6 @@ id btnAddMark
 id btnCancel
 id btnCustomPictures
 id btnExit
-id btnNext
-id btnPrevious
 id btnProjectInfo
 id btnProjectSave
 id btnSave
@@ -1319,6 +1330,7 @@ id italic
 id item_touch_helper_previous_elevation
 id ivDocument
 id ivItem
+id ivPrevNext
 id labeled
 id largeLabel
 id layoutButtons
@@ -1458,6 +1470,7 @@ id transition_position
 id transition_scene_layoutid_cache
 id transition_transform
 id tvConfigurationActivityTitle
+id tvCurrentPage
 id tvDeviceId
 id tvFileSelectMessage
 id tvItemComments
@@ -1674,6 +1687,7 @@ string common_open_on_phone
 string common_signin_button_text
 string common_signin_button_text_long
 string configButton
+string configLoadingMessage
 string configScreenTitle
 string confirmationNeeded
 string controlCardLabel
@@ -1699,6 +1713,7 @@ string fcm_fallback_notification_channel_label
 string fileNotFoundMessage
 string fileSelectMessage
 string finishedTag
+string firebaseConnectingMessage
 string firebase_database_url
 string gcm_defaultSenderId
 string getMorePicturesTag
@@ -1720,6 +1735,7 @@ string itemTag
 string magTag
 string mtrl_chip_close_icon_content_description
 string mustWaitCompletion
+string newPicturesTag
 string noDataTag
 string noMarksMessage
 string noPermissionsGrantedTitle
@@ -1743,12 +1759,15 @@ string permissionsNeededMessage
 string photoCaptureError
 string picturesListTag
 string picturesUploadTag
+string pleaseWaitMessage
 string projectCreationRequestFailed
 string projectFinishButton
 string projectFinishConfirmation
 string projectInfoTitle
 string projectLabel
+string projectLoadingMessage
 string projectNumberPrefix
+string projectUpdatedMessage
 string projectUploadMessage
 string project_id
 string qrScanButton
@@ -1779,6 +1798,7 @@ string s6
 string s7
 string saveButton
 string search_menu_title
+string sendToServerTag
 string serverConnectErrorMessage
 string serverPathRequestMessage
 string smbConnectError
@@ -1811,6 +1831,9 @@ string unableToProcced
 string unfinishedReportsMessage
 string unknownDeviceMessage
 string unknownErrorMessage
+string updatesChannelDescription
+string updatesChannelId
+string updatesChannelName
 string usernameTag
 string valuesSavedMessage
 string wiredDatasheetLabel

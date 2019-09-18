@@ -27,7 +27,7 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_MARKREMOVE_KE
 
 public class EntityRestTemplateHelper<T extends DomainEntity> extends RestTemplateHelper<EntityRequest<T>> {
 
-    public EntityRestTemplateHelper(RestTemplateResponse delegate, boolean toggleControlsOnCompletion){
+    public EntityRestTemplateHelper(RestResponseHandler delegate, boolean toggleControlsOnCompletion){
         super(delegate, toggleControlsOnCompletion);
     }
 
@@ -74,7 +74,7 @@ public class EntityRestTemplateHelper<T extends DomainEntity> extends RestTempla
                 break;
             case DELETE_METHOD:
                 if (requestCode.equals(REST_MARKREMOVE_KEY)) {
-                    getResponseEntity(request.getClazz(), null, request.getUri(), HttpMethod.DELETE, restTemplate);
+                    restTemplate.delete(request.getUri());
                     result = new EmptyResult();
                 }
                 break;

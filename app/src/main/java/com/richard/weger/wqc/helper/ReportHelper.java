@@ -64,22 +64,4 @@ public class ReportHelper {
         }
     }
 
-    public void picturesDownload(FileRestTemplateHelper.RestTemplateResponse delegate, Project project, List<String> files, List<FileRestTemplateHelper> queue) {
-        if (files != null) {
-            for (String fileName : files) {
-                if (fileName.length() > 0) {
-                    if (fileName.contains("/")) {
-                        fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
-                    }
-
-                    FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_PDFREPORTDOWNLOAD_KEY, delegate);
-                    FileRestTemplateHelper helper = resolver.getPicture(fileName, StringHelper.getQrText(project));
-                    if (queue != null) {
-                        queue.add(helper);
-                    }
-                }
-            }
-        }
-    }
-
 }

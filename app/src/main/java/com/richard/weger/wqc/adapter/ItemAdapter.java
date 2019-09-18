@@ -18,8 +18,8 @@ import com.richard.weger.wqc.activity.ItemReportEditActivity;
 import com.richard.weger.wqc.domain.DomainEntity;
 import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.Project;
+import com.richard.weger.wqc.helper.AlertHelper;
 import com.richard.weger.wqc.helper.FileHelper;
-import com.richard.weger.wqc.helper.MessageboxHelper;
 import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.util.App;
 
@@ -153,7 +153,7 @@ public class ItemAdapter extends ArrayAdapter<Item> {
 
         tvComments.setOnClickListener(v -> {
             String message = itemList.get(position).getDescription();
-            MessageboxHelper.getString(context, message, (content) -> {
+            AlertHelper.getString(context, message, (content) -> {
                 if (!content.equals(App.getContext().getResources().getString(R.string.editCommentsHint))) {
                     itemList.get(position).setComments(content);
                     tvComments.setText(content);

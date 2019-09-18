@@ -139,4 +139,14 @@
     <string name="reportPageLoadFailed">Failed to load this report\'s page!</string>
     <string name="photoCaptureError">Error setting photo capture!</string>
     <string name="invalidVersionMessage">The version of the server does not match the version of the client!</string>
+    <string name="sendToServerTag">Send to server</string>
+    <string name="newPicturesTag">New pictures</string>
+    <string name="firebaseConnectingMessage">Connecting to firebird service</string>
+    <string name="pleaseWaitMessage">Please wait for a while...</string>
+    <string name="projectLoadingMessage">Loading project info</string>
+    <string name="configLoadingMessage">Loading configurations</string>
+    <string name="updatesChannelName">ProjectUpdates</string>
+    <string name="updatesChannelDescription">Notifies the user about external updates to projects for real-time operation</string>
+    <string name="updatesChannelId" translatable="false">UPDATES_CHANNEL</string>
+    <string name="projectUpdatedMessage">Project updated</string>
 </resources>

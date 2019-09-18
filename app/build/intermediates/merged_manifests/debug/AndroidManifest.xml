@@ -5,7 +5,7 @@
     android:versionName="2.6.0.3" >
 
     <uses-sdk
-        android:minSdkVersion="24"
+        android:minSdkVersion="26"
         android:targetSdkVersion="28" />
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -64,7 +64,7 @@
         <activity android:name="com.richard.weger.wqc.activity.ConfigurationsActivity" />
         <activity android:name="com.richard.weger.wqc.activity.CheckReportEditActivity" />
 
-        <service android:name="com.richard.weger.wqc.firebird.FirebirdMessagingService" >
+        <service android:name="com.richard.weger.wqc.firebird.FirebaseHelper" >
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>

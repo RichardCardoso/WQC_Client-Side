@@ -1,14 +1,9 @@
 package com.richard.weger.wqc.activity;
 
 import android.app.ListActivity;
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.Bundle;
 import android.content.Intent;
-import android.os.Handler;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.richard.weger.wqc.R;
@@ -16,35 +11,39 @@ import com.richard.weger.wqc.adapter.ReportAdapter;
 import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
-import com.richard.weger.wqc.firebird.FirebirdMessagingService;
-import com.richard.weger.wqc.helper.MessageboxHelper;
+import com.richard.weger.wqc.firebird.FirebaseHelper;
+import com.richard.weger.wqc.helper.AlertHelper;
+import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
-import com.richard.weger.wqc.rest.entity.EntityRestTemplateHelper;
+import com.richard.weger.wqc.helper.ReportHelper;
+import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.result.ResultService;
 import com.richard.weger.wqc.result.SuccessResult;
-import com.richard.weger.wqc.service.AbstractEntityRequestParametersResolver;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
-import com.richard.weger.wqc.service.ProjectRequestParametersResolver;
 import com.richard.weger.wqc.util.ConfigurationsManager;
-
-import com.richard.weger.wqc.helper.ReportHelper;
-import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.util.LoggerManager;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.logging.Logger;
 
-import static com.richard.weger.wqc.appconstants.AppConstants.*;
+import static com.richard.weger.wqc.appconstants.AppConstants.PARAMCONFIG_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_LIST_SCREEN_ID;
+import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_FINISH_SCREEN_ID;
+import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REPORT_ID_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REPORT_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_CONFIGLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.WELCOME_ACTIVITY_SCREEN_KEY;
 
 public class ProjectEditActivity extends ListActivity
         implements ReportAdapter.ChangeListener,
-        EntityRestTemplateHelper.RestTemplateResponse,
-                    FirebirdMessagingService.FirebaseListener {
+        RestTemplateHelper.RestResponseHandler,
+                    FirebaseHelper.FirebaseListener {
 
     ParamConfigurations conf;
     Project project;
@@ -52,82 +51,22 @@ public class ProjectEditActivity extends ListActivity
     ReportAdapter reportAdapter;
     List<Report> reports = new ArrayList<>();
 
-    Runnable runnable;
-    Handler handler = new Handler();
-    boolean paused = false;
-    boolean resumed = true;
-
     Logger logger;
-
-    private void setRunnable(){
-        final int interval = 1000;
-        runnable = () -> {
-            if(!checkInternetConnection()){
-                setWaitingLayout();
-                paused = true;
-            } else {
-                if(paused){
-                    inflateActivityLayout();
-                    projectLoad();
-                    paused = false;
-                }
-            }
-        };
-        handler.postAtTime(runnable, System.currentTimeMillis() + interval);
-        handler.postDelayed(runnable, interval);
-    }
-
-    private void setWaitingLayout(){
-        setContentView(R.layout.activity_wait);
-        (findViewById(R.id.pbWelcome)).setVisibility(View.VISIBLE);
-        ((findViewById(R.id.btnExit))).setOnClickListener(v -> {
-            finish();
-            onDestroy();
-        });
-    }
-
-    private boolean checkInternetConnection(){
-        ConnectivityManager cm =
-                (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-    }
 
     @Override
     public void onBackPressed(){}
 
-    @Override
-    public void onPause(){
-        super.onPause();
-        handler.removeCallbacks(runnable);
-    }
 
     @Override
     public void onResume(){
         super.onResume();
+        logger = LoggerManager.getLogger(getClass());
         logger.info("Activity resumed. Starting project load routine");
-        projectLoad();
-        if (FirebirdMessagingService.delegate != this) {
-            FirebirdMessagingService.delegate = this;
-        }
-        setRunnable();
+        loadServerConfig();
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        logger = LoggerManager.getLogger(getClass());
-
-        inflateActivityLayout();
-        logger.info("Getting project data from previous activity intent");
-        Intent intent = getIntent();
-        project = (Project) intent.getSerializableExtra(PROJECT_KEY);
-        reports = project.getDrawingRefs().get(0).getReports();
-        ProjectHelper.linkReferences(project);
-        init();
-        resumed = false;
+    private void loadServerConfig(){
+        ConfigurationsManager.loadServerConfig(this);
     }
 
     private void inflateActivityLayout(){
@@ -147,21 +86,28 @@ public class ProjectEditActivity extends ListActivity
 
     private void init(){
         logger.info("Started init routine from project edit screen");
+        inflateActivityLayout();
+        toggleControls(false);
         setFields();
-        setConf();
         setAdapter();
+        toggleControls(true);
     }
 
     @Override
     public void toggleControls(boolean bResume){
         logger.info("Started toggle controls routine");
-        getListView().setClickable(bResume);
-        reportAdapter.setEnabled(bResume);
-        reportAdapter.notifyDataSetChanged();
+        if(getListView() != null) {
+            getListView().setClickable(bResume);
+        }
+        if(reportAdapter != null) {
+            reportAdapter.setEnabled(bResume);
+            reportAdapter.notifyDataSetChanged();
+        }
+        if(findViewById(R.id.btnProjectInfo) != null) {
+            findViewById(R.id.btnProjectInfo).setEnabled(bResume);
+        }
 
-        findViewById(R.id.btnProjectInfo).setEnabled(bResume);
-
-        if(!bResume) {
+        if (!bResume && findViewById(R.id.progressBarProjectMain) != null) {
             findViewById(R.id.progressBarProjectMain).setVisibility(View.VISIBLE);
         } else {
             findViewById(R.id.progressBarProjectMain).setVisibility(View.INVISIBLE);
@@ -173,10 +119,6 @@ public class ProjectEditActivity extends ListActivity
 
     }
 
-    private void setConf(){
-        conf = ConfigurationsManager.getServerConfig();
-    }
-
     private void setAdapter(){
         logger.info("Started adapters set routine");
         reportAdapter = new ReportAdapter(this, reports);
@@ -186,11 +128,12 @@ public class ProjectEditActivity extends ListActivity
 
     private void setListeners(){
         logger.info("Started listeners set routine");
-        Button button;
+        ImageButton button;
 
         button = findViewById(R.id.btnCustomPictures);
         button.setOnClickListener(v -> {
             logger.info("Started general pictures list activity");
+            toggleControls(false);
             Intent intent = new Intent(ProjectEditActivity.this, PicturesListActivity.class);
             intent.putExtra(PROJECT_KEY, project);
             startActivityForResult(intent, PICTURE_LIST_SCREEN_ID);
@@ -206,7 +149,7 @@ public class ProjectEditActivity extends ListActivity
         });
 
         button = findViewById(R.id.btnExit);
-        button.setOnClickListener(v -> MessageboxHelper.showMessage(this,
+        button.setOnClickListener(v -> AlertHelper.showMessage(this,
                 getResources().getString(R.string.confirmationNeeded),
                 getResources().getString(R.string.qrScanQuestion),
                 getResources().getString(R.string.yesTAG),
@@ -217,7 +160,7 @@ public class ProjectEditActivity extends ListActivity
                     startActivityForResult(intent, WELCOME_ACTIVITY_SCREEN_KEY);
                     finish();
                 },
-                () -> MessageboxHelper.showMessage(this,
+                () -> AlertHelper.showMessage(this,
                         getResources().getString(R.string.app_name),
                         getResources().getString(R.string.closeQuestion),
                         getResources().getString(R.string.yesTAG),
@@ -247,15 +190,11 @@ public class ProjectEditActivity extends ListActivity
 
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data){
-        toggleControls(false);
-    }
-
     private void startReportEdit(Long id) {
         logger.info("Starting report edit activity");
         Report report = project.getDrawingRefs().get(0).getReports().stream().filter(r -> r.getId().equals(id)).findFirst().orElse(null);
         if(report != null) {
+            toggleControls(false);
             ReportHelper helper = new ReportHelper();
             toggleControls(false);
             Class targetActivityClass;
@@ -279,27 +218,24 @@ public class ProjectEditActivity extends ListActivity
         startReportEdit(id);
     }
 
-    private void projectLoad(){
-        logger.info("Started project download from server routine");
-        toggleControls(false);
-        AbstractEntityRequestParametersResolver<Project> resolver = new ProjectRequestParametersResolver(REST_QRPROJECTLOAD_KEY, conf, true);
-        resolver.getEntity(project, this);
-    }
-
     @Override
     public void RestTemplateCallback(AbstractResult result) {
         logger.info("Started server response handling routine");
-        toggleControls(true);
         if (result instanceof SuccessResult) {
-            logger.info("The request was a qr project load one");
             if (result.getRequestCode().equals(REST_QRPROJECTLOAD_KEY)) {
-                logger.info("Started trial to parse the result to a project entity");
+                logger.info("Got project from received request");
                 project = ResultService.getSingleResult(result, Project.class);
                 ProjectHelper.linkReferences(project);
-                logger.info("Parse successful");
                 reports.clear();
                 reports.addAll(project.getDrawingRefs().get(0).getReports());
-                reportAdapter.notifyDataSetChanged();
+                init();
+//                reportAdapter.notifyDataSetChanged();
+            } else if (result.getRequestCode().equals(REST_CONFIGLOAD_KEY)){
+                logger.info("Got ParamConfigurations from received request");
+                ParamConfigurations c = ResultService.getSingleResult(result, ParamConfigurations.class);
+                ConfigurationsManager.setServerConfig(c);
+                conf = c;
+                FirebaseHelper.firebaseConfig(this);
             }
         } else {
             ErrorResult err = ResultService.getErrorResult(result);
@@ -308,14 +244,13 @@ public class ProjectEditActivity extends ListActivity
     }
 
     @Override
-    public void messageReceived(Map<String, String> data) {
-        String qrCode = data.get("qrCode");
-        if(qrCode != null) {
-//            qrCode = data.replace("\\", "");
-            if (ProjectHelper.getQrCode().equals(qrCode)) {
-                runOnUiThread(this::projectLoad);
-            }
-        }
+    public void messageReceived(String qrCode, Long id) {
+        runOnUiThread(() -> ProjectHelper.projectLoad(this, false));
+    }
+
+    @Override
+    public void onConnectionSuccess() {
+        ProjectHelper.projectLoad(this);
     }
 
 }

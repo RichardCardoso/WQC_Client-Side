@@ -1,7 +1,9 @@
 package com.richard.weger.wqc.helper;
 
+import android.content.res.Resources;
 import android.os.AsyncTask;
 
+import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.domain.CheckReport;
 import com.richard.weger.wqc.domain.DrawingRef;
 import com.richard.weger.wqc.domain.Item;
@@ -14,9 +16,15 @@ import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
 import com.richard.weger.wqc.domain.dto.FileDTO;
 import com.richard.weger.wqc.rest.RequestParameter;
+import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.rest.entity.EntityRestTemplateHelper;
 import com.richard.weger.wqc.rest.file.FileRestTemplateHelper;
+import com.richard.weger.wqc.result.AbstractResult;
+import com.richard.weger.wqc.result.EmptyResult;
+import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.service.FileRequestParametersResolver;
+import com.richard.weger.wqc.service.ProjectRequestParametersResolver;
+import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.LoggerManager;
 
 import java.io.File;
@@ -35,6 +43,7 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREDOW
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTURESREQUEST_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREUPLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTUREUPLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
 import static java.io.File.separatorChar;
 
 public class ProjectHelper {
@@ -45,8 +54,15 @@ public class ProjectHelper {
 
     private static Logger logger = LoggerManager.getLogger(ProjectHelper.class);
 
-    public static void setQrCode(String qrCode) {
+    public static AbstractResult setQrCode(String qrCode) {
+        Map<String, String> values = new QrTextHelper(conf).execute(qrCode);
+        if(values == null){
+            return new ErrorResult(ErrorResult.ErrorCode.QR_TRANSLATION_FAILED,
+                    App.getContext().getResources().getString(R.string.invalidQrCodeString),
+                    ErrorResult.ErrorLevel.SEVERE, ProjectHelper.class);
+        }
         ProjectHelper.qrCode = qrCode;
+        return new EmptyResult();
     }
 
     public static ParamConfigurations getConf() {
@@ -95,6 +111,25 @@ public class ProjectHelper {
         dRef.getParts().add(part);
 
         return project;
+    }
+
+    public static void projectLoad(RestTemplateHelper.RestResponseHandler handler){
+        projectLoad(handler,true);
+    }
+
+    public static void projectLoad(RestTemplateHelper.RestResponseHandler handler, boolean toggleWaitScreen){
+        logger.info("Started project load request routine");
+        Resources r = App.getContext().getResources();
+        String message = String.format(r.getConfiguration().getLocales().get(0), "%s, %s",
+                r.getString(R.string.projectLoadingMessage),
+                r.getString(R.string.pleaseWaitMessage).toLowerCase());
+        if(toggleWaitScreen) {
+            ActivityHelper.setHandlerWaitingLayout(handler, message);
+        } else {
+            ActivityHelper.disableHandlerControls(handler, true);
+        }
+        ProjectRequestParametersResolver resolver = new ProjectRequestParametersResolver(REST_QRPROJECTLOAD_KEY, getConf(), true);
+        resolver.getEntity(getProject(), handler);
     }
 
     // superFolder = "Originals/"
@@ -195,7 +230,7 @@ public class ProjectHelper {
         }
     }
 
-    public static void getGenPicturesList(FileRestTemplateHelper.RestTemplateResponse delegate, Project project, boolean deleteOldFiles){
+    public static void getGenPicturesList(RestTemplateHelper.RestResponseHandler delegate, Project project, boolean deleteOldFiles){
         logger.info("Started routine to check if general pictures download is necessary");
         if(deleteOldFiles) {
             String picFolderPath = StringHelper.getPicturesFolderPath(project);
@@ -212,7 +247,7 @@ public class ProjectHelper {
         resolver.getGeneralPicturesList(StringHelper.getQrText(project));
     }
 
-    public static int getGenPictures(FileRestTemplateHelper.RestTemplateResponse delegate, List<FileDTO> pictures, List<FileRestTemplateHelper> queue, Project project){
+    public static int getGenPictures(RestTemplateHelper.RestResponseHandler delegate, List<FileDTO> pictures, List<FileRestTemplateHelper> queue, Project project){
         String code = StringHelper.getQrText(project);
         int cnt = 0;
         for(FileDTO dto : pictures) {
@@ -280,14 +315,24 @@ public class ProjectHelper {
 
     public static int getCurrentPicNumber(Project project){
         File folder = new File(StringHelper.getPicturesFolderPath(project));
-        int currentPicNumber = 1;
+        int currentPicNumber = Integer.MAX_VALUE;
         if(folder.exists() && folder.listFiles().length > 0) {
-            currentPicNumber += Arrays.stream(folder.listFiles()).filter(f -> f.getName().contains("QP")).count();
+            List<Integer> qpIdList = new ArrayList<>();
+            Arrays.stream(folder.listFiles())
+                    .filter(f -> f.getName().contains("QP"))
+                    .map(File::getName)
+                    .mapToInt(n -> Integer.valueOf(n.substring(n.lastIndexOf("QP") + 2).replace(".jpg","").replace("_new","")))
+                    .forEach(qpIdList::add);
+            currentPicNumber = qpIdList.stream().mapToInt(i -> i).max().orElse(currentPicNumber);
+            if(currentPicNumber < Integer.MAX_VALUE){
+                currentPicNumber++;
+            }
+//            currentPicNumber += Arrays.stream(folder.listFiles()).filter(f -> f.getName().contains("QP")).count();
         }
         return currentPicNumber;
     }
 
-    public static void itemPictureUpload(FileRestTemplateHelper.RestTemplateResponse delegate, Item item, Project project){
+    public static void itemPictureUpload(RestTemplateHelper.RestResponseHandler delegate, Item item, Project project){
         logger.info("Started picture upload request");
 
         String picName = item.getPicture().getFileName();
@@ -298,7 +343,7 @@ public class ProjectHelper {
 
     }
 
-    public static void generalPictureUpload(FileRestTemplateHelper.RestTemplateResponse delegate, Project project, String picName, List<FileRestTemplateHelper> queue){
+    public static void generalPictureUpload(RestTemplateHelper.RestResponseHandler delegate, Project project, String picName, List<FileRestTemplateHelper> queue){
 
         FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_GENPICTUREUPLOAD_KEY, delegate);
         FileRestTemplateHelper helper = resolver.uploadGeneralPicture(picName, StringHelper.getQrText(project));

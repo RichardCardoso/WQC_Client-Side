@@ -5,14 +5,14 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.common.util.Strings;
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.zxing.Result;
+import com.richard.weger.wqc.BuildConfig;
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.domain.CheckReport;
 import com.richard.weger.wqc.domain.Device;
@@ -22,8 +22,9 @@ import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
 import com.richard.weger.wqc.domain.Role;
 import com.richard.weger.wqc.domain.dto.FileDTO;
+import com.richard.weger.wqc.helper.ActivityHelper;
 import com.richard.weger.wqc.helper.DeviceHelper;
-import com.richard.weger.wqc.helper.MessageboxHelper;
+import com.richard.weger.wqc.helper.AlertHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.rest.RestTemplateHelper;
@@ -36,7 +37,6 @@ import com.richard.weger.wqc.result.SuccessResult;
 import com.richard.weger.wqc.service.DeviceRequestParameterResolver;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.service.FileRequestParametersResolver;
-import com.richard.weger.wqc.service.ParamConfigurationsRequestParametersResolver;
 import com.richard.weger.wqc.service.ProjectRequestParametersResolver;
 import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.Configurations;
@@ -67,7 +67,7 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTCREA
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
 
 public class WelcomeActivity extends Activity implements ZXingScannerView.ResultHandler,
-        RestTemplateHelper.RestTemplateResponse{
+        RestTemplateHelper.RestResponseHandler {
 
     Project project;
     String qrCode;
@@ -98,12 +98,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
         super.onCreate(savedInstanceState);
         new App();
 
-        setContentView(R.layout.activity_wait);
-        (findViewById(R.id.pbWelcome)).setVisibility(View.VISIBLE);
-        ((findViewById(R.id.btnExit))).setOnClickListener(v -> {
-            finish();
-            onDestroy();
-        });
+        ActivityHelper.setWaitingLayout(this);
 
         if(handlePermissions()){
             gotPermissions();
@@ -158,7 +153,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
         if(conf.getServerPath() != null && conf.getServerPath().length() <= 0){
             firstContact();
         } else {
-            getServerConfig();
+            ConfigurationsManager.loadServerConfig(this);
         }
     }
 
@@ -184,7 +179,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
         setContentView(R.layout.activity_welcome);
         setListeners();
         setTextEditValue(DeviceHelper.getCurrentDevice());
-         tvStatus = findViewById(R.id.tvStatus);
+        tvStatus = findViewById(R.id.tvStatus);
     }
 
     public void QrScan(){
@@ -200,13 +195,13 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
 
         findViewById(R.id.buttonQrScan).setOnClickListener(v -> QrScan());
 
-        Button button = findViewById(R.id.btnExit);
-        button.setOnClickListener(v -> MessageboxHelper.showMessage(this,
+        ImageButton button = findViewById(R.id.btnExit);
+        button.setOnClickListener(v -> AlertHelper.showMessage(this,
                 getResources().getString(R.string.confirmationNeeded),
                 getResources().getString(R.string.closeQuestion),
                 getResources().getString(R.string.yesTAG),
                 getResources().getString(R.string.noTag),
-                this::finish,
+                () -> android.os.Process.killProcess(android.os.Process.myPid()),
                 null));
     }
 
@@ -234,38 +229,35 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     @Override
     public void handleResult(Result rawResult) {
         log("Started routine to handle qr scan result");
-        qrCode = rawResult.getText();
-        if(qrCode != null) {
-            ProjectHelper.setConf(conf);
-            ProjectHelper.setQrCode(qrCode);
-        } else {
-            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.QR_TRANSLATION_FAILED, getResources().getString(R.string.invalidQrCodeString), ErrorResult.ErrorLevel.SEVERE, getClass());
-            ErrorResponseHandler.handle(err, this, this::finish);
-            return;
-        }
         if(mScannerView != null) {
             mScannerView.stopCamera();
         }
         layoutRestore();
-        projectLoad();
+        handleQrScan(rawResult.getText());
     }
 
-    private void getServerConfig(){
-        log("Started routine to get the configs from server");
-        ParamConfigurationsRequestParametersResolver resolver = new ParamConfigurationsRequestParametersResolver(REST_CONFIGLOAD_KEY, null, true);
-        resolver.getEntity(new ParamConfigurations(), this);
+    private void handleQrScan(String res){
+        AbstractResult qrRes;
+        qrCode = res;
+        if(qrCode != null) {
+            ProjectHelper.setConf(conf);
+            qrRes = ProjectHelper.setQrCode(qrCode);
+            if (qrRes instanceof ErrorResult) {
+                ErrorResult err = ResultService.getErrorResult(qrRes);
+                ErrorResponseHandler.handle(err, this, null);
+                return;
+            }
+        } else {
+            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.QR_TRANSLATION_FAILED, getResources().getString(R.string.invalidQrCodeString), ErrorResult.ErrorLevel.SEVERE, getClass());
+            ErrorResponseHandler.handle(err, this, null);
+            return;
+        }
+        ProjectHelper.projectLoad(this, false);
     }
 
-    private void projectLoad(){
-        toggleControls(false);
-        log("Started routine to get the project from server");
-        ProjectRequestParametersResolver resolver = new ProjectRequestParametersResolver(REST_QRPROJECTLOAD_KEY, conf, true);
-        resolver.getEntity(ProjectHelper.getProject(qrCode, conf), this);
-    }
 
     private void startProjectEdit(){
         if(!projectEditStarted) {
-            FirebaseMessaging.getInstance().subscribeToTopic("WQC2-0");
             log("Started routine to open the project edit screen");
             Intent intent = new Intent(WelcomeActivity.this, ProjectEditActivity.class);
             intent.putExtra(PROJECT_KEY, project);
@@ -358,12 +350,12 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
         log("Configuration file not found, starting first run routine");
         String prevPath;
         prevPath = ConfigurationsManager.getLocalConfig().getServerPath();
-        MessageboxHelper.getString(this, getResources().getString(R.string.serverPathRequestMessage), (path) -> {
+        AlertHelper.getString(this, getResources().getString(R.string.serverPathRequestMessage), (path) -> {
             if(path == null){
                 finish();
             } else {
                 serverPathReferenceUpdate(path);
-                getServerConfig();
+                ConfigurationsManager.loadServerConfig(this);
             }
         }
         , prevPath);
@@ -401,6 +393,9 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                 log("Device authorized");
                 hasAuthorization = true;
                 layoutRestore();
+                if(BuildConfig.DEBUG){
+                    handleQrScan("\\17-1-435_Z_1_T_1");
+                }
             }
         } catch (Exception ex) {
             String message = getResources().getString(R.string.deviceNotAuthorizedMessage).concat("\n(").concat(App.getUniqueId()).concat(")");
@@ -443,7 +438,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                     identificationResponse(device);
                     break;
                 case REST_QRPROJECTCREATE_KEY:
-                    projectLoad();
+                    ProjectHelper.projectLoad(this, false);
                     break;
                 case REST_QRPROJECTLOAD_KEY:
                     toggleControls(false);
@@ -538,7 +533,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                     continueIfPossible(null);
                     break;
                 default:
-                    MessageboxHelper.showMessage(this,
+                    AlertHelper.showMessage(this,
                             ErrorUtil.getErrorMessageWithCode(err),
                             getResources().getString(R.string.okTag),
                             null);

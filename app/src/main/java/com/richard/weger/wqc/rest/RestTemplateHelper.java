@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 
 import com.richard.weger.wqc.converter.MyHttpMessageConverter;
 import com.richard.weger.wqc.exception.ServerException;
+import com.richard.weger.wqc.helper.ActivityHelper;
 import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
@@ -25,14 +26,14 @@ import java.util.logging.Logger;
 
 public abstract class RestTemplateHelper<Params extends Request> extends AsyncTask<Params, Void, AbstractResult> {
 
-    public interface RestTemplateResponse {
+    public interface RestResponseHandler {
         void RestTemplateCallback(AbstractResult result);
         void toggleControls(boolean resume);
         void runOnUiThread(Runnable runnable);
         void onFatalError();
     }
 
-    public RestTemplateHelper(RestTemplateResponse delegate, boolean toggleControlsOnCompletion){
+    public RestTemplateHelper(RestResponseHandler delegate, boolean toggleControlsOnCompletion){
         this.delegate = delegate;
         this.toggleControlsOnCompletion = toggleControlsOnCompletion;
         logger = LoggerManager.getLogger(getClass());
@@ -55,7 +56,7 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
             restTemplate.getMessageConverters().add(0, new MyHttpMessageConverter());
 
             try {
-                delegate.runOnUiThread(() -> delegate.toggleControls(false));
+                delegate.runOnUiThread(() -> ActivityHelper.disableHandlerControls(delegate, true));
             } catch (Exception ex) {
                 warnUnknownException(ex);
             }
@@ -76,7 +77,7 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
         return result;
     }
 
-    protected RestTemplateResponse delegate;
+    protected RestResponseHandler delegate;
     protected String requestCode;
     private Logger logger;
     private boolean toggleControlsOnCompletion;
@@ -96,7 +97,7 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
                 delegate.runOnUiThread(() -> delegate.toggleControls(true));
             }
         } catch (Exception ex){
-            informUnknownException(ex);
+
         }
         try {
             delegate.RestTemplateCallback(result);

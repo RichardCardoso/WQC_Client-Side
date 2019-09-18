@@ -14,10 +14,10 @@ import static com.richard.weger.wqc.appconstants.AppConstants.POST_METHOD;
 
 public class FileRequestParametersResolver {
 
-    RestTemplateHelper.RestTemplateResponse delegate;
+    RestTemplateHelper.RestResponseHandler delegate;
     String requestCode;
 
-    public FileRequestParametersResolver(String requestCode, FileRestTemplateHelper.RestTemplateResponse delegate){
+    public FileRequestParametersResolver(String requestCode, RestTemplateHelper.RestResponseHandler delegate){
         this.delegate = delegate;
         this.requestCode = requestCode;
     }

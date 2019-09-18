@@ -4,33 +4,36 @@ import com.richard.weger.wqc.domain.AuditableEntity;
 import com.richard.weger.wqc.domain.Device;
 import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.ParentAwareEntity;
+import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.rest.RequestParameter;
+import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.rest.entity.EntityRequest;
 import com.richard.weger.wqc.rest.entity.EntityRequestHelper;
 import com.richard.weger.wqc.rest.entity.EntityRestTemplateHelper;
 import com.richard.weger.wqc.rest.entity.EntityReturnType;
 import com.richard.weger.wqc.rest.entity.RawEntityRequest;
-import com.richard.weger.wqc.helper.DeviceHelper;
 
 import java.util.Date;
 
-import static com.richard.weger.wqc.appconstants.AppConstants.*;
+import static com.richard.weger.wqc.appconstants.AppConstants.DELETE_METHOD;
+import static com.richard.weger.wqc.appconstants.AppConstants.GET_METHOD;
+import static com.richard.weger.wqc.appconstants.AppConstants.POST_METHOD;
 
 public abstract class AbstractEntityRequestParametersResolver<T extends AuditableEntity> implements IEntityRequestParametersResolver<T> {
 
     private String requestCode;
     private ParamConfigurations conf;
-    private boolean toggleControlsOnCompletion = false;
+    private boolean toggleControlsOnCompletion;
 
-    public AbstractEntityRequestParametersResolver(String requestCode, ParamConfigurations conf, boolean toggleControlsOnCompletion){
+    AbstractEntityRequestParametersResolver(String requestCode, ParamConfigurations conf, boolean toggleControlsOnCompletion){
         this.requestCode = requestCode;
         this.conf = conf;
         this.toggleControlsOnCompletion = toggleControlsOnCompletion;
     }
 
     @Override
-    public final EntityRestTemplateHelper<T> getEntity(T entity, EntityRestTemplateHelper.RestTemplateResponse delegate) {
+    public final EntityRestTemplateHelper<T> getEntity(T entity, RestTemplateHelper.RestResponseHandler delegate) {
         EntityRestTemplateHelper<T> template = new EntityRestTemplateHelper<>(delegate, toggleControlsOnCompletion);
 
         if(entity == null){
@@ -53,7 +56,7 @@ public abstract class AbstractEntityRequestParametersResolver<T extends Auditabl
     }
 
     @Override
-    public final EntityRestTemplateHelper<T> getEntities(T entity, EntityRestTemplateHelper.RestTemplateResponse delegate) {
+    public final EntityRestTemplateHelper<T> getEntities(T entity, RestTemplateHelper.RestResponseHandler delegate) {
         EntityRestTemplateHelper<T> template = new EntityRestTemplateHelper<>(delegate, toggleControlsOnCompletion);
 
         if(entity == null){
@@ -76,7 +79,7 @@ public abstract class AbstractEntityRequestParametersResolver<T extends Auditabl
     }
 
     @Override
-    public EntityRestTemplateHelper<T> getEntitiesFromParent(T entity, EntityRestTemplateHelper.RestTemplateResponse delegate) {
+    public EntityRestTemplateHelper<T> getEntitiesFromParent(T entity, RestTemplateHelper.RestResponseHandler delegate) {
         EntityRestTemplateHelper<T> template = new EntityRestTemplateHelper<>(delegate, toggleControlsOnCompletion);
 
         if(!(entity instanceof ParentAwareEntity) || ((ParentAwareEntity) entity).getParent() == null){
@@ -104,7 +107,7 @@ public abstract class AbstractEntityRequestParametersResolver<T extends Auditabl
     }
 
     @Override
-    public final EntityRestTemplateHelper<T> postEntity(T entity, EntityRestTemplateHelper.RestTemplateResponse delegate) {
+    public final EntityRestTemplateHelper<T> postEntity(T entity, RestTemplateHelper.RestResponseHandler delegate) {
         EntityRestTemplateHelper<T> template = new EntityRestTemplateHelper<>(delegate, toggleControlsOnCompletion);
 
         RawEntityRequest<T> request = new RawEntityRequest<>(entity);
@@ -131,7 +134,7 @@ public abstract class AbstractEntityRequestParametersResolver<T extends Auditabl
     }
 
     @Override
-    public EntityRestTemplateHelper<T> deleteEntity(T entity, EntityRestTemplateHelper.RestTemplateResponse delegate) {
+    public EntityRestTemplateHelper<T> deleteEntity(T entity, RestTemplateHelper.RestResponseHandler delegate) {
         EntityRestTemplateHelper<T> template = new EntityRestTemplateHelper<>(delegate, toggleControlsOnCompletion);
 
         RawEntityRequest<T> request = new RawEntityRequest<>(entity);

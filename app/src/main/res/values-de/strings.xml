@@ -140,4 +140,13 @@
     <string name="reportPageLoadFailed">Fehler beim Laden der Seite dieses Berichts!</string>
     <string name="photoCaptureError">Fehler beim Einstellen der Fotoaufnahme!</string>
     <string name="invalidVersionMessage">Die Version des Servers stimmt nicht mit der Version des Clients überein!</string>
+    <string name="sendToServerTag">An Server senden</string>
+    <string name="newPicturesTag">Neue Bilder</string>
+    <string name="firebaseConnectingMessage">Verbindung zum Firebird-Dienst wird hergestellt</string>
+    <string name="pleaseWaitMessage">Bitte warte eine Weile...</string>
+    <string name="projectLoadingMessage">Projektinformationen werden geladen</string>
+    <string name="configLoadingMessage">Konfigurationen werden geladen</string>
+    <string name="updatesChannelName">Projektaktualisierungen</string>
+    <string name="updatesChannelDescription">Informiert den Benutzer über externe Aktualisierungen von Projekten für den Echtzeitbetrieb</string>
+    <string name="projectUpdatedMessage">Projekt aktualisiert</string>
 </resources>

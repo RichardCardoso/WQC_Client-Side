@@ -4,8 +4,8 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.domain.ItemReport;
@@ -13,8 +13,9 @@ import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
 import com.richard.weger.wqc.helper.DeviceHelper;
-import com.richard.weger.wqc.helper.MessageboxHelper;
+import com.richard.weger.wqc.helper.AlertHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
+import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.rest.entity.EntityRestTemplateHelper;
 import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.ErrorResult;
@@ -30,7 +31,7 @@ import static com.richard.weger.wqc.appconstants.AppConstants.PARAMCONFIG_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_REPORTUPLOAD_KEY;
 
-public class ProjectInfoActivity extends Activity implements EntityRestTemplateHelper.RestTemplateResponse {
+public class ProjectInfoActivity extends Activity implements RestTemplateHelper.RestResponseHandler {
 
     Project project = null;
     ParamConfigurations conf = null;
@@ -81,7 +82,7 @@ public class ProjectInfoActivity extends Activity implements EntityRestTemplateH
     }
 
     private void setListeners(){
-        Button btn = findViewById(R.id.btnProjectSave);
+        ImageButton btn = findViewById(R.id.btnProjectSave);
         btn.setOnClickListener(view -> reportSubmit());
         btn = findViewById(R.id.btnCancel);
         btn.setOnClickListener(view -> close(false));
@@ -143,7 +144,7 @@ public class ProjectInfoActivity extends Activity implements EntityRestTemplateH
     private void completion(){
         if(queue != null && (queue.stream().filter(r -> r.getStatus() == AsyncTask.Status.FINISHED || r.isCancelled() || r.getStatus() == AsyncTask.Status.PENDING).count() - 1) <= 0) {
             String message = getResources().getString(R.string.changesSavedMessage);
-            MessageboxHelper.showMessage(this,
+            AlertHelper.showMessage(this,
                     message,
                     getResources().getString(R.string.okTag),
                     () -> close(false)
