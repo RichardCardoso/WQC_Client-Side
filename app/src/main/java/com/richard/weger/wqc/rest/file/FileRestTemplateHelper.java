@@ -6,10 +6,13 @@ import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.rest.RequestParameter;
 import com.richard.weger.wqc.rest.RestTemplateHelper;
+import com.richard.weger.wqc.rest.entity.EntityRestTemplateHelper;
 import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.EmptyResult;
+import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.result.MultipleObjectResult;
 import com.richard.weger.wqc.result.SingleObjectResult;
+import com.richard.weger.wqc.util.ErrorUtil;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
@@ -38,12 +41,11 @@ public class FileRestTemplateHelper extends RestTemplateHelper<FileRequest> {
 
     @Override
     protected final AbstractResult executionStrategy(RestTemplate restTemplate, FileRequest request) throws Exception {
-        AbstractResult result = null;
+        AbstractResult result;
 
         if (request.getRequestMethod().equals(GET_METHOD)) {
             if (request.getFileReturnType() == FileReturnType.ListReturn) {
-                ParameterizedTypeReference<List<FileDTO>> type = new ParameterizedTypeReference<List<FileDTO>>() {
-                };
+                ParameterizedTypeReference<List<FileDTO>> type = new ParameterizedTypeReference<List<FileDTO>>() {};
                 ResponseEntity<List<FileDTO>> response = getResponseEntity(type, request.getEntity(), request.getUri(), HttpMethod.GET, restTemplate);
 
                 result = new MultipleObjectResult<>(FileDTO.class, response.getBody());
@@ -60,6 +62,8 @@ public class FileRestTemplateHelper extends RestTemplateHelper<FileRequest> {
                 ProjectHelper.byteArrayToFile(response.getBody().getByteArray(), request.getParameters(), parentFolder);
 
                 result = new EmptyResult();
+            } else {
+                result = new ErrorResult(ErrorResult.ErrorCode.INVALID_ENTITYRETURNTYPE,  ErrorUtil.getUnknownErrorMessage(), ErrorResult.ErrorLevel.SEVERE, EntityRestTemplateHelper.class);
             }
         } else if (request.getRequestMethod().equals(POST_METHOD)) {
             if (requestCode.equals(REST_PICTUREUPLOAD_KEY) || requestCode.equals(REST_GENPICTUREUPLOAD_KEY)) {
@@ -112,7 +116,11 @@ public class FileRestTemplateHelper extends RestTemplateHelper<FileRequest> {
                 ResponseEntity<List<String>> responseEntity = getResponseEntity(type, null, request.getUri(), HttpMethod.POST, restTemplate);
 
                 result = new MultipleObjectResult<>(String.class, responseEntity.getBody());
+            } else {
+                result = new ErrorResult(ErrorResult.ErrorCode.INVALID_REQUESTCODE,  ErrorUtil.getUnknownErrorMessage(), ErrorResult.ErrorLevel.SEVERE, EntityRestTemplateHelper.class);
             }
+        } else {
+            result = new ErrorResult(ErrorResult.ErrorCode.INVALID_REST_METHOD,  ErrorUtil.getUnknownErrorMessage(), ErrorResult.ErrorLevel.SEVERE, EntityRestTemplateHelper.class);
         }
         return result;
     }

@@ -17,8 +17,8 @@ public class CheckReport extends Report {
 		setPages((List<Page>) children);
 	}
 
-	public CheckReport() {
-		this.pages = new ArrayList<Page>();
+	CheckReport() {
+		this.pages = new ArrayList<>();
 		this.fileName = "";
 	}
 
@@ -50,7 +50,7 @@ public class CheckReport extends Report {
 		this.fileName = serverPdfPath;
 	}
 
-	public int getPagesCount() {
+	private int getPagesCount() {
 		return pages.size();
 	}
 

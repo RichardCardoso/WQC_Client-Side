@@ -5,6 +5,8 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 
@@ -16,7 +18,13 @@ public class App extends Application {
     private static SharedPreferences mPrefs;
 
     public static String getExpectedVersion() {
-        return "2.7.0.0";
+        try {
+            PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+            return pInfo.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            LoggerManager.getLogger(App.class).severe(e.getMessage());
+            return "-1";
+        }
     }
 
     public static SharedPreferences getmPrefs() {
@@ -27,7 +35,6 @@ public class App extends Application {
     public void onCreate(){
         super.onCreate();
         context = this;
-        createNotificationChannel();
         mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
@@ -39,7 +46,7 @@ public class App extends Application {
         return Settings.Secure.getString(getContext().getContentResolver(), Settings.Secure.ANDROID_ID);
     }
 
-    private void createNotificationChannel(){
+    public static void createNotificationChannel(){
         CharSequence name = App.getContext().getResources().getString(R.string.updatesChannelName);
         String description = App.getContext().getResources().getString(R.string.updatesChannelDescription);
         String id = App.getContext().getResources().getString(R.string.updatesChannelId);
@@ -48,5 +55,9 @@ public class App extends Application {
         channel.setDescription(description);
         NotificationManager manager = App.getContext().getSystemService(NotificationManager.class);
         manager.createNotificationChannel(channel);
+    }
+
+    public interface Method {
+        void execute();
     }
 }

@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.richard.weger.wqc"
     android:versionCode="2"
-    android:versionName="2.6.0.3" >
+    android:versionName="2.7.0.1" >
 
     <uses-sdk
         android:minSdkVersion="26"
@@ -64,12 +64,13 @@
         <activity android:name="com.richard.weger.wqc.activity.ConfigurationsActivity" />
         <activity android:name="com.richard.weger.wqc.activity.CheckReportEditActivity" />
 
-        <service android:name="com.richard.weger.wqc.firebird.FirebaseHelper" >
+        <!--
+        <service android:name=".messaging.firebird.FirebaseHelper">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
+        -->
         <activity android:name="com.richard.weger.wqc.activity.PicturesListActivity" />
 
         <meta-data

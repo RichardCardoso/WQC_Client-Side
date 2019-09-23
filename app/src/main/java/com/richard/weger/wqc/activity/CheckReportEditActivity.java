@@ -22,7 +22,9 @@ import com.richard.weger.wqc.domain.Mark;
 import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Role;
-import com.richard.weger.wqc.firebird.FirebaseHelper;
+import com.richard.weger.wqc.messaging.IMessagingListener;
+import com.richard.weger.wqc.messaging.MessagingHelper;
+import com.richard.weger.wqc.messaging.firebird.FirebaseHelper;
 import com.richard.weger.wqc.helper.ActivityHelper;
 import com.richard.weger.wqc.helper.AlertHelper;
 import com.richard.weger.wqc.helper.DeviceHelper;
@@ -60,7 +62,7 @@ import static com.richard.weger.wqc.appconstants.AppConstants.SDF;
 
 public class CheckReportEditActivity extends Activity implements TouchImageView.ChangeListener,
         RestTemplateHelper.RestResponseHandler,
-        FirebaseHelper.FirebaseListener, TouchImageView.SwipeHandler {
+        IMessagingListener, TouchImageView.SwipeHandler {
 
     CheckReport report;
     Long reportId;
@@ -73,6 +75,7 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
     String filePath;
     Mark lastTouchedMark;
     int mode = 0;
+    boolean onCreateChain = false;
     // mode 0 = zoom / pan
     // mode 1 = add mark
 
@@ -97,6 +100,8 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        onCreateChain = true;
 
         logger = LoggerManager.getLogger(getClass());
 
@@ -265,6 +270,7 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
     }
 
     private void close(boolean error){
+        MessagingHelper.getServiceInstance().removeListener();
         logger.info("Started close routine");
         if(error) {
             setResult(RESULT_CANCELED);
@@ -461,7 +467,7 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
         } else {
             AlertHelper.showMessage(this, message,
                     getResources().getString(R.string.okTag),
-                    () -> remove(lastTouchedMark));
+                    null);
         }
 
     }
@@ -529,7 +535,12 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
                     ParamConfigurations c = ResultService.getSingleResult(result, ParamConfigurations.class);
                     ConfigurationsManager.setServerConfig(c);
                     conf = c;
-                    FirebaseHelper.firebaseConfig(this);
+                    if(!onCreateChain) {
+                        MessagingHelper.getServiceInstance().setListener(this, true);
+                    } else {
+                        onCreateChain = false;
+                        MessagingHelper.getServiceInstance().setup(this);
+                    }
                     break;
             }
         } else {
@@ -551,7 +562,7 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
                         (findViewById(R.id.btnUndo)).setEnabled(false);
                     }
 
-                    (findViewById(R.id.btnExit)).setEnabled(bResume);
+                    (findViewById(R.id.btnExit)).setEnabled(true);
                     if (!bResume) {
                         (findViewById(R.id.pbCheckReportEdit)).setVisibility(View.VISIBLE);
                     } else {
@@ -583,14 +594,29 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
     }
 
     @Override
-    public void messageReceived(String qrCode, Long id) {
-        logger.info("Project was updated by another user. Triggering reload from CheckReport activity");
-        runOnUiThread(() -> ProjectHelper.projectLoad(this, false));
+    public boolean shouldNotifyChange(String qrCode, Long id, Long parentId) {
+        if(ProjectHelper.shouldRefresh(report, id, parentId)) {
+            logger.info("The current report was updated by another user. Triggering reload from ItemReport activity");
+            try{
+                runOnUiThread(()-> toggleControls(false));
+            } catch (Exception e){
+                logger.warning("Unable to disable controls for project refresh routine!");
+            }
+            ProjectHelper.projectLoad(this, false);
+            return true;
+        }
+        logger.info("Another report was updated by another user. There is no need to refresh the contents.");
+        return false;
     }
 
     @Override
     public void onConnectionSuccess() {
-        ProjectHelper.projectLoad(this);
+        ProjectHelper.projectLoad(this, report == null);
+    }
+
+    @Override
+    public void onConnectionFailure() {
+        close(true);
     }
 
     @Override

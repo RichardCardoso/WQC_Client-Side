@@ -45,12 +45,13 @@
         <activity android:name=".activity.ConfigurationsActivity" />
         <activity android:name=".activity.CheckReportEditActivity" />
 
-        <service android:name=".firebird.FirebaseHelper">
+        <!--
+        <service android:name=".messaging.firebird.FirebaseHelper">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
+        -->
         <activity android:name=".activity.PicturesListActivity"></activity>
 
         <meta-data

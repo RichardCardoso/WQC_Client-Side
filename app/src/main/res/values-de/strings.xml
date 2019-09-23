@@ -21,7 +21,7 @@
     <string name="rdAproved">Genehmigt</string>
     <string name="rdNotAproved">Nicht bestätigt</string>
     <string name="rdNotAplicable">Unzutreffend</string>
-    <string name="editCommentsHint">Kommentare hier ...</string>
+    <string name="editCommentsHint">Kommentare hier …</string>
     <string name="btnTakePicture">Ein Bild machen</string>
     <string name="btnErasePicture">Bild löschen</string>
     <string name="saveButton">Speichern</string>
@@ -43,7 +43,7 @@
     <string name="unableToProcced">Nicht in der Lage, fortzufahren</string>
     <string name="unfinishedReportsMessage">Es gibt noch einige unvollendete Berichte</string>
     <string name="okTag">Ok</string>
-    <string name="reportComentsHint">Allgemeine Kommentare hier ...</string>
+    <string name="reportComentsHint">Allgemeine Kommentare hier …</string>
     <string name="tvClientText">Klient</string>
     <string name="tvComissionText">Kommission</string>
     <string name="tvReportCommentsText">Allgemeine Kommentare</string>
@@ -123,7 +123,7 @@
     <string name="accessDisabledMessage">Der Systemzugriff für dieses Gerät ist deaktiviert. Bitte wenden Sie sich an Ihren Systemadministrator.</string>
     <string name="invalidUsernameMessage">Der Benutzername dieses Geräts ist ungültig. Bitte wenden Sie sich an Ihren Systemadministrator.</string>
     <string name="retrievingFilesTag">" 28/5000 Dateien vom Server abrufen"</string>
-    <string name="commentsLabel">Kommentare hier ...</string>
+    <string name="commentsLabel">Kommentare hier …</string>
     <string name="reportFinishMessage">Möchten Sie diesen Bericht als abgeschlossen festlegen? Es sind keine Änderungen zulässig, solange der Bericht als abgeschlossen festgelegt ist!</string>
     <string name="reportUnfinishMessage">Möchten Sie diesen Bericht als nicht abgeschlossen festlegen? Dadurch kann der Bericht bearbeitet werden!</string>
     <string name="noMarksMessage">Sie können einen Bericht, der keine Punkte enthält, nicht als abgeschlossen festlegen!</string>
@@ -142,11 +142,13 @@
     <string name="invalidVersionMessage">Die Version des Servers stimmt nicht mit der Version des Clients überein!</string>
     <string name="sendToServerTag">An Server senden</string>
     <string name="newPicturesTag">Neue Bilder</string>
-    <string name="firebaseConnectingMessage">Verbindung zum Firebird-Dienst wird hergestellt</string>
-    <string name="pleaseWaitMessage">Bitte warte eine Weile...</string>
+    <string name="messagingServiceConnectingMessage">Herstellen einer Verbindung zum Nachrichtendienst</string>
+    <string name="pleaseWaitMessage">Bitte warte eine Weile…</string>
     <string name="projectLoadingMessage">Projektinformationen werden geladen</string>
     <string name="configLoadingMessage">Konfigurationen werden geladen</string>
     <string name="updatesChannelName">Projektaktualisierungen</string>
     <string name="updatesChannelDescription">Informiert den Benutzer über externe Aktualisierungen von Projekten für den Echtzeitbetrieb</string>
     <string name="projectUpdatedMessage">Projekt aktualisiert</string>
+    <string name="pushMessageConnectionFailed">Verbindung zum Echtzeit-Aktualisierungsdienst fehlgeschlagen. App wird jetzt geschlossen.</string>
+    <string name="cancelQuestion">Möchten Sie den aktuellen Vorgang abbrechen?</string>
 </resources>

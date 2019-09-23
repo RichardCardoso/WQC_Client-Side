@@ -23,8 +23,8 @@ import com.richard.weger.wqc.domain.Report;
 import com.richard.weger.wqc.domain.Role;
 import com.richard.weger.wqc.domain.dto.FileDTO;
 import com.richard.weger.wqc.helper.ActivityHelper;
-import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.helper.AlertHelper;
+import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.rest.RestTemplateHelper;
@@ -34,6 +34,7 @@ import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.result.ResultService;
 import com.richard.weger.wqc.result.SuccessResult;
+import com.richard.weger.wqc.service.AsyncMethodExecutor;
 import com.richard.weger.wqc.service.DeviceRequestParameterResolver;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.service.FileRequestParametersResolver;
@@ -96,9 +97,10 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        new App();
 
         ActivityHelper.setWaitingLayout(this);
+        AsyncMethodExecutor.execute(App::createNotificationChannel);
+        new App();
 
         if(handlePermissions()){
             gotPermissions();
@@ -123,7 +125,6 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
 
     @Override
     public void onFatalError() {
-        checkedForGenPictures = false;
 
     }
 
@@ -283,11 +284,13 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
             return false;
         } else {
             log("Pictures missing. Started routine to download them from the server");
-            for (Item item : items){
-                FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_PICTUREDOWNLOAD_KEY, this);
-                FileRestTemplateHelper helper = resolver.getPicture(item.getPicture().getFileName(), qrCode);
-                fileHelperQueue.add(helper);
-            }
+            AsyncMethodExecutor.execute(() -> {
+                for (Item item : items) {
+                    FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_PICTUREDOWNLOAD_KEY, this);
+                    FileRestTemplateHelper helper = resolver.getPicture(item.getPicture().getFileName(), qrCode);
+                    fileHelperQueue.add(helper);
+                }
+            });
             return true;
         }
     }
@@ -314,7 +317,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     private void checkForGenPictures(){
         tvStatus.setText(R.string.retrievingGeneralPicturesTag);
         if(!checkedForGenPictures) {
-            ProjectHelper.getGenPicturesList(this, project, false);
+            AsyncMethodExecutor.execute(() -> ProjectHelper.getGenPicturesList(this, project, false));
             checkedForGenPictures = true;
         }
     }

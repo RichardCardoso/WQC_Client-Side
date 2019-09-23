@@ -24,13 +24,13 @@ public abstract class ErrorResponseHandler {
         return message;
     }
 
-    public static void handle(ErrorResult result, Context delegate, AlertHelper.Method method){
+    public static void handle(ErrorResult result, Context delegate, App.Method method){
         String message;
         message = handle(result);
         AlertHelper.showMessage(delegate, message, delegate.getResources().getString(R.string.okTag), method);
     }
 
-    public static void handle(ErrorResult result, Context delegate, String positiveTag, String negativeTag, AlertHelper.Method positiveMethod, AlertHelper.Method negativeMethod){
+    public static void handle(ErrorResult result, Context delegate, String positiveTag, String negativeTag, App.Method positiveMethod, App.Method negativeMethod){
         String message;
         message = handle(result);
         AlertHelper.showMessage(delegate, null, message, positiveTag, negativeTag, positiveMethod, negativeMethod);

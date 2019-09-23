@@ -21,7 +21,7 @@
     <string name="rdAproved">Approvato</string>
     <string name="rdNotAproved">Non approvato</string>
     <string name="rdNotAplicable">Non applicabile</string>
-    <string name="editCommentsHint">Commenti qui ...</string>
+    <string name="editCommentsHint">Commenti qui …</string>
     <string name="btnTakePicture">Fare una foto</string>
     <string name="btnErasePicture">Cancella foto</string>
     <string name="saveButton">Salvare</string>
@@ -43,7 +43,7 @@
     <string name="unableToProcced">Impossibile procedere</string>
     <string name="unfinishedReportsMessage">Ci sono ancora alcuni rapporti incompleti</string>
     <string name="okTag">Ok</string>
-    <string name="reportComentsHint">Commenti generali qui ...</string>
+    <string name="reportComentsHint">Commenti generali qui …</string>
     <string name="tvClientText">Cliente</string>
     <string name="tvComissionText">Commissione</string>
     <string name="tvReportCommentsText">Commenti generali</string>
@@ -123,7 +123,7 @@
     <string name="accessDisabledMessage">L\'accesso al sistema per questo dispositivo è disabilitato. Si prega di contattare l\'amministratore di sistema.</string>
     <string name="invalidUsernameMessage">Il nome utente di questo dispositivo non è valido. Si prega di contattare l\'amministratore di sistema.</string>
     <string name="retrievingFilesTag">Recupero di file dal server</string>
-    <string name="commentsLabel">Commenti qui ...</string>
+    <string name="commentsLabel">Commenti qui …</string>
     <string name="reportFinishMessage">Vuoi impostare questo rapporto come finito? Nessuna modifica è consentita mentre il report è impostato come finito!</string>
     <string name="reportUnfinishMessage">Vuoi impostare questo rapporto come non finito? Ciò consentirà la modifica del report!</string>
     <string name="noMarksMessage">Non è possibile impostare un rapporto finito senza segni!</string>
@@ -142,11 +142,13 @@
     <string name="invalidVersionMessage">La versione del server non corrisponde alla versione del client!</string>
     <string name="sendToServerTag">Invia al server</string>
     <string name="newPicturesTag">Nuove foto</string>
-    <string name="firebaseConnectingMessage">Connessione al servizio Firebird</string>
-    <string name="pleaseWaitMessage">Per favore aspetta per un po...</string>
+    <string name="messagingServiceConnectingMessage">Connessione al servizio di messaggistica</string>
+    <string name="pleaseWaitMessage">Per favore aspetta per un po…</string>
     <string name="projectLoadingMessage">Caricamento delle informazioni sul progetto</string>
     <string name="configLoadingMessage">Caricamento configurazioni</string>
     <string name="updatesChannelName">Aggiornamenti_del_progetto</string>
     <string name="updatesChannelDescription">Notifica all\'utente gli aggiornamenti esterni ai progetti per il funzionamento in tempo reale</string>
     <string name="projectUpdatedMessage">Progetto aggiornato</string>
+    <string name="pushMessageConnectionFailed">Impossibile connettersi al servizio di aggiornamento in tempo reale. L\'app ora verrà chiusa.</string>
+    <string name="cancelQuestion">Desideri annullare l\'operazione corrente?</string>
 </resources>

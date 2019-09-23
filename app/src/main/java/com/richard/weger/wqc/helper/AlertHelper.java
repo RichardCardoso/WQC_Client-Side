@@ -1,10 +1,7 @@
 package com.richard.weger.wqc.helper;
 
 import android.app.AlertDialog;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.content.Context;
-import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -23,10 +20,6 @@ import java.util.List;
 public class AlertHelper {
 
     private static List<Integer> notificationIds = new ArrayList<>();
-
-    public interface Method {
-        void execute();
-    }
 
     public interface InputBoxContentHandler {
         void processInputboxResult(String content);
@@ -64,7 +57,7 @@ public class AlertHelper {
         }
     }
 
-    public static void showMessage(Context delegate, String title, String message, String positiveTag, String negativeTag, Method positiveCallback, Method negativeCallback){
+    public static void showMessage(Context delegate, String title, String message, String positiveTag, String negativeTag, App.Method positiveCallback, App.Method negativeCallback){
         AlertDialog.Builder builder = new AlertDialog.Builder(delegate);
         builder.setCancelable(false);
         if(title != null){
@@ -92,7 +85,7 @@ public class AlertHelper {
         } catch (Exception ignored){}
     }
 
-    public static void showMessage(Context delegate, String message, String positiveTag, Method method){
+    public static void showMessage(Context delegate, String message, String positiveTag, App.Method method){
         AlertDialog.Builder builder = new AlertDialog.Builder(delegate);
         builder.setCancelable(false);
         if(message != null){
@@ -122,8 +115,7 @@ public class AlertHelper {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setTimeoutAfter(10000)
                 .setAutoCancel(true);
-        int notificationId = notificationIds.size() + 1;
-        notificationIds.add(notificationId);
+        int notificationId = 1;
         NotificationManagerCompat manager = NotificationManagerCompat.from(context);
         manager.cancelAll();
         manager.notify(notificationId, builder.build());

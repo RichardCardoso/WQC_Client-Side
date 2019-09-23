@@ -20,7 +20,7 @@
     <string name="rdAproved">Approved</string>
     <string name="rdNotAproved">Not Approved</string>
     <string name="rdNotAplicable">Not Applicable</string>
-    <string name="editCommentsHint">Comments here...</string>
+    <string name="editCommentsHint">Comments here…</string>
     <string name="btnTakePicture">Take picture</string>
     <string name="btnErasePicture">Erase picture</string>
     <string name="saveButton">Save</string>
@@ -41,8 +41,8 @@
     <string name="configButton">Config</string>
     <string name="unableToProcced">Unable to proceed</string>
     <string name="unfinishedReportsMessage">There are still some unfinished reports</string>
-    <string name="okTag">Ok</string>
-    <string name="reportComentsHint">General comments here...</string>
+    <string name="okTag">OK</string>
+    <string name="reportComentsHint">General comments here…</string>
     <string name="tvClientText">Client</string>
     <string name="tvComissionText">Commission</string>
     <string name="tvReportCommentsText">General comments</string>
@@ -122,7 +122,7 @@
     <string name="accessDisabledMessage">System access for this device is disabled. Please contact your system administrator.</string>
     <string name="invalidUsernameMessage">This device\'s username is invalid. Please contact your system admin.</string>
     <string name="retrievingFilesTag">Retrieving files from server</string>
-    <string name="commentsLabel">Comments here...</string>
+    <string name="commentsLabel">Comments here…</string>
     <string name="reportFinishMessage">Do you want to set this report as finished? No changes are allowed while report is set as finished!</string>
     <string name="reportUnfinishMessage">Do you want to set this report as not finished? This will allow the report to be edited!</string>
     <string name="noMarksMessage">You can\'t set as finished a report that has no marks!</string>
@@ -141,12 +141,14 @@
     <string name="invalidVersionMessage">The version of the server does not match the version of the client!</string>
     <string name="sendToServerTag">Send to server</string>
     <string name="newPicturesTag">New pictures</string>
-    <string name="firebaseConnectingMessage">Connecting to firebird service</string>
-    <string name="pleaseWaitMessage">Please wait for a while...</string>
+    <string name="messagingServiceConnectingMessage">Connecting to the messaging service</string>
+    <string name="pleaseWaitMessage">Please wait for a while…</string>
     <string name="projectLoadingMessage">Loading project info</string>
     <string name="configLoadingMessage">Loading configurations</string>
     <string name="updatesChannelName">ProjectUpdates</string>
     <string name="updatesChannelDescription">Notifies the user about external updates to projects for real-time operation</string>
     <string name="updatesChannelId" translatable="false">UPDATES_CHANNEL</string>
     <string name="projectUpdatedMessage">Project updated</string>
+    <string name="pushMessageConnectionFailed">Failed to connect to the real-time update service. App will now be closed.</string>
+    <string name="cancelQuestion">Do you wish to cancel the current operation?</string>
 </resources>

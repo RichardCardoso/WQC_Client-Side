@@ -96,7 +96,7 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
             if(toggleControlsOnCompletion) {
                 delegate.runOnUiThread(() -> delegate.toggleControls(true));
             }
-        } catch (Exception ex){
+        } catch (Exception ignored){
 
         }
         try {
@@ -114,10 +114,6 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
 
     private void warnUnknownException(Exception ex){
         logger.warning(getStackTrace(ex));
-    }
-
-    private void informUnknownException(Exception ex){
-        logger.info(getStackTrace(ex));
     }
 
     protected final <E, S> ResponseEntity<S> getResponseEntity(Class<S> responseClazz, HttpEntity<E> entity, URI uri, HttpMethod method, RestTemplate restTemplate) {

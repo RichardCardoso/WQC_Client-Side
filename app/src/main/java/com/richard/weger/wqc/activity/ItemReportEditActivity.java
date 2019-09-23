@@ -1,14 +1,10 @@
 package com.richard.weger.wqc.activity;
 
-import android.app.ActivityManager;
 import android.app.ListActivity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.view.View;
-import android.widget.AbsListView;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -16,15 +12,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.adapter.ItemAdapter;
 import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.ItemReport;
 import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
-import com.richard.weger.wqc.firebird.FirebaseHelper;
+import com.richard.weger.wqc.messaging.IMessagingListener;
+import com.richard.weger.wqc.messaging.MessagingHelper;
+import com.richard.weger.wqc.messaging.firebird.FirebaseHelper;
 import com.richard.weger.wqc.helper.AlertHelper;
 import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.helper.FileHelper;
@@ -38,7 +34,6 @@ import com.richard.weger.wqc.result.SuccessResult;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.service.ItemRequestParametersResolver;
 import com.richard.weger.wqc.service.ReportRequestParametersResolver;
-import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 import com.richard.weger.wqc.util.LoggerManager;
 
@@ -62,19 +57,18 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_REPORTUPLOAD_
 
 public class ItemReportEditActivity extends ListActivity implements ItemAdapter.ChangeListener,
         RestTemplateHelper.RestResponseHandler,
-        FirebaseHelper.FirebaseListener {
+        IMessagingListener {
 
     ItemReport report;
     Project project;
     Long reportId;
     ItemAdapter itemAdapter;
     ParamConfigurations conf;
-    int lastItemId = -1;
     boolean canEdit = true;
     Parcelable state;
     boolean paused = false;
-
     Logger logger;
+    boolean onCreateChain = false;
 
     @Override
     public void onBackPressed() {
@@ -100,6 +94,8 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        onCreateChain = true;
 
         logger = LoggerManager.getLogger(getClass());
 
@@ -218,28 +214,6 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
         }
     }
 
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        logger.info("Started activity result handling");
-        toggleControls(false);
-        restoreCurrListPosition();
-        if(resultCode == RESULT_OK){
-            if(requestCode == PICTURE_VIEWER_SCREEN_ID){
-                Item newItem = (Item) data.getSerializableExtra(ITEM_KEY);
-                int itemId = data.getIntExtra(ITEM_ID_KEY, -1);
-                if(itemId > -1) {
-                    lastItemId = itemId;
-                    report.getItems().set(itemId, newItem);
-                    itemAdapter.notifyDataSetChanged();
-                    save(report.getItems().get(itemId), true);
-                }
-            }
-        } else {
-            toggleControls(true);
-        }
-    }
-
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         if(canEdit) {
@@ -281,24 +255,11 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     private void storeCurrListPosition(){
         ListView list = findViewById(android.R.id.list);
         state = list.onSaveInstanceState();
-//        String json;
-//        GsonBuilder builder = new GsonBuilder();
-//        json = builder.create().toJson(state);
-//        SharedPreferences.Editor prefsEditor = App.getmPrefs().edit();
-//        prefsEditor.putString(String.valueOf(android.R.id.list), json);
-//        prefsEditor.apply();
     }
 
     private void restoreCurrListPosition(){
-//        String json = App.getmPrefs().getString(String.valueOf(android.R.id.list), "");
-//        if (json != null && !json.isEmpty()) {
-//            Gson gson;
-//            Parcelable state;
-//            gson = new Gson();
-//            state = gson.fromJson(json, Parcelable.class);
-            ListView list = findViewById(android.R.id.list);
-            list.onRestoreInstanceState(state);
-//        }
+        ListView list = findViewById(android.R.id.list);
+        list.onRestoreInstanceState(state);
     }
 
     private void save(Item item, boolean savePicture){
@@ -313,17 +274,8 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
         if(savePicture && FileHelper.isValidFile(fileName)) {
             ProjectHelper.itemPictureUpload(this, item, project);
         }
-//        } else {
-//            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_INVALID_PICTURE_NAME_EXCEPTION, getResources().getString(R.string.invalidPictureFilenameMessage), ErrorResult.ErrorLevel.SEVERE, getClass());
-//            ErrorResponseHandler.handle(err, this, () -> toggleControls(true));
-//            AlertHelper.showMessage(this,
-//                    getResources().getString(R.string.invalidPictureFilenameMessage),
-//                    getResources().getString(R.string.okTag),
-//                    () -> close(false));
-//        }
 
     }
-
 
     @Override
     public void onChangeHappened(int position, View view) {
@@ -331,8 +283,8 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
         toggleControls(false);
         Item item = report.getItems().get(position);
         if(view instanceof ImageView) {
-            paused = true;
             storeCurrListPosition();
+            paused = true;
             view.setEnabled(false);
             view.setClickable(false);
             Intent intent = new Intent(ItemReportEditActivity.this, PictureViewerActivity.class);
@@ -342,14 +294,28 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
             intent.putExtra(REPORT_KEY, report);
             intent.putExtra(PROJECT_KEY, project);
             startActivityForResult(intent, PICTURE_VIEWER_SCREEN_ID);
-            view.setEnabled(true);
-            view.setClickable(true);
         } else {
             save(item, false);
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        logger.info("Started activity result handling");
+        toggleControls(false);
+        if(resultCode == RESULT_OK && requestCode == PICTURE_VIEWER_SCREEN_ID){
+            Item newItem = (Item) data.getSerializableExtra(ITEM_KEY);
+            if(newItem != null) {
+                save(newItem, true);
+            }
+        } else {
+            restoreCurrListPosition();
+            toggleControls(true);
+        }
+    }
+
     private void close(boolean error){
+        MessagingHelper.getServiceInstance().removeListener();
         if(error) {
             setResult(RESULT_CANCELED);
         } else {
@@ -362,20 +328,36 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     }
 
     @Override
-    public void messageReceived(String qrCode, Long id) {
-        logger.info("Project was updated by another user. Triggering reload from ItemReport activity");
+    public boolean shouldNotifyChange(String qrCode, Long id, Long parentId) {
+        try{
+            runOnUiThread(()-> toggleControls(false));
+        } catch (Exception e){
+            logger.warning("Unable to disable controls for project refresh routine!");
+        }
         if(!paused) {
             storeCurrListPosition();
         } else {
             paused = false;
         }
-        runOnUiThread(() -> ProjectHelper.projectLoad(this,false));
+        if(ProjectHelper.shouldRefresh(report, id, parentId)) {
+            logger.info("The current report was updated by another user. Triggering reload from ItemReport activity");
+            ProjectHelper.projectLoad(this, false);
+            return true;
+        }
+        logger.info("Another report was updated by another user. There is no need to refresh the contents.");
+        runOnUiThread(()-> toggleControls(true));
+        return false;
     }
 
 
     @Override
     public void onConnectionSuccess() {
-        ProjectHelper.projectLoad(this, false);
+        ProjectHelper.projectLoad(this, report == null);
+    }
+
+    @Override
+    public void onConnectionFailure() {
+        close(true);
     }
 
     @Override
@@ -418,7 +400,12 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
                     ParamConfigurations c = ResultService.getSingleResult(result, ParamConfigurations.class);
                     ConfigurationsManager.setServerConfig(c);
                     conf = c;
-                    FirebaseHelper.firebaseConfig(this);
+                    if(!onCreateChain) {
+                        MessagingHelper.getServiceInstance().setListener(this, true);
+                    } else {
+                        onCreateChain = false;
+                        MessagingHelper.getServiceInstance().setup(this);
+                    }
                     break;
             }
         } else {

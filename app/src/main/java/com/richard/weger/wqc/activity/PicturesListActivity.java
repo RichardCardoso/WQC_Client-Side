@@ -21,6 +21,7 @@ import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.result.ResultService;
 import com.richard.weger.wqc.result.SuccessResult;
+import com.richard.weger.wqc.service.AsyncMethodExecutor;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
 
 import java.io.File;
@@ -56,7 +57,7 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
         project = (Project) intent.getSerializableExtra(PROJECT_KEY);
         ProjectHelper.linkReferences(project);
 
-        ProjectHelper.getGenPicturesList(this, project, false);
+        AsyncMethodExecutor.execute(() -> ProjectHelper.getGenPicturesList(this, project, false));
 
     }
 
@@ -181,7 +182,7 @@ public class PicturesListActivity extends ListActivity implements GeneralPicture
             }
             n1 = String.format(getResources().getConfiguration().getLocales().get(0), "%02d", Integer.valueOf(s1));
             n2 = String.format(getResources().getConfiguration().getLocales().get(0), "%02d", Integer.valueOf(s2));
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
 
         return n1.compareTo(n2);

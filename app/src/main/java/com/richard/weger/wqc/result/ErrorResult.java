@@ -35,6 +35,7 @@ public class ErrorResult extends AbstractResult {
 		CLIENT_EMPTY_ROLES_LIST_WARNING,
 		CLIENT_INVALID_USERNAME_WARNING,
 		CLIENT_SERVER_CONNECTION_FAILED_WARNING,
+		CLIENT_UPDATE_SERVICE_CONNECTION_FAILED,
 
 		INVALID_QRCODE,
 		INVALID_ENTITY_ID,
@@ -66,7 +67,12 @@ public class ErrorResult extends AbstractResult {
 		BASE_FILE_IO_FAILED,
 		REST_OPERATION_ERROR,
 		UNKNOWN_ERROR,
-		INVALID_APP_VERSION
+		INVALID_APP_VERSION,
+		GENERAL_SERVER_FAILURE,
+
+		INVALID_REST_METHOD,
+		INVALID_ENTITYRETURNTYPE,
+		INVALID_REQUESTCODE
 	}
 	
 	private String code;
@@ -79,7 +85,7 @@ public class ErrorResult extends AbstractResult {
 		return level;
 	}
 
-	public void setLevel(ErrorLevel level) {
+	private void setLevel(ErrorLevel level) {
 		this.level = level;
 	}
 
@@ -121,7 +127,7 @@ public class ErrorResult extends AbstractResult {
 	public String getDescription() {
 		return description;
 	}
-	public void setDescription(String description) {
+	private void setDescription(String description) {
 		this.description = description;
 	}
 	

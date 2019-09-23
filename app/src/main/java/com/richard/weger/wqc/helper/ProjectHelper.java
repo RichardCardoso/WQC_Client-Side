@@ -133,7 +133,7 @@ public class ProjectHelper {
     }
 
     // superFolder = "Originals/"
-    public static void byteArrayToFile(byte[] bytes, List<RequestParameter> params, String superFolder) throws IOException {
+    public static void byteArrayToFile(byte[] bytes, List<RequestParameter> params, String superFolder) {
         String qrcode = params.stream().filter(p -> p.getName().equals("qrcode")).map(RequestParameter::getValue).findFirst().orElse(null);
         String fileName = params.stream().filter(p -> p.getName().equals("filename")).map(RequestParameter::getValue).findFirst().orElse(null);
         if(qrcode != null && fileName != null) {
@@ -353,5 +353,19 @@ public class ProjectHelper {
 
     public static String getQrCode() {
         return qrCode;
+    }
+
+    public static boolean shouldRefresh(Report report, Long itemId, Long parentId){
+        boolean ret;
+
+        if(report == null || itemId == null || parentId == null){
+            return false;
+        }
+
+        ret = report.getId().equals(itemId);
+        ret |= report.getId().equals(parentId);
+        ret |= report.getChildren().stream().anyMatch(c -> c.getId().equals(itemId) || c.getId().equals(parentId));
+
+        return ret;
     }
 }

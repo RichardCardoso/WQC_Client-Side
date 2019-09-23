@@ -1660,6 +1660,7 @@ string btnUndo
 string cablelessDatasheetLabel
 string cablelessDrawingLabel
 string cancelButton
+string cancelQuestion
 string cancelTag
 string changesSavedMessage
 string character_counter_content_description
@@ -1713,7 +1714,6 @@ string fcm_fallback_notification_channel_label
 string fileNotFoundMessage
 string fileSelectMessage
 string finishedTag
-string firebaseConnectingMessage
 string firebase_database_url
 string gcm_defaultSenderId
 string getMorePicturesTag
@@ -1733,6 +1733,7 @@ string invalidUsernameMessage
 string invalidVersionMessage
 string itemTag
 string magTag
+string messagingServiceConnectingMessage
 string mtrl_chip_close_icon_content_description
 string mustWaitCompletion
 string newPicturesTag
@@ -1770,6 +1771,7 @@ string projectNumberPrefix
 string projectUpdatedMessage
 string projectUploadMessage
 string project_id
+string pushMessageConnectionFailed
 string qrScanButton
 string qrScanQuestion
 string qrWelcome

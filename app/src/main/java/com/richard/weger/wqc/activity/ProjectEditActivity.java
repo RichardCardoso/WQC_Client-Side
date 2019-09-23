@@ -2,6 +2,7 @@ package com.richard.weger.wqc.activity;
 
 import android.app.ListActivity;
 import android.content.Intent;
+import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -11,16 +12,18 @@ import com.richard.weger.wqc.adapter.ReportAdapter;
 import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
-import com.richard.weger.wqc.firebird.FirebaseHelper;
 import com.richard.weger.wqc.helper.AlertHelper;
 import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.ReportHelper;
+import com.richard.weger.wqc.messaging.IMessagingListener;
+import com.richard.weger.wqc.messaging.MessagingHelper;
 import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.result.ResultService;
 import com.richard.weger.wqc.result.SuccessResult;
+import com.richard.weger.wqc.service.AsyncMethodExecutor;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 import com.richard.weger.wqc.util.LoggerManager;
@@ -43,19 +46,25 @@ import static com.richard.weger.wqc.appconstants.AppConstants.WELCOME_ACTIVITY_S
 public class ProjectEditActivity extends ListActivity
         implements ReportAdapter.ChangeListener,
         RestTemplateHelper.RestResponseHandler,
-                    FirebaseHelper.FirebaseListener {
+        IMessagingListener {
 
     ParamConfigurations conf;
     Project project;
     Locale locale ;
     ReportAdapter reportAdapter;
     List<Report> reports = new ArrayList<>();
+    boolean onCreateChain = false;
 
     Logger logger;
 
     @Override
     public void onBackPressed(){}
 
+    @Override
+    public void onCreate(Bundle savedInstance){
+        super.onCreate(savedInstance);
+        onCreateChain = true;
+    }
 
     @Override
     public void onResume(){
@@ -66,7 +75,7 @@ public class ProjectEditActivity extends ListActivity
     }
 
     private void loadServerConfig(){
-        ConfigurationsManager.loadServerConfig(this);
+        AsyncMethodExecutor.execute(() -> ConfigurationsManager.loadServerConfig(this));
     }
 
     private void inflateActivityLayout(){
@@ -191,6 +200,7 @@ public class ProjectEditActivity extends ListActivity
     }
 
     private void startReportEdit(Long id) {
+
         logger.info("Starting report edit activity");
         Report report = project.getDrawingRefs().get(0).getReports().stream().filter(r -> r.getId().equals(id)).findFirst().orElse(null);
         if(report != null) {
@@ -235,7 +245,12 @@ public class ProjectEditActivity extends ListActivity
                 ParamConfigurations c = ResultService.getSingleResult(result, ParamConfigurations.class);
                 ConfigurationsManager.setServerConfig(c);
                 conf = c;
-                FirebaseHelper.firebaseConfig(this);
+                if(!onCreateChain) {
+                    MessagingHelper.getServiceInstance().setListener(this, true);
+                } else {
+                    onCreateChain = false;
+                    MessagingHelper.getServiceInstance().setup(this);
+                }
             }
         } else {
             ErrorResult err = ResultService.getErrorResult(result);
@@ -244,13 +259,26 @@ public class ProjectEditActivity extends ListActivity
     }
 
     @Override
-    public void messageReceived(String qrCode, Long id) {
-        runOnUiThread(() -> ProjectHelper.projectLoad(this, false));
+    public boolean shouldNotifyChange(String qrCode, Long id, Long parentId) {
+        try {
+            runOnUiThread(() -> toggleControls(false));
+        } catch (Exception e){
+            logger.warning("Unable to disable controls for project refresh routine!");
+        }
+        ProjectHelper.projectLoad(this, false);
+        return true;
     }
 
     @Override
     public void onConnectionSuccess() {
-        ProjectHelper.projectLoad(this);
+        AsyncMethodExecutor.execute(() -> ProjectHelper.projectLoad(this));
     }
+
+    @Override
+    public void onConnectionFailure() {
+
+        finishAndRemoveTask();
+    }
+
 
 }

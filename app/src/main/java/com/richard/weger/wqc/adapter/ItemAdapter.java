@@ -154,7 +154,7 @@ public class ItemAdapter extends ArrayAdapter<Item> {
         tvComments.setOnClickListener(v -> {
             String message = itemList.get(position).getDescription();
             AlertHelper.getString(context, message, (content) -> {
-                if (!content.equals(App.getContext().getResources().getString(R.string.editCommentsHint))) {
+                if (content != null && !content.equals(App.getContext().getResources().getString(R.string.editCommentsHint))) {
                     itemList.get(position).setComments(content);
                     tvComments.setText(content);
                     listener.onChangeHappened(position, tvComments);
