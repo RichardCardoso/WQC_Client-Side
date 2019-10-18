@@ -153,5 +153,5 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="beginUploadQuestion">Do you want to upload the photos taken?</string>
     <string name="pictureRemoveQuestion">Would you like to remove this picture from the upload list?</string>
-    
+
 </resources>
