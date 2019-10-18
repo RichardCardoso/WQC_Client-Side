@@ -1,11 +1,18 @@
 package com.richard.weger.wqc.messaging.websocket;
 
 public class MessagingDTO {
-	
+
+	private String messageId;
 	private String qrcode;
 	private Long id;
 	private Long parentId;
-	
+
+	public String getMessageId() {
+		return messageId;
+	}
+	public void setMessageId(String messageId) {
+		this.messageId = messageId;
+	}
 	public String getQrcode() {
 		return qrcode;
 	}
@@ -24,5 +31,5 @@ public class MessagingDTO {
 	public void setParentId(Long parentId) {
 		this.parentId = parentId;
 	}
-	
+
 }

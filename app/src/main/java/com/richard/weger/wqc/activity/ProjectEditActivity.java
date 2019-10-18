@@ -8,7 +8,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.richard.weger.wqc.R;
-import com.richard.weger.wqc.adapter.ReportAdapter;
+import com.richard.weger.wqc.adapter.ProjectEditAdapter;
 import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
@@ -23,7 +23,6 @@ import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.result.ResultService;
 import com.richard.weger.wqc.result.SuccessResult;
-import com.richard.weger.wqc.service.AsyncMethodExecutor;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 import com.richard.weger.wqc.util.LoggerManager;
@@ -33,8 +32,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.logging.Logger;
 
+import static com.richard.weger.wqc.appconstants.AppConstants.GENPICTURE_LIST_SCREEN_ID;
 import static com.richard.weger.wqc.appconstants.AppConstants.PARAMCONFIG_KEY;
-import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_LIST_SCREEN_ID;
 import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_FINISH_SCREEN_ID;
 import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REPORT_ID_KEY;
@@ -44,14 +43,14 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD
 import static com.richard.weger.wqc.appconstants.AppConstants.WELCOME_ACTIVITY_SCREEN_KEY;
 
 public class ProjectEditActivity extends ListActivity
-        implements ReportAdapter.ChangeListener,
+        implements ProjectEditAdapter.ChangeListener,
         RestTemplateHelper.RestResponseHandler,
         IMessagingListener {
 
     ParamConfigurations conf;
     Project project;
     Locale locale ;
-    ReportAdapter reportAdapter;
+    ProjectEditAdapter projectEditAdapter;
     List<Report> reports = new ArrayList<>();
     boolean onCreateChain = false;
 
@@ -63,19 +62,15 @@ public class ProjectEditActivity extends ListActivity
     @Override
     public void onCreate(Bundle savedInstance){
         super.onCreate(savedInstance);
+        logger = LoggerManager.getLogger(ProjectEditActivity.class);
         onCreateChain = true;
     }
 
     @Override
-    public void onResume(){
-        super.onResume();
-        logger = LoggerManager.getLogger(getClass());
+    public void onStart(){
+        super.onStart();
         logger.info("Activity resumed. Starting project load routine");
-        loadServerConfig();
-    }
-
-    private void loadServerConfig(){
-        AsyncMethodExecutor.execute(() -> ConfigurationsManager.loadServerConfig(this));
+        ConfigurationsManager.loadServerConfig(this);
     }
 
     private void inflateActivityLayout(){
@@ -108,9 +103,9 @@ public class ProjectEditActivity extends ListActivity
         if(getListView() != null) {
             getListView().setClickable(bResume);
         }
-        if(reportAdapter != null) {
-            reportAdapter.setEnabled(bResume);
-            reportAdapter.notifyDataSetChanged();
+        if(projectEditAdapter != null) {
+            projectEditAdapter.setEnabled(bResume);
+            projectEditAdapter.notifyDataSetChanged();
         }
         if(findViewById(R.id.btnProjectInfo) != null) {
             findViewById(R.id.btnProjectInfo).setEnabled(bResume);
@@ -130,9 +125,9 @@ public class ProjectEditActivity extends ListActivity
 
     private void setAdapter(){
         logger.info("Started adapters set routine");
-        reportAdapter = new ReportAdapter(this, reports);
-        setListAdapter(reportAdapter);
-        reportAdapter.setChangeListener(this);
+        projectEditAdapter = new ProjectEditAdapter(this, reports);
+        setListAdapter(projectEditAdapter);
+        projectEditAdapter.setChangeListener(this);
     }
 
     private void setListeners(){
@@ -141,11 +136,10 @@ public class ProjectEditActivity extends ListActivity
 
         button = findViewById(R.id.btnCustomPictures);
         button.setOnClickListener(v -> {
-            logger.info("Started general pictures list activity");
+            logger.info("Started general picsList list activity");
             toggleControls(false);
-            Intent intent = new Intent(ProjectEditActivity.this, PicturesListActivity.class);
-            intent.putExtra(PROJECT_KEY, project);
-            startActivityForResult(intent, PICTURE_LIST_SCREEN_ID);
+            Intent intent = new Intent(ProjectEditActivity.this, GeneralPictureListActivity.class);
+            startActivityForResult(intent, GENPICTURE_LIST_SCREEN_ID);
         });
 
         button = findViewById(R.id.btnProjectInfo);
@@ -218,7 +212,7 @@ public class ProjectEditActivity extends ListActivity
             startActivityForResult(intent, helper.getTargetActivityKey(report));
         } else {
             String message = "Report with id " + id + " not found. Edit activity will not start";
-            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.ENTITY_NOT_FOUND, message, ErrorResult.ErrorLevel.SEVERE, getClass());
+            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.ENTITY_NOT_FOUND, message, ErrorResult.ErrorLevel.SEVERE);
             ErrorResponseHandler.handle(err, this, null);
         }
     }
@@ -239,18 +233,13 @@ public class ProjectEditActivity extends ListActivity
                 reports.clear();
                 reports.addAll(project.getDrawingRefs().get(0).getReports());
                 init();
-//                reportAdapter.notifyDataSetChanged();
+//                projectEditAdapter.notifyDataSetChanged();
             } else if (result.getRequestCode().equals(REST_CONFIGLOAD_KEY)){
                 logger.info("Got ParamConfigurations from received request");
                 ParamConfigurations c = ResultService.getSingleResult(result, ParamConfigurations.class);
                 ConfigurationsManager.setServerConfig(c);
                 conf = c;
-                if(!onCreateChain) {
-                    MessagingHelper.getServiceInstance().setListener(this, true);
-                } else {
-                    onCreateChain = false;
-                    MessagingHelper.getServiceInstance().setup(this);
-                }
+                MessagingHelper.getServiceInstance().setListener(this, true);
             }
         } else {
             ErrorResult err = ResultService.getErrorResult(result);
@@ -271,7 +260,7 @@ public class ProjectEditActivity extends ListActivity
 
     @Override
     public void onConnectionSuccess() {
-        AsyncMethodExecutor.execute(() -> ProjectHelper.projectLoad(this));
+         ProjectHelper.projectLoad(this);
     }
 
     @Override

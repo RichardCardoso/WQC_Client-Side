@@ -506,7 +506,7 @@ instanceKlass com/android/build/gradle/internal/pipeline/StreamFilter
 instanceKlass com/android/build/gradle/tasks/PackageAndroidArtifact$ConfigAction$$Lambda$244
 instanceKlass com/android/build/gradle/tasks/PackageAndroidArtifact$ConfigAction$$Lambda$243
 instanceKlass com/android/build/gradle/internal/scope/BuildElements
-instanceKlass com/android/builder/files/FileCacheByPath
+instanceKlass com/android/builder/itemList/FileCacheByPath
 instanceKlass com/android/build/gradle/tasks/PackageAndroidArtifact$ConfigAction
 instanceKlass com/android/build/gradle/internal/ApplicationTaskManager$$Lambda$242
 instanceKlass com/android/build/gradle/internal/tasks/InstantRunSplitApkResourcesBuilder$ConfigAction$execute$1

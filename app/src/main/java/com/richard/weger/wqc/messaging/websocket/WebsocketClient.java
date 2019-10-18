@@ -3,9 +3,9 @@ package com.richard.weger.wqc.messaging.websocket;
 import com.google.gson.Gson;
 import com.richard.weger.wqc.messaging.IMessagingListener;
 import com.richard.weger.wqc.messaging.MessagingHelper;
-import com.richard.weger.wqc.messaging.firebird.FirebaseHelper;
 import com.richard.weger.wqc.util.LoggerManager;
 
+import java.net.SocketTimeoutException;
 import java.net.URI;
 
 import tech.gusavila92.websocketclient.WebSocketClient;
@@ -13,6 +13,7 @@ import tech.gusavila92.websocketclient.WebSocketClient;
 public class WebsocketClient extends WebSocketClient {
 
     private IMessagingListener delegate;
+    public boolean firstConnectionDone = false;
 
     /**
      * Initialize all the variables
@@ -26,19 +27,25 @@ public class WebsocketClient extends WebSocketClient {
 
     @Override
     public void onOpen() {
-        delegate.onConnectionSuccess();
+        if(!firstConnectionDone) {
+            LoggerManager.getLogger(WebsocketClient.class).info( "Websocket onOpen event was called.");
+            if(delegate != null) {
+                delegate.onConnectionSuccess();
+            }
+            firstConnectionDone = true;
+        }
     }
 
     @Override
     public void onTextReceived(String message) {
         if (message.length() > 0) {
-            LoggerManager.getLogger(FirebaseHelper.class).info( "Message data payload: " + message);
+            LoggerManager.getLogger(WebsocketClient.class).info( "Message data payload: " + message);
             MessagingDTO dto;
             Gson gson = new Gson();
             dto = gson.fromJson(message, MessagingDTO.class);
             MessagingHelper.handleData(dto, delegate);
         } else {
-            LoggerManager.getLogger(FirebaseHelper.class).info( "Empty message payload was received!");
+            LoggerManager.getLogger(WebsocketClient.class).info( "Empty message payload was received!");
         }
     }
 
@@ -59,7 +66,11 @@ public class WebsocketClient extends WebSocketClient {
 
     @Override
     public void onException(Exception e) {
-        MessagingHelper.failureHandler(e, true);
+        if(e instanceof SocketTimeoutException){
+            LoggerManager.getLogger(WebsocketClient.class).warning("Socket timeout exception. Possibly a network issue.");
+        } else {
+            MessagingHelper.failureHandler(e, true);
+        }
     }
 
     @Override
@@ -69,10 +80,14 @@ public class WebsocketClient extends WebSocketClient {
 
 
     void setListener(IMessagingListener listener) {
+        if(listener != delegate) {
+            firstConnectionDone = false;
+        }
         delegate = listener;
     }
 
     void removeListener() {
+        firstConnectionDone = false;
         delegate = null;
     }
 

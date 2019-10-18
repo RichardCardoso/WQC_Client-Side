@@ -64,7 +64,7 @@ public class ActivityHelper {
     }
 
     public static void disableActivityControls(Activity target, boolean allowCancel){
-        List<Integer> cancelControls = Arrays.asList(R.id.btnCancel, R.id.backButton, R.id.btnExit);
+        List<Integer> cancelControls = Arrays.asList(R.id.backButton, R.id.backButton, R.id.btnExit);
         ViewGroup g = (ViewGroup) target.getWindow().getDecorView();
         for (int i = 0; i < g.getChildCount(); i++) {
             View child = g.getChildAt(i);
@@ -88,4 +88,5 @@ public class ActivityHelper {
             setWaitingLayout(t, message);
         }
     }
+
 }

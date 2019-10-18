@@ -80,7 +80,6 @@
     <string name="invalidDocumentCodesMessage">Nicht in der Lage, fortzufahren. Bitte überprüfen Sie die App-Parameter (Zeichencode + Erweiterung und Datenblattcode + Erweiterung)</string>
     <string name="successfulServerUploadMessage">Projekt erfolgreich hochgeladen!</string>
     <string name="invalidServerFileMessage">Die Datei auf dem Server ist ungültig / beschädigt. Bitte ersetzen Sie es durch ein gültiges und versuchen Sie es erneut.</string>
-    <string name="projectUploadMessage">Möchten Sie die Berichtsdateien hochladen? </string>
     <string name="tryAgainMessage">Möchtest du es noch einmal versuchen?</string>
     <string name="permissionsNeededMessage">Nicht alle erforderlichen Berechtigungen wurden der App gewährt. Ohne sie ist es unmöglich fortzufahren. Die App wird jetzt geschlossen.</string>
     <string name="noPermissionsGrantedTitle">Berechtigungen fehlen</string>
@@ -98,7 +97,6 @@
     <string name="serverConnectErrorMessage">Es konnte keine Verbindung zum Server hergestellt werden. Bitte überprüfen Sie die Adresse und versuchen Sie es erneut.</string>
     <string name="deviceNotAuthorizedMessage">Für Ihr Gerät wurde keine Autorisierung gefunden. Bitte zeigen Sie diesen Bildschirm dem Systemadministrator.</string>
     <string name="closeTag">Schließen</string>
-    <string name="drawingLockedMessage">Die Dateien dieser Zeichnung werden von jemand anderem bearbeitet. Sie müssen warten, bis die Zeit vorbei ist.</string>
     <string name="tryAgainTag">Wieder</string>
     <string name="notImplementedMessage">Noch nicht implementiert!</string>
     <string name="unknownDeviceMessage">Unbekanntes Gerät</string>
@@ -151,4 +149,6 @@
     <string name="projectUpdatedMessage">Projekt aktualisiert</string>
     <string name="pushMessageConnectionFailed">Verbindung zum Echtzeit-Aktualisierungsdienst fehlgeschlagen. App wird jetzt geschlossen.</string>
     <string name="cancelQuestion">Möchten Sie den aktuellen Vorgang abbrechen?</string>
+    <string name="beginUploadQuestion">Möchten Sie die aufgenommenen Fotos hochladen?</string>
+    <string name="pictureRemoveQuestion">Möchten Sie dieses Bild aus der Upload-Liste entfernen?</string>
 </resources>

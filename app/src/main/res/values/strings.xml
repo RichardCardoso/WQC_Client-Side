@@ -77,9 +77,8 @@
     <string name="btnPreviousText">"&lt;"</string>
     <string name="btnNextText">"&gt;"</string>
     <string name="invalidDocumentCodesMessage">Unable to proceed. Please check the app parameters (Drawing code + extension and Datasheet code + extension</string>
-    <string name="successfulServerUploadMessage">Project uploaded successfully!</string>
+    <string name="successfulServerUploadMessage">Project processed successfully!</string>
     <string name="invalidServerFileMessage">The file in the server is invalid / corrupted. Please replace it with a valid one and try again.</string>
-    <string name="projectUploadMessage">Do you wish to postType the report files?</string>
     <string name="tryAgainMessage">Do you want to try again?</string>
     <string name="permissionsNeededMessage">Not all needed permissions were granted to the app. Without them, it\'s impossible to continue. The app will be closed now.</string>
     <string name="noPermissionsGrantedTitle">Permissions missing</string>
@@ -97,7 +96,6 @@
     <string name="serverConnectErrorMessage">Unable to connect to the server. Please check it\'s address and try again.</string>
     <string name="deviceNotAuthorizedMessage">No authorization found for your device. Please show this screen to the system\'s administrator.</string>
     <string name="closeTag">Close</string>
-    <string name="drawingLockedMessage">This drawing\'s files are being edited by someone else. You have to wait until it\'s time is over.</string>
     <string name="tryAgainTag">Try again</string>
     <string name="notImplementedMessage">Not implemented yet!</string>
     <string name="unknownDeviceMessage">Unknown device</string>
@@ -151,4 +149,9 @@
     <string name="projectUpdatedMessage">Project updated</string>
     <string name="pushMessageConnectionFailed">Failed to connect to the real-time update service. App will now be closed.</string>
     <string name="cancelQuestion">Do you wish to cancel the current operation?</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="beginUploadQuestion">Do you want to upload the photos taken?</string>
+    <string name="pictureRemoveQuestion">Would you like to remove this picture from the upload list?</string>
+    
 </resources>

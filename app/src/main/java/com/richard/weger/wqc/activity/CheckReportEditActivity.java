@@ -1,38 +1,32 @@
 package com.richard.weger.wqc.activity;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
-import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.fragment.app.FragmentActivity;
+import androidx.viewpager.widget.ViewPager;
+
 import com.richard.weger.wqc.R;
+import com.richard.weger.wqc.adapter.CheckReportEditAdapter;
 import com.richard.weger.wqc.domain.CheckReport;
 import com.richard.weger.wqc.domain.Mark;
+import com.richard.weger.wqc.domain.Page;
 import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Role;
-import com.richard.weger.wqc.messaging.IMessagingListener;
-import com.richard.weger.wqc.messaging.MessagingHelper;
-import com.richard.weger.wqc.messaging.firebird.FirebaseHelper;
-import com.richard.weger.wqc.helper.ActivityHelper;
+import com.richard.weger.wqc.fragment.CheckReportEditFragment;
 import com.richard.weger.wqc.helper.AlertHelper;
 import com.richard.weger.wqc.helper.DeviceHelper;
-import com.richard.weger.wqc.helper.FileHelper;
-import com.richard.weger.wqc.helper.PdfHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.StringHelper;
-import com.richard.weger.wqc.helper.WQCDocumentHelper;
+import com.richard.weger.wqc.messaging.IMessagingListener;
+import com.richard.weger.wqc.messaging.MessagingHelper;
 import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.ErrorResult;
@@ -41,12 +35,10 @@ import com.richard.weger.wqc.result.SuccessResult;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.service.MarkRequestParametersResolver;
 import com.richard.weger.wqc.service.ReportRequestParametersResolver;
-import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 import com.richard.weger.wqc.util.LoggerManager;
-import com.richard.weger.wqc.util.TouchImageView;
+import com.richard.weger.wqc.views.TouchImageView;
 
-import java.io.File;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Objects;
@@ -60,36 +52,27 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_REPORTUPLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.SDF;
 
-public class CheckReportEditActivity extends Activity implements TouchImageView.ChangeListener,
+public class CheckReportEditActivity extends FragmentActivity implements TouchImageView.ImageTouchListener,
         RestTemplateHelper.RestResponseHandler,
-        IMessagingListener, TouchImageView.SwipeHandler {
+        IMessagingListener, CheckReportEditFragment.MarkTouchListener{
 
     CheckReport report;
     Long reportId;
     ParamConfigurations conf;
-    Bitmap originalBitmap = null,
-            currentBitmap = null;
-    int currentPage = 0,
-        pageCount = 0;
-    TouchImageView imageView = null;
-    String filePath;
-    Mark lastTouchedMark;
-    int mode = 0;
     boolean onCreateChain = false;
-    // mode 0 = zoom / pan
-    // mode 1 = add mark
+
+    ViewPager mPager;
+    CheckReportEditAdapter adapter;
+    boolean isWaiting = false;
+
+    private int mode = 0;
+    // mode 0 -> zoom / pan;
+    // mode 1 -> addMark;
 
     Logger logger;
 
     @Override
-    public void onBackPressed(){
-
-    }
-
-    @Override
-    protected void onPause(){
-        super.onPause();
-    }
+    public void onBackPressed(){}
 
     @Override
     protected void onResume(){
@@ -103,7 +86,7 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
 
         onCreateChain = true;
 
-        logger = LoggerManager.getLogger(getClass());
+        logger = LoggerManager.getLogger(CheckReportEditActivity.class);
 
         Intent intent = getIntent();
         reportId = intent.getLongExtra(REPORT_ID_KEY, -1);
@@ -113,37 +96,12 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
         }
     }
 
-    private void configImageView(){
-        logger.info("Started image view config");
-        imageView = findViewById(R.id.ivDocument);
-        imageView.setMaxZoom(12f);
-        imageView.setChangeListener(this);
-        imageView.setSwipeHandler(this);
-        imageView.setTag(mode);
-
-        pageCount = PdfHelper.getPageCount(filePath);
-        if(pageCount == 0 || pageCount != report.getPages().size()){
-            setResult(RESULT_CANCELED);
-            finish();
-        }
-
-        originalBitmap = WQCDocumentHelper.pageLoad(currentPage, filePath, getResources());
-
-        if(originalBitmap != null) {
-            currentBitmap = WQCDocumentHelper.bitmapCopy(originalBitmap);
-            setListeners();
-            updatePointsDrawing();
-        } else {
-            String message = getResources().getString(R.string.reportPageLoadFailed).concat("\n(").concat(getResources().getString(R.string.invalidEntityError));
-            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_REPORT_PAGE_LOAD_EXCEPTION, message, ErrorResult.ErrorLevel.SEVERE, getClass());
-            ErrorResponseHandler.handle(err, this, null);
-        }
-    }
-
     @SuppressWarnings("unchecked")
-    private void inflateActivityLayout(){
-        logger.info("Setting content view");
-        setContentView(R.layout.activity_check_report_edit);
+    private void inflateActivityLayout(Project project){
+        if(onCreateChain) {
+            logger.info("Setting content view");
+            setContentView(R.layout.activity_check_report_edit);
+        }
 
         if(DeviceHelper.isOnlyRole("TE") || report.isFinished()){
             findViewById(R.id.btnAddMark).setVisibility(View.INVISIBLE);
@@ -163,7 +121,36 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
                 Objects.requireNonNull(DeviceHelper.getCurrentDevice().getRoles().stream().map(Role::getDescription).toArray()));
         cmbRoles.setAdapter(rolesAdapter);
 
-        configImageView();
+        if(onCreateChain) {
+            adapter = new CheckReportEditAdapter(getSupportFragmentManager(),
+                    report.getFileName(),
+                    StringHelper.getPdfsFolderPath(project),
+                    report.getPages(), this, this);
+            mPager = findViewById(R.id.pager);
+            mPager.setAdapter(adapter);
+            mPager.setCurrentItem(0);
+            mPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+                public void onPageScrollStateChanged(int state) {}
+                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+
+                public void onPageSelected(int position) {
+                    onPageChanged();
+                }
+            });
+            onCreateChain = false;
+        } else {
+            adapter.setPages(report.getPages());
+            adapter.notifyDataSetChanged();
+        }
+        onPageChanged();
+        setListeners();
+    }
+
+    private void onPageChanged(){
+        adapter.setCurrentPosition(mPager.getCurrentItem());
+        TextView tvCurrPage = findViewById(R.id.tvCurrentPage);
+        tvCurrPage.setText(String.format(getResources().getConfiguration().getLocales().get(0), "%d/%d", mPager.getCurrentItem() + 1, adapter.getCount()));
+        toggleControls(true);
     }
 
     private void setListeners(){
@@ -186,7 +173,7 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
             if(report.getMarksCount() > 0 || report.isFinished()) {
                 shouldChangeReportState();
             } else {
-                ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_UNFINISHED_CHECKREPORT_WARNING, getResources().getString(R.string.noMarksMessage), ErrorResult.ErrorLevel.WARNING, getClass());
+                ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_UNFINISHED_CHECKREPORT_WARNING, getResources().getString(R.string.noMarksMessage), ErrorResult.ErrorLevel.WARNING);
                 ErrorResponseHandler.handle(err, this, this::cancelReportFinish);
             }
         });
@@ -234,14 +221,12 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
             findViewById(R.id.pbCheckReportEdit).setVisibility(View.INVISIBLE);
             btn.setEnabled(true);
             mode = 1;
-        }
-        else{
+        } else {
             btn.setImageDrawable(getResources().getDrawable(R.drawable.ic_add));
             mode = 0;
             toggleControls(true);
             btn.setEnabled(true);
         }
-        imageView.setTag(mode);
     }
 
     private void notAddingMark(){
@@ -254,8 +239,11 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
 
         mark.setDevice(DeviceHelper.getCurrentDevice());
 
+        Page parent = mark.getParent();
+        Long parentId = report.getPages().get(adapter.getCurrentPosition()).getId();
+        parent.setId(parentId);
+
         MarkRequestParametersResolver resolver = new MarkRequestParametersResolver(REST_MARKSAVE_KEY, conf, false);
-        mark.getParent().setId(report.getPages().get(currentPage).getId());
         resolver.postEntity(mark, this);
     }
 
@@ -265,8 +253,6 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
         MarkRequestParametersResolver resolver = new MarkRequestParametersResolver(REST_MARKREMOVE_KEY, conf, false);
         resolver.deleteEntity(mark, this);
 
-        List<Mark> marks = report.getPages().get(currentPage).getMarks();
-        marks.remove(mark);
     }
 
     private void close(boolean error){
@@ -278,102 +264,13 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
             setResult(RESULT_OK);
         }
         finishAndRemoveTask();
-        stopLockTask();
-        super.onDestroy();
-    }
-
-    private void changePage(int dWork){
-        int dir;
-        float lastX;
-
-        dir = dWork / Math.abs(dWork);
-        lastX = 24;
-
-        if(((TouchImageView)findViewById(R.id.ivDocument)).isZoomed()){
-            return;
-        }
-
-        if((dir > 0 && currentPage < (pageCount - 1)) || (dir < 0 && currentPage > 0)) {
-
-            ImageView iv = findViewById(R.id.ivDocument);
-            ImageView ivWork = findViewById(R.id.ivPrevNext);
-
-            iv.setClickable(false);
-            iv.setEnabled(false);
-            ivWork.setClickable(false);
-            ivWork.setEnabled(false);
-
-            ivWork.setImageBitmap(currentBitmap);
-            ivWork.setVisibility(View.VISIBLE);
-
-            iv.setX(dir * getWindow().getDecorView().getWidth());
-
-            currentPage += dir;
-            originalBitmap = WQCDocumentHelper.pageLoad(currentPage, filePath, getResources());
-            currentBitmap = WQCDocumentHelper.bitmapCopy(originalBitmap);
-            updatePointsDrawing();
-
-            ObjectAnimator ivAnim = ObjectAnimator.ofFloat(iv, View.TRANSLATION_X, lastX).setDuration(150);
-            ObjectAnimator ivwAnim = ObjectAnimator.ofFloat(ivWork, View.TRANSLATION_X, -dir * getWindow().getDecorView().getWidth()).setDuration(150);
-
-            AnimatorSet animations = new AnimatorSet();
-            animations.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    super.onAnimationEnd(animation);
-                    ivWork.setVisibility(View.INVISIBLE);
-                    ivWork.animate().translationX(lastX).setDuration(0);
-                    iv.setClickable(true);
-                    iv.setEnabled(true);
-                    ivWork.setClickable(true);
-                    ivWork.setEnabled(true);
-                }
-            });
-            animations.play(ivAnim).with(ivwAnim);
-            animations.start();
-        } else {
-            ImageView iv = findViewById(R.id.ivDocument);
-
-            iv.setClickable(false);
-            iv.setEnabled(false);
-
-            ObjectAnimator ivAnim = ObjectAnimator.ofFloat(iv, View.TRANSLATION_X, -dir * (float)(getWindow().getDecorView().getWidth() / 3)).setDuration(100);
-
-            AnimatorSet animations = new AnimatorSet();
-            animations.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    super.onAnimationEnd(animation);
-                    iv.animate().translationX(lastX).setDuration(100).withEndAction(() -> {
-                        iv.setClickable(true);
-                        iv.setEnabled(true);
-                    });
-                }
-            });
-            animations.play(ivAnim);
-            animations.start();
-        }
-    }
-
-//    private void updateButtonState(){
-//        logger.info("Started buttons state update routine");
-////        findViewById(R.id.btnNext).setEnabled(!(currentPage == pageCount - 1));
-////        findViewById(R.id.btnPrevious).setEnabled(!(currentPage == 0));
-//        findViewById(R.id.btnUndo).setEnabled(getLastPlacedUserMark() != null);
-//    }
-
-    private void updateImageView(Bitmap bitmap){
-        logger.info("Started image view update routine");
-        imageView.setImageBitmap(bitmap);
-        TextView tv = (findViewById(R.id.tvCurrentPage));
-        tv.setText(String.format(App.getContext().getResources().getConfiguration().getLocales().get(0), "%d / %d", currentPage + 1, pageCount));
     }
 
     private void addMark(float[] touchPoint){
         Spinner cmbRoles = findViewById(R.id.cmbRole);
         String roleToShow = cmbRoles.getSelectedItem().toString();
         logger.info("Started on-touch mark add routine");
-        List<Mark> markList = report.getPages().get(currentPage).getMarks();
+        List<Mark> markList = report.getPages().get(adapter.getCurrentPosition()).getMarks();
         Mark mark = new Mark();
         mark.setX(touchPoint[0]);
         mark.setY(touchPoint[1]);
@@ -386,20 +283,25 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
     }
 
     private void undo(){
-        Mark mark;
-        mark = getLastPlacedUserMark();
-        if(mark != null) {
-            logger.info("Started mark undo routine");
+        if(!isWaiting) {
             toggleControls(false);
+            Mark mark;
+            mark = getLastPlacedUserMark();
+            if (mark != null) {
+                isWaiting = true;
+                logger.info("Started mark undo routine");
 //            updateButtonState();
-            notAddingMark();
-            remove(mark);
+                notAddingMark();
+                remove(mark);
+            } else {
+                toggleControls(true);
+            }
         }
     }
 
     private Mark getLastPlacedUserMark(){
         logger.info("Started get last context mark routine");
-        List<Mark> markList = report.getPages().get(currentPage).getMarks();
+        List<Mark> markList = report.getPages().get(adapter.getCurrentPosition()).getMarks();
         Mark mark;
         if(markList != null && markList.size() > 0){
             for(int i = markList.size() - 1; i >= 0; i--) {
@@ -414,38 +316,20 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
         return null;
     }
 
-    private void updatePointsDrawing(){
-        logger.info("Started update points drawing routine");
-        List<Mark> markList = report.getPages().get(currentPage).getMarks();
-        if(markList != null) {
-            logger.info("Marks found and are going to be drawn within the rendered page");
-            currentBitmap = WQCDocumentHelper.updatePointsDrawing(markList, originalBitmap, getResources());
-            updateImageView(currentBitmap);
-        }
-        else{
-            logger.info("No marks were found. Only the original document page will be rendered");
-            updateImageView(originalBitmap);
+    @Override
+    public void onTouch(float[] touchPoint) {
+        if(mode == 1) {
+            toggleControls(false);
+            addMark(touchPoint);
         }
     }
 
     @Override
-    public void onTouch(float[] touchPoint) {
-        Mark m = touchOnExistingMark(touchPoint);
-        if(m == null) {
-            if(mode == 1) {
-                toggleControls(false);
-                addMark(touchPoint);
-            }
-        } else {
-            notAddingMark();
-            lastTouchedMark = m;
-            displayMarkInfo(m);
-        }
-    }
-
-    public void displayMarkInfo(Mark m){
+    public void onMarkTouch(Mark m) {
         boolean canRemove = false;
         final String markRole = m.getRoleToShow();
+
+        notAddingMark();
 
         String message = String.format("%s: %s \n%s: %s \n%s: %s",
                 getResources().getString(R.string.usernameTag),
@@ -463,46 +347,11 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
             AlertHelper.showMessage(this, "", message,
                     getResources().getString(R.string.removeTag),
                     getResources().getString(R.string.cancelTag),
-                    () -> remove(lastTouchedMark), null);
+                    () -> remove(m), null);
         } else {
             AlertHelper.showMessage(this, message,
                     getResources().getString(R.string.okTag),
                     null);
-        }
-
-    }
-
-    public Mark touchOnExistingMark(float[] touchPoint){
-        List<Mark> marks = report.getPages().get(currentPage).getMarks();
-        for(int i = 0; i < marks.size(); i++){
-            Mark m = marks.get(i);
-            int radius = WQCDocumentHelper.radius;
-            float mX, mY, pX, pY;
-            mX = m.getX() * currentBitmap.getWidth();
-            mY = m.getY() * currentBitmap.getHeight();
-            pX = touchPoint[0] * currentBitmap.getWidth();
-            pY = touchPoint[1] * currentBitmap.getHeight();
-            if(pX >= (mX - radius) && pX <= (mX + radius)
-                    && pY >= (mY - radius) && pY <= (mY + radius)){
-                return m;
-            }
-        }
-        return null;
-    }
-
-    private void setFilePath(Project project){
-        String folder;
-        folder = StringHelper.getPdfsFolderPath(project);
-
-        filePath = folder.concat(File.separator).concat(report.getFileName());
-
-        if(!FileHelper.isValidFile(filePath)){
-            ActivityHelper.setWaitingLayout(this);
-            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_FILE_ACCESS_EXCEPTION, getResources().getString(R.string.fileNotFoundMessage), ErrorResult.ErrorLevel.SEVERE, getClass());
-            ErrorResponseHandler.handle(err, this, () ->{
-                setResult(RESULT_OK);
-                finish();
-            });
         }
     }
 
@@ -523,24 +372,19 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
                             .findFirst()
                             .orElse(null);
                     if (report == null) {
-                        ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.INVALID_ENTITY, getResources().getString(R.string.unknownErrorMessage), ErrorResult.ErrorLevel.SEVERE, getClass());
+                        ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.INVALID_ENTITY, getResources().getString(R.string.unknownErrorMessage), ErrorResult.ErrorLevel.SEVERE);
                         ErrorResponseHandler.handle(err, this, () -> close(true));
                         return;
                     }
-                    setFilePath(project);
-                    inflateActivityLayout();
+                    inflateActivityLayout(project);
                     notAddingMark();
+                    isWaiting = false;
                     break;
                 case REST_CONFIGLOAD_KEY:
                     ParamConfigurations c = ResultService.getSingleResult(result, ParamConfigurations.class);
                     ConfigurationsManager.setServerConfig(c);
                     conf = c;
-                    if(!onCreateChain) {
-                        MessagingHelper.getServiceInstance().setListener(this, true);
-                    } else {
-                        onCreateChain = false;
-                        MessagingHelper.getServiceInstance().setup(this);
-                    }
+                    MessagingHelper.getServiceInstance().setListener(this, true);
                     break;
             }
         } else {
@@ -551,41 +395,37 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
 
     @Override
     public void toggleControls(boolean bResume){
-        runOnUiThread(() ->
-                {
-                    logger.info("Started controls toggle routine");
-                    (findViewById(R.id.btnAddMark)).setEnabled(bResume && !DeviceHelper.isOnlyRole("TE"));
+        logger.info("Started controls toggle routine");
+        (findViewById(R.id.btnAddMark)).setEnabled(bResume && !DeviceHelper.isOnlyRole("TE"));
 
-                    if (bResume) {
-                        (findViewById(R.id.btnUndo)).setEnabled(getLastPlacedUserMark() != null);
-                    } else {
-                        (findViewById(R.id.btnUndo)).setEnabled(false);
-                    }
+        if (bResume) {
+            (findViewById(R.id.btnUndo)).setEnabled(getLastPlacedUserMark() != null);
+        } else {
+            (findViewById(R.id.btnUndo)).setEnabled(false);
+        }
 
-                    (findViewById(R.id.btnExit)).setEnabled(true);
-                    if (!bResume) {
-                        (findViewById(R.id.pbCheckReportEdit)).setVisibility(View.VISIBLE);
-                    } else {
-                        (findViewById(R.id.pbCheckReportEdit)).setVisibility(View.INVISIBLE);
-                    }
-                    (findViewById(R.id.chkFinished)).setEnabled(bResume && !DeviceHelper.isOnlyRole("TE"));
-                    (findViewById(R.id.cmbRole)).setEnabled(bResume && !DeviceHelper.isOnlyRole("TE"));
+        (findViewById(R.id.btnExit)).setEnabled(true);
+        if (!bResume) {
+            (findViewById(R.id.pbCheckReportEdit)).setVisibility(View.VISIBLE);
+        } else {
+            (findViewById(R.id.pbCheckReportEdit)).setVisibility(View.INVISIBLE);
+        }
+        (findViewById(R.id.chkFinished)).setEnabled(bResume && !DeviceHelper.isOnlyRole("TE"));
+        (findViewById(R.id.cmbRole)).setEnabled(bResume && !DeviceHelper.isOnlyRole("TE"));
 
-                    if(DeviceHelper.isOnlyRole("TE") || report.isFinished()){
-                        findViewById(R.id.btnAddMark).setVisibility(View.INVISIBLE);
-                        findViewById(R.id.btnUndo).setVisibility(View.INVISIBLE);
-                        (findViewById(R.id.cmbRole)).setVisibility(View.INVISIBLE);
-                    } else {
-                        findViewById(R.id.btnAddMark).setVisibility(View.VISIBLE);
-                        findViewById(R.id.btnUndo).setVisibility(View.VISIBLE);
-                        (findViewById(R.id.cmbRole)).setVisibility(View.VISIBLE);
-                    }
+        if(DeviceHelper.isOnlyRole("TE") || report.isFinished()){
+            findViewById(R.id.btnAddMark).setVisibility(View.INVISIBLE);
+            findViewById(R.id.btnUndo).setVisibility(View.INVISIBLE);
+            (findViewById(R.id.cmbRole)).setVisibility(View.INVISIBLE);
+        } else {
+            findViewById(R.id.btnAddMark).setVisibility(View.VISIBLE);
+            findViewById(R.id.btnUndo).setVisibility(View.VISIBLE);
+            (findViewById(R.id.cmbRole)).setVisibility(View.VISIBLE);
+        }
 
-                    CheckBox chkFinished = findViewById(R.id.chkFinished);
-                    chkFinished.setChecked(report.isFinished());
+        CheckBox chkFinished = findViewById(R.id.chkFinished);
+        chkFinished.setChecked(report.isFinished());
 
-                }
-        );
     }
 
     @Override
@@ -619,23 +459,4 @@ public class CheckReportEditActivity extends Activity implements TouchImageView.
         close(true);
     }
 
-    @Override
-    public void onSwipeRight() {
-        changePage(-1);
-    }
-
-    @Override
-    public void onSwipeLeft() {
-        changePage(1);
-    }
-
-    @Override
-    public void onSwipeTop() {
-
-    }
-
-    @Override
-    public void onSwipeBottom() {
-
-    }
 }

@@ -7,20 +7,15 @@ import com.richard.weger.wqc.activity.ItemReportEditActivity;
 import com.richard.weger.wqc.domain.CheckReport;
 import com.richard.weger.wqc.domain.ItemReport;
 import com.richard.weger.wqc.domain.ParamConfigurations;
-import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
-import com.richard.weger.wqc.rest.file.FileRestTemplateHelper;
-import com.richard.weger.wqc.service.FileRequestParametersResolver;
 import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.CHECK_REPORT_EDIT_SCREEN_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_REPORT_EDIT_SCREEN_KEY;
-import static com.richard.weger.wqc.appconstants.AppConstants.REST_PDFREPORTDOWNLOAD_KEY;
 
 public class ReportHelper {
 

@@ -9,7 +9,7 @@ public class Request {
     private List<RequestParameter> parameters;
     private String requestCode;
     private String requestMethod;
-
+    private RawRequest rawRequest;
 
     public URI getUri() {
         return uri;
@@ -43,4 +43,11 @@ public class Request {
         this.requestMethod = requestMethod;
     }
 
+    public RawRequest getRawRequest() {
+        return rawRequest;
+    }
+
+    public void setRawRequest(RawRequest rawRequest) {
+        this.rawRequest = rawRequest;
+    }
 }

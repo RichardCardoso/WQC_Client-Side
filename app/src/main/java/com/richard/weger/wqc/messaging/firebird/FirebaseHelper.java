@@ -25,9 +25,7 @@ public class FirebaseHelper extends FirebaseMessagingService implements IMessagi
     public void setListener(IMessagingListener listener, boolean callbackToDelegate){
         LoggerManager.getLogger(FirebaseHelper.class).info("Setting firebird listener");
         FirebaseHelper.delegate = listener;
-        if(callbackToDelegate && delegate != null) {
-            listener.onConnectionSuccess();
-        }
+        subscribe();
     }
 
     public void removeListener(){
@@ -35,10 +33,10 @@ public class FirebaseHelper extends FirebaseMessagingService implements IMessagi
         delegate = null;
     }
 
-    public void setup(IMessagingListener listener){
+    private void setup(IMessagingListener listener){
         ActivityHelper.activityDisable(listener);
         setListener(listener, false);
-        FirebaseHelper.subscribe();
+        subscribe();
     }
 
 

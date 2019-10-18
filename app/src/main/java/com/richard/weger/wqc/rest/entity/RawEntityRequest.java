@@ -1,21 +1,16 @@
 package com.richard.weger.wqc.rest.entity;
 
 import com.richard.weger.wqc.domain.DomainEntity;
-import com.richard.weger.wqc.rest.RequestParameter;
-import com.richard.weger.wqc.rest.entity.EntityReturnType;
+import com.richard.weger.wqc.rest.RawRequest;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-public class RawEntityRequest<T extends DomainEntity> {
+public class RawEntityRequest<T extends DomainEntity> extends RawRequest {
     private String requestCode;
     private String requestMethod;
     private String resource;
-    private Set<RequestParameter> parameters;
     private List<T> entitiesList;
     private T singleEntity;
     private EntityReturnType entityReturnType;
@@ -49,14 +44,6 @@ public class RawEntityRequest<T extends DomainEntity> {
 
     public void setResource(String resource) {
         this.resource = resource;
-    }
-
-    public Set<RequestParameter> getParameters() {
-        return parameters;
-    }
-
-    public void setParameters(Set<RequestParameter> parameters) {
-        this.parameters = parameters;
     }
 
     public List<T> getEntitiesList() {

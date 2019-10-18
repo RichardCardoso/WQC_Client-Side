@@ -69,6 +69,7 @@ public class ErrorResult extends AbstractResult {
 		UNKNOWN_ERROR,
 		INVALID_APP_VERSION,
 		GENERAL_SERVER_FAILURE,
+		REST_POST_EXECUTOR_ERROR,
 
 		INVALID_REST_METHOD,
 		INVALID_ENTITYRETURNTYPE,
@@ -78,9 +79,7 @@ public class ErrorResult extends AbstractResult {
 	private String code;
 	private String description;
 	private ErrorLevel level;
-	
-	private transient Logger logger;
-	
+
 	public ErrorLevel getLevel() {
 		return level;
 	}
@@ -89,31 +88,17 @@ public class ErrorResult extends AbstractResult {
 		this.level = level;
 	}
 
-	public ErrorResult(ErrorCode code, String description, ErrorLevel level, Class<?> callerClass) {
+	public ErrorResult(ErrorCode code, String description, ErrorLevel level) {
 
 		if(description == null){
 			description = App.getContext().getResources().getString(R.string.unknownErrorMessage);
 		}
-
-		logger = LoggerManager.getLogger(callerClass);
-		
 		if(code != null) {
 			setCode(code.toString());
 		} else {
 			setCode(ErrorCode.UNKNOWN_ERROR.toString());
-			logger.warning("Null error code passed to ErrorResult constructor");
 		}
-		
 		setDescription(description);
-		
-		if(level == ErrorLevel.SEVERE) {
-			logger.severe(description);
-		} else if (level == ErrorLevel.WARNING) {
-			logger.warning(description);
-		} else if (level == ErrorLevel.LOG){
-			logger.info(description);
-		}
-
 		setLevel(level);
 
 	}

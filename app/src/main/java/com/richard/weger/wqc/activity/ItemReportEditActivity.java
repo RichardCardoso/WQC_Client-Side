@@ -1,31 +1,35 @@
 package com.richard.weger.wqc.activity;
 
-import android.app.ListActivity;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.richard.weger.wqc.R;
-import com.richard.weger.wqc.adapter.ItemAdapter;
+import com.richard.weger.wqc.adapter.ItemReportAdapter;
+import com.richard.weger.wqc.adapter.ReportItemActionHandler;
 import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.ItemReport;
 import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
-import com.richard.weger.wqc.messaging.IMessagingListener;
-import com.richard.weger.wqc.messaging.MessagingHelper;
-import com.richard.weger.wqc.messaging.firebird.FirebaseHelper;
 import com.richard.weger.wqc.helper.AlertHelper;
 import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.helper.FileHelper;
+import com.richard.weger.wqc.helper.ImageHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.helper.StringHelper;
+import com.richard.weger.wqc.messaging.IMessagingListener;
+import com.richard.weger.wqc.messaging.MessagingHelper;
 import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.ErrorResult;
@@ -37,17 +41,15 @@ import com.richard.weger.wqc.service.ReportRequestParametersResolver;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 import com.richard.weger.wqc.util.LoggerManager;
 
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
-import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_ID_KEY;
-import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_NOT_CHECKED_KEY;
-import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_PICTURE_MODE;
-import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_CAPTURE_MODE;
+import static com.richard.weger.wqc.appconstants.AppConstants.PICTURES_LIST_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_START_INDEX_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_VIEWER_SCREEN_ID;
-import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REPORT_ID_KEY;
-import static com.richard.weger.wqc.appconstants.AppConstants.REPORT_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REQUEST_IMAGE_CAPTURE_ACTION;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_CONFIGLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_ITEMSAVE_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTUREDOWNLOAD_KEY;
@@ -55,20 +57,23 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTUREUPLOAD
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_REPORTUPLOAD_KEY;
 
-public class ItemReportEditActivity extends ListActivity implements ItemAdapter.ChangeListener,
+public class ItemReportEditActivity extends Activity implements ReportItemActionHandler,
         RestTemplateHelper.RestResponseHandler,
         IMessagingListener {
 
     ItemReport report;
     Project project;
     Long reportId;
-    ItemAdapter itemAdapter;
     ParamConfigurations conf;
     boolean canEdit = true;
     Parcelable state;
     boolean paused = false;
     Logger logger;
     boolean onCreateChain = false;
+    Item itemToUpdadePicture;
+    String tempPicPath;
+    private ItemReportAdapter adapter;
+    boolean isWaiting = false;
 
     @Override
     public void onBackPressed() {
@@ -97,7 +102,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
 
         onCreateChain = true;
 
-        logger = LoggerManager.getLogger(getClass());
+        logger = LoggerManager.getLogger(ItemReportEditActivity.class);
 
         logger.info("Started intent data get");
         Intent intent = getIntent();
@@ -111,27 +116,39 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
         }
     }
 
+    private void updateRecyclerView(){
+        RecyclerView view = findViewById(R.id.recyclerview);
+        if(adapter == null){
+            adapter = new ItemReportAdapter(StringHelper.getPicturesFolderPath(project),report.getItems(), this);
+        }
+        GridLayoutManager grid = new GridLayoutManager(this, 2, RecyclerView.VERTICAL, false);
+        view.setLayoutManager(grid);
+        view.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+    }
+
+
     private void inflateActivityLayout(){
         setContentView(R.layout.activity_item_report_edit);
         logger.info("Setting item adapter");
-        itemAdapter = new ItemAdapter(this, report.getItems(), project);
-        setListAdapter(itemAdapter);
-        itemAdapter.setChangeListener(this);
+
+        updateRecyclerView();
+
+
         setListeners();
         setTextViews();
         toggleControls(true);
 
         if(DeviceHelper.isOnlyRole("te")){
-            itemAdapter.setEnabled(false);
+            adapter.setEnabled(false);
             (findViewById(R.id.chkFinished)).setEnabled(false);
             (findViewById(R.id.chkFinished)).setClickable(false);
         } else {
-            itemAdapter.setEnabled(!report.isFinished());
+            adapter.setEnabled(!report.isFinished());
             (findViewById(R.id.chkFinished)).setEnabled(true);
             (findViewById(R.id.chkFinished)).setClickable(true);
         }
-        itemAdapter.setCameraEnabled(true);
-        itemAdapter.notifyDataSetChanged();
+        adapter.notifyDataSetChanged();
 
     }
 
@@ -153,7 +170,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
 
     private void setListeners(){
         logger.info("Setting listeners");
-        ImageButton btn = findViewById(R.id.btnCancel);
+        ImageButton btn = findViewById(R.id.backButton);
         btn.setOnClickListener(v -> close(false));
 
         CheckBox chkFinished = findViewById(R.id.chkFinished);
@@ -163,7 +180,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
             if(report.getItems().stream().noneMatch(i -> i.getStatus() == ITEM_NOT_CHECKED_KEY) || report.isFinished()) {
                 shouldChangeReportState();
             } else {
-                ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_UNFINISHED_ITEMREPORT_WARNING, getResources().getString(R.string.pendingItemsMessage), ErrorResult.ErrorLevel.WARNING, getClass());
+                ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_UNFINISHED_ITEMREPORT_WARNING, getResources().getString(R.string.pendingItemsMessage), ErrorResult.ErrorLevel.WARNING);
                 ErrorResponseHandler.handle(err, this, this::cancelReportFinish);
             }
         });
@@ -203,7 +220,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
                     report.setClient(content);
                     reportFinish(!report.isFinished());
                 } else {
-                    ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_EMPTY_FIELDS_WARNING, getResources().getString(R.string.emptyFieldsError), ErrorResult.ErrorLevel.WARNING, getClass());
+                    ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_EMPTY_FIELDS_WARNING, getResources().getString(R.string.emptyFieldsError), ErrorResult.ErrorLevel.WARNING);
                     ErrorResponseHandler.handle(err, this, () -> toggleControls(true));
                 }
             });
@@ -211,13 +228,6 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
             report.setFinished(finish);
             ReportRequestParametersResolver resolver = new ReportRequestParametersResolver(REST_REPORTUPLOAD_KEY, conf,false);
             resolver.postEntity(report, this);
-        }
-    }
-
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        if(canEdit) {
-            super.onListItemClick(l, v, position, id);
         }
     }
 
@@ -234,17 +244,26 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
     public void toggleControls(boolean bResume){
         logger.info("Toggling screen controls");
         canEdit = bResume;
-        itemAdapter.setEnabled(bResume && !report.isFinished() && !DeviceHelper.isOnlyRole("te"));
-        itemAdapter.notifyDataSetChanged();
-        if(bResume){
-            findViewById(R.id.pbItemReportEdit).setVisibility(View.INVISIBLE);
+
+        if(adapter != null) {
+            adapter.setEnabled(bResume && !report.isFinished() && !DeviceHelper.isOnlyRole("te"));
+            adapter.notifyDataSetChanged();
         }
-        else{
-            findViewById(R.id.pbItemReportEdit).setVisibility(View.VISIBLE);
+
+        ProgressBar pb = findViewById(R.id.pbItemReportEdit);
+        if (pb != null) {
+            if (bResume) {
+                pb.setVisibility(View.INVISIBLE);
+            } else {
+                pb.setVisibility(View.VISIBLE);
+            }
         }
-        (findViewById(R.id.chkFinished)).setEnabled(bResume && !DeviceHelper.isOnlyRole("te"));
-        ((CheckBox) findViewById(R.id.chkFinished)).setChecked(report.isFinished());
-        itemAdapter.setCameraEnabled(true);
+        CheckBox chk = (findViewById(R.id.chkFinished));
+        if(chk != null) {
+            chk.setEnabled(bResume && !DeviceHelper.isOnlyRole("te"));
+            chk.setChecked(report.isFinished());
+        }
+
     }
 
     @Override
@@ -254,60 +273,111 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
 
     private void storeCurrListPosition(){
         ListView list = findViewById(android.R.id.list);
-        state = list.onSaveInstanceState();
+        if(list != null) {
+            state = list.onSaveInstanceState();
+        }
     }
 
     private void restoreCurrListPosition(){
         ListView list = findViewById(android.R.id.list);
-        list.onRestoreInstanceState(state);
+        if(list != null) {
+            list.onRestoreInstanceState(state);
+        }
     }
 
     private void save(Item item, boolean savePicture){
-        logger.info("Started ReportItem save request");
-        toggleControls(false);
+        if(!isWaiting) {
+            logger.info("Started ReportItem save request");
+            isWaiting = true;
+            toggleControls(false);
 
-        String fileName = StringHelper.getPicturesFolderPath(project).concat("/").concat(item.getPicture().getFileName());
+            String fileName = StringHelper.getPicturesFolderPath(project).concat("/").concat(item.getPicture().getFileName());
 
-        ItemRequestParametersResolver resolver = new ItemRequestParametersResolver(REST_ITEMSAVE_KEY, conf, false);
-        resolver.postEntity(item, this);
+            storeCurrListPosition();
+            ItemRequestParametersResolver resolver = new ItemRequestParametersResolver(REST_ITEMSAVE_KEY, conf, false);
+            resolver.postEntity(item, this);
 
-        if(savePicture && FileHelper.isValidFile(fileName)) {
-            ProjectHelper.itemPictureUpload(this, item, project);
+            if (savePicture && FileHelper.isValidFile(fileName)) {
+                ProjectHelper.itemPictureUpload(this, item, project);
+            }
         }
 
     }
 
+    private boolean isEditable() {
+        return !report.isFinished() && !DeviceHelper.isOnlyRole("te");
+    }
+
     @Override
-    public void onChangeHappened(int position, View view) {
+    public void onPictureTap(int position) {
         logger.info("Started list's item change handler");
         toggleControls(false);
         Item item = report.getItems().get(position);
-        if(view instanceof ImageView) {
-            storeCurrListPosition();
-            paused = true;
-            view.setEnabled(false);
-            view.setClickable(false);
+        storeCurrListPosition();
+        paused = true;
+        if (FileHelper.isValidFile(StringHelper.getPicturesFolderPath(project) + item.getPicture().getFileName())) {
             Intent intent = new Intent(ItemReportEditActivity.this, PictureViewerActivity.class);
-            intent.putExtra(ITEM_KEY, item);
-            intent.putExtra(ITEM_ID_KEY, position);
-            intent.putExtra(PICTURE_CAPTURE_MODE, ITEM_PICTURE_MODE);
-            intent.putExtra(REPORT_KEY, report);
-            intent.putExtra(PROJECT_KEY, project);
+            intent.putStringArrayListExtra(PICTURES_LIST_KEY, new ArrayList<String>() {{
+                add(item.getPicture().getFileName());
+            }});
+            intent.putExtra(PICTURE_START_INDEX_KEY, position);
             startActivityForResult(intent, PICTURE_VIEWER_SCREEN_ID);
+            return;
+        } else if (isEditable()) {
+            takePicture(item);
+            return;
+        }
+        toggleControls(true);
+    }
+
+    @Override
+    public void onCommentsChange(int position, String newContent) {
+        logger.info("Started comments change request handlerr");
+        toggleControls(false);
+        Item item = report.getItems().get(position);
+        if(isEditable() && !newContent.equals(item.getComments())) {
+            item.setComments(newContent);
+            save(item, false);
         } else {
+            toggleControls(true);
+        }
+    }
+
+    @Override
+    public void onStatusTap(int value, int position) {
+        Item item = report.getItems().get(position);
+        if(item.getStatus() != value && isEditable()) {
+            logger.info("Started status change request handler");
+            toggleControls(false);
+            item.setStatus(value);
             save(item, false);
         }
+    }
+
+    @Override
+    public void onRequestPictureCapture(int position) {
+        logger.info("Started picture capture request handler");
+        toggleControls(false);
+        if(isEditable()) {
+            Item item = report.getItems().get(position);
+            takePicture(item);
+        }
+    }
+
+    private void takePicture(Item item) {
+        itemToUpdadePicture = item;
+        tempPicPath = ImageHelper.takePicture(this, project, item);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         logger.info("Started activity result handling");
         toggleControls(false);
-        if(resultCode == RESULT_OK && requestCode == PICTURE_VIEWER_SCREEN_ID){
-            Item newItem = (Item) data.getSerializableExtra(ITEM_KEY);
-            if(newItem != null) {
-                save(newItem, true);
-            }
+        if (resultCode == RESULT_OK && requestCode == REQUEST_IMAGE_CAPTURE_ACTION) {
+            String picPath = tempPicPath;
+            picPath = ImageHelper.compressImage(picPath);
+            ImageHelper.putPicInfoAndTimestamp(picPath, project, ImageHelper.getPrefixedPicNumber(itemToUpdadePicture));
+            save(itemToUpdadePicture, true);
         } else {
             restoreCurrListPosition();
             toggleControls(true);
@@ -375,14 +445,15 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
                             .findFirst()
                             .orElse(null);
                     if (report == null) {
-                        ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.INVALID_ENTITY, getResources().getString(R.string.unknownErrorMessage), ErrorResult.ErrorLevel.SEVERE, getClass());
+                        ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.INVALID_ENTITY, getResources().getString(R.string.unknownErrorMessage), ErrorResult.ErrorLevel.SEVERE);
                         ErrorResponseHandler.handle(err, this, () -> close(true));
                         return;
                     }
                     inflateActivityLayout();
-                    itemAdapter.setItemList(report.getItems());
-                    itemAdapter.notifyDataSetChanged();
+                    adapter.setItemList(report.getItems());
+                    adapter.notifyDataSetChanged();
                     restoreCurrListPosition();
+                    isWaiting = false;
                     break;
                 case REST_REPORTUPLOAD_KEY:
                     break;
@@ -400,12 +471,7 @@ public class ItemReportEditActivity extends ListActivity implements ItemAdapter.
                     ParamConfigurations c = ResultService.getSingleResult(result, ParamConfigurations.class);
                     ConfigurationsManager.setServerConfig(c);
                     conf = c;
-                    if(!onCreateChain) {
-                        MessagingHelper.getServiceInstance().setListener(this, true);
-                    } else {
-                        onCreateChain = false;
-                        MessagingHelper.getServiceInstance().setup(this);
-                    }
+                    MessagingHelper.getServiceInstance().setListener(this, true);
                     break;
             }
         } else {

@@ -80,7 +80,6 @@
     <string name="invalidDocumentCodesMessage">Impossibile procedere. Controlla i parametri dell\'app (codice di disegno + estensione e codice del foglio dati + estensione</string>
     <string name="successfulServerUploadMessage">Progetto caricato con successo!</string>
     <string name="invalidServerFileMessage">Il file nel server non è valido / corrotto. Si prega di sostituirlo con uno valido e riprovare.</string>
-    <string name="projectUploadMessage">Vuoi caricare i file del rapporto? </string>
     <string name="tryAgainMessage">Vuoi riprovare?</string>
     <string name="permissionsNeededMessage">Non tutte le autorizzazioni necessarie sono state concesse all\'app. Senza di loro, è impossibile continuare. L\'app sarà chiusa ora.</string>
     <string name="noPermissionsGrantedTitle">Autorizzazioni mancanti</string>
@@ -98,7 +97,6 @@
     <string name="serverConnectErrorMessage">Impossibile connettersi al server. Si prega di controllare il suo indirizzo e riprovare.</string>
     <string name="deviceNotAuthorizedMessage">Nessuna autorizzazione trovata per il tuo dispositivo. Si prega di mostrare questa schermata all\'amministratore del sistema.</string>
     <string name="closeTag">Chiudi</string>
-    <string name="drawingLockedMessage">I file di questo disegno sono stati modificati da qualcun altro. Devi aspettare fino a quando non è il momento.</string>
     <string name="tryAgainTag">Riprova</string>
     <string name="notImplementedMessage">Non ancora implementato!</string>
     <string name="unknownDeviceMessage">Dispositivo sconosciuto</string>
@@ -151,4 +149,6 @@
     <string name="projectUpdatedMessage">Progetto aggiornato</string>
     <string name="pushMessageConnectionFailed">Impossibile connettersi al servizio di aggiornamento in tempo reale. L\'app ora verrà chiusa.</string>
     <string name="cancelQuestion">Desideri annullare l\'operazione corrente?</string>
+    <string name="beginUploadQuestion">Vuoi caricare le foto scattate?</string>
+    <string name="pictureRemoveQuestion">Vuoi rimuovere questa immagine dalla lista di upload?</string>
 </resources>

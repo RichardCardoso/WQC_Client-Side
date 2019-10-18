@@ -1,21 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.richard.weger.wqc">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android:name=android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <application
-        android:usesCleartextTraffic="true"
-
         android:name=".util.App"
         android:allowBackup="true"
+        android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true"
+        tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name=".activity.CameraActivity"></activity>
+        <activity android:name=".activity.GeneralPictureCaptureActivity" />
+        <activity android:name=".activity.GeneralPictureListActivity" />
         <activity
             android:name=".activity.WelcomeActivity"
             android:exported="true">
@@ -27,7 +36,7 @@
         </activity>
         <activity
             android:name=".activity.ProjectEditActivity"
-            android:label="@string/app_name"></activity>
+            android:label="@string/app_name" />
         <activity android:name=".activity.ItemReportEditActivity" />
         <activity android:name=".activity.PictureViewerActivity" />
 
@@ -42,9 +51,7 @@
         </provider>
 
         <activity android:name=".activity.ProjectInfoActivity" />
-        <activity android:name=".activity.ConfigurationsActivity" />
         <activity android:name=".activity.CheckReportEditActivity" />
-
         <!--
         <service android:name=".messaging.firebird.FirebaseHelper">
             <intent-filter>
@@ -52,12 +59,9 @@
             </intent-filter>
         </service>
         -->
-        <activity android:name=".activity.PicturesListActivity"></activity>
-
         <meta-data
             android:name="com.google.android.gms.ads.AD_MANAGER_APP"
             android:value="true" />
-
     </application>
 
 </manifest>

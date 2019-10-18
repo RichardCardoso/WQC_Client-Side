@@ -1,6 +1,5 @@
 package com.richard.weger.wqc.service;
 
-import com.richard.weger.wqc.domain.CheckReport;
 import com.richard.weger.wqc.rest.RequestParameter;
 import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.rest.file.FileRequest;
@@ -22,7 +21,7 @@ public class FileRequestParametersResolver {
         this.requestCode = requestCode;
     }
 
-    public FileRestTemplateHelper getPdf(CheckReport report, String qrcode){
+    public FileRestTemplateHelper getPdf(String filename, String qrcode){
         FileRestTemplateHelper template = new FileRestTemplateHelper(delegate);
 
         RawFileRequest request = new RawFileRequest();
@@ -37,7 +36,28 @@ public class FileRequestParametersResolver {
 
         param = new RequestParameter();
         param.setName("filename");
-        param.setValue(report.getFileName());
+        param.setValue(filename);
+        request.getParameters().add(param);
+
+        FileRequestHelper helper = new FileRequestHelper();
+        FileRequest req = helper.proccess(request);
+
+        template.execute(req);
+
+        return template;
+    }
+
+    public FileRestTemplateHelper getPdfsList(String qrcode){
+        FileRestTemplateHelper template = new FileRestTemplateHelper(delegate);
+
+        RawFileRequest request = new RawFileRequest();
+        request.setRequestCode(requestCode);
+        request.setFileReturnType(FileReturnType.ListReturn);
+        request.setRequestMethod(GET_METHOD);
+
+        RequestParameter param = new RequestParameter();
+        param.setName("qrcode");
+        param.setValue(qrcode);
         request.getParameters().add(param);
 
         FileRequestHelper helper = new FileRequestHelper();

@@ -13,6 +13,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
@@ -21,6 +22,8 @@ import static com.richard.weger.wqc.appconstants.AppConstants.POST_METHOD;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREDOWNLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTURESREQUEST_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREUPLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_ITEMPICTURESREQUEST_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_PDFDOCUMENTSREQUEST_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_PDFREPORTDOWNLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTUREDOWNLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTURESREQUEST_KEY;
@@ -52,7 +55,12 @@ public class FileRequestHelper {
                         break;
                     case REST_PICTURESREQUEST_KEY:
                     case REST_GENPICTURESREQUEST_KEY:
+                    case REST_ITEMPICTURESREQUEST_KEY:
                         url += "rest/pictures";
+                        request.setFileReturnType(FileReturnType.ListReturn);
+                        break;
+                    case REST_PDFDOCUMENTSREQUEST_KEY:
+                        url += "rest/pdfdocuments";
                         request.setFileReturnType(FileReturnType.ListReturn);
                         break;
                 }
@@ -89,7 +97,7 @@ public class FileRequestHelper {
         if (params != null) {
             url += "?" + params;
         }
-        request.setParameters(rawFileRequest.getParameters());
+        request.setParameters(new ArrayList<>(rawFileRequest.getParameters()));
         request.setRequestCode(rawFileRequest.getRequestCode());
         request.setRequestMethod(rawFileRequest.getRequestMethod());
 

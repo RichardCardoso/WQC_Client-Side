@@ -1,22 +1,12 @@
 package com.richard.weger.wqc.rest.file;
 
-import com.richard.weger.wqc.domain.DomainEntity;
-import com.richard.weger.wqc.rest.RequestParameter;
-import com.richard.weger.wqc.rest.entity.EntityReturnType;
+import com.richard.weger.wqc.rest.RawRequest;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class RawFileRequest {
+public class RawFileRequest extends RawRequest {
     private String requestCode;
     private String requestMethod;
     private String resource;
-    private List<RequestParameter> parameters;
     private FileReturnType fileReturnType;
-
-    public RawFileRequest(){
-        setParameters(new ArrayList<>());
-    }
 
     public String getRequestCode() {
         return requestCode;
@@ -40,14 +30,6 @@ public class RawFileRequest {
 
     public void setResource(String resource) {
         this.resource = resource;
-    }
-
-    public List<RequestParameter> getParameters() {
-        return parameters;
-    }
-
-    public void setParameters(List<RequestParameter> parameters) {
-        this.parameters = parameters;
     }
 
     public FileReturnType getFileReturnType() {

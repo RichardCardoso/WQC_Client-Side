@@ -53,7 +53,7 @@ public class ProjectInfoActivity extends Activity implements RestTemplateHelper.
             conf = (ParamConfigurations) b.get(PARAMCONFIG_KEY);
             ProjectHelper.linkReferences(project);
         } else {
-            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_INTENT_DATA_RETRIEVAL_EXCEPTION, getResources().getString(R.string.unknownErrorMessage), ErrorResult.ErrorLevel.SEVERE, getClass());
+            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_INTENT_DATA_RETRIEVAL_EXCEPTION, getResources().getString(R.string.unknownErrorMessage), ErrorResult.ErrorLevel.SEVERE);
             ErrorResponseHandler.handle(err, this, () -> close(true));
         }
 
@@ -84,7 +84,7 @@ public class ProjectInfoActivity extends Activity implements RestTemplateHelper.
     private void setListeners(){
         ImageButton btn = findViewById(R.id.btnProjectSave);
         btn.setOnClickListener(view -> reportSubmit());
-        btn = findViewById(R.id.btnCancel);
+        btn = findViewById(R.id.backButton);
         btn.setOnClickListener(view -> close(false));
     }
 
@@ -105,7 +105,7 @@ public class ProjectInfoActivity extends Activity implements RestTemplateHelper.
         editComments = findViewById(R.id.editReportComments);
         if (editClient.getText().toString().equals("")) {
             String message = getResources().getString(R.string.emptyFieldsError);
-            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_EMPTY_FIELDS_WARNING, message, ErrorResult.ErrorLevel.WARNING, getClass());
+            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_EMPTY_FIELDS_WARNING, message, ErrorResult.ErrorLevel.WARNING);
             ErrorResponseHandler.handle(err, this, () -> toggleControls(true));
             return;
         }
@@ -125,7 +125,7 @@ public class ProjectInfoActivity extends Activity implements RestTemplateHelper.
 
     @Override
     public void toggleControls(boolean bResume){
-        (findViewById(R.id.btnCancel)).setEnabled(bResume);
+        (findViewById(R.id.backButton)).setEnabled(bResume);
         (findViewById(R.id.btnProjectSave)).setEnabled(bResume);
         (findViewById(R.id.editClient)).setEnabled(bResume);
         (findViewById(R.id.editReportComments)).setEnabled(bResume);

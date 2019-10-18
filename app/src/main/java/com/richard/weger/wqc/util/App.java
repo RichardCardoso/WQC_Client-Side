@@ -12,10 +12,28 @@ import android.provider.Settings;
 
 import com.richard.weger.wqc.R;
 
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
+
 public class App extends Application {
     private static App context;
 
     private static SharedPreferences mPrefs;
+
+    private static Set<String> processedMessages = new HashSet<>();
+
+    public static void markAsProcessed(String messageId){
+        processedMessages.add(messageId);
+    }
+
+    public static boolean wasProcessed(String messageId) {
+        return processedMessages.contains(messageId);
+    }
+
+    public static Locale getLocale(){
+        return getContext().getResources().getConfiguration().getLocales().get(0);
+    }
 
     public static String getExpectedVersion() {
         try {
@@ -57,7 +75,4 @@ public class App extends Application {
         manager.createNotificationChannel(channel);
     }
 
-    public interface Method {
-        void execute();
-    }
 }

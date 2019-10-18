@@ -23,6 +23,25 @@
                     }
                 },
                 {
+                    "source": "C:\\Users\\vendas1\\.gradle\\caches\\transforms-2\\files-2.1\\bebf2c2e6b8c63eda7dcd5c0c11c647a\\res\\values-v23\\values-v23.xml",
+                    "from": {
+                        "startLines": "2,6,9,12,16,19",
+                        "startColumns": "4,4,4,4,4,4",
+                        "startOffsets": "55,330,502,662,945,1121",
+                        "endLines": "5,8,11,15,18,21",
+                        "endColumns": "10,10,10,10,10,10",
+                        "endOffsets": "325,497,657,940,1116,1285"
+                    },
+                    "to": {
+                        "startLines": "51,55,58,61,65,68",
+                        "startColumns": "4,4,4,4,4,4",
+                        "startOffsets": "3557,3832,4004,4164,4447,4623",
+                        "endLines": "54,57,60,64,67,70",
+                        "endColumns": "10,10,10,10,10,10",
+                        "endOffsets": "3827,3999,4159,4442,4618,4787"
+                    }
+                },
+                {
                     "source": "C:\\Users\\vendas1\\.gradle\\caches\\transforms-2\\files-2.1\\3a14197df676f23783b84fa793a4e074\\res\\values-v23\\values-v23.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,20,34,35,36,37,41,42,43,44",

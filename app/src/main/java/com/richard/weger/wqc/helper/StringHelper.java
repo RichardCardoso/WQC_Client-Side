@@ -5,6 +5,8 @@ import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.util.App;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public class StringHelper {
     public static String getQrText(Project project){
@@ -20,6 +22,12 @@ public class StringHelper {
         sb.append("_T_");
         sb.append(partNumber);
         return sb.toString();
+    }
+
+    public static String getStackTraceAsString(Exception e){
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
     }
 
     private static String getProjectName(Project project){
@@ -71,4 +79,25 @@ public class StringHelper {
     public static String getPicturesFolderName(){
         return "Pictures";
     }
+
+    public static String getItemImageFilename(Item item){
+        if(item != null) {
+            return item.getPicture().getFileName();
+        } else {
+            return null;
+        }
+    }
+
+    public static String getGeneralPictureFilename(Project project){
+        if(project != null){
+            return project.getReference()
+                    .concat("Z").concat(String.valueOf(project.getDrawingRefs().get(0).getDnumber()))
+                    .concat("T").concat(String.valueOf(project.getDrawingRefs().get(0).getParts().get(0).getNumber()))
+                    .concat("QP").concat(String.valueOf(ProjectHelper.getCurrentPicNumber(project)))
+                    .concat("_new.jpg");
+        } else {
+            return null;
+        }
+    }
+
 }

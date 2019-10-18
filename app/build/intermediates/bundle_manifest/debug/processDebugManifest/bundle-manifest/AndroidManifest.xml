@@ -2,15 +2,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.richard.weger.wqc"
     android:versionCode="2"
-    android:versionName="2.7.0.1" >
+    android:versionName="2.7.1.0" >
 
     <uses-sdk
         android:minSdkVersion="26"
         android:targetSdkVersion="28" />
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android:name=android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <!-- Include required permissions for Google Maps API to run. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -28,6 +32,7 @@
         android:allowBackup="true"
         android:appComponentFactory="androidx.core.app.CoreComponentFactory"
         android:debuggable="true"
+        android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -35,6 +40,9 @@
         android:testOnly="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true" >
+        <activity android:name="com.richard.weger.wqc.activity.CameraActivity" />
+        <activity android:name="com.richard.weger.wqc.activity.GeneralPictureCaptureActivity" />
+        <activity android:name="com.richard.weger.wqc.activity.GeneralPictureListActivity" />
         <activity
             android:name="com.richard.weger.wqc.activity.WelcomeActivity"
             android:exported="true" >
@@ -61,9 +69,7 @@
         </provider>
 
         <activity android:name="com.richard.weger.wqc.activity.ProjectInfoActivity" />
-        <activity android:name="com.richard.weger.wqc.activity.ConfigurationsActivity" />
         <activity android:name="com.richard.weger.wqc.activity.CheckReportEditActivity" />
-
         <!--
         <service android:name=".messaging.firebird.FirebaseHelper">
             <intent-filter>
@@ -71,12 +77,9 @@
             </intent-filter>
         </service>
         -->
-        <activity android:name="com.richard.weger.wqc.activity.PicturesListActivity" />
-
         <meta-data
             android:name="com.google.android.gms.ads.AD_MANAGER_APP"
             android:value="true" />
-
         <!--
              FirebaseMessagingService performs security checks at runtime,
              but set to not exported to explicitly avoid allowing another app to call it.

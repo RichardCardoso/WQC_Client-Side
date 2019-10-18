@@ -16,10 +16,10 @@ public class WebsocketService implements IMessagingService {
 
     private WebsocketClient socket;
 
-    @Override
-    public void setup(IMessagingListener listener) {
+    private void setup(IMessagingListener listener) {
         AsyncMethodExecutor.execute(() -> {
             try {
+                LoggerManager.getLogger(WebsocketService.class).info("Websocket setup event was called");
                 Configurations conf = ConfigurationsManager.getLocalConfig();
                 Locale l = App.getContext().getResources().getConfiguration().getLocales().get(0);
                 String pathWithPort = conf.getServerPath();
@@ -39,9 +39,13 @@ public class WebsocketService implements IMessagingService {
     @Override
     public void setListener(IMessagingListener listener, boolean callbackToListener) {
         LoggerManager.getLogger(WebsocketService.class).info("Setting messaging listener");
-        socket.setListener(listener);
-        if (callbackToListener && listener != null) {
-            listener.onConnectionSuccess();
+        if(socket == null || !socket.firstConnectionDone) {
+            setup(listener);
+        } else {
+            socket.setListener(listener);
+            if (callbackToListener && listener != null) {
+                listener.onConnectionSuccess();
+            }
         }
     }
 

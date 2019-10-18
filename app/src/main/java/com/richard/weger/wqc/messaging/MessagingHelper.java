@@ -3,7 +3,6 @@ package com.richard.weger.wqc.messaging;
 import android.content.res.Resources;
 
 import com.richard.weger.wqc.R;
-import com.richard.weger.wqc.helper.AlertHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.messaging.firebird.FirebaseHelper;
 import com.richard.weger.wqc.messaging.websocket.MessagingDTO;
@@ -34,8 +33,7 @@ public class MessagingHelper {
     public static ErrorResult getError(){
         Resources r;
         r = App.getContext().getResources();
-        return new ErrorResult(ErrorResult.ErrorCode.CLIENT_UPDATE_SERVICE_CONNECTION_FAILED,
-                r.getString(R.string.pushMessageConnectionFailed), ErrorResult.ErrorLevel.SEVERE, FirebaseHelper.class);
+        return new ErrorResult(ErrorResult.ErrorCode.CLIENT_UPDATE_SERVICE_CONNECTION_FAILED, r.getString(R.string.pushMessageConnectionFailed), ErrorResult.ErrorLevel.SEVERE);
     }
 
     public static void failureHandler(Exception e, boolean subscribeError){
@@ -54,10 +52,16 @@ public class MessagingHelper {
 
     }
 
-    public static void handleData(MessagingDTO dto, IMessagingListener delegate){
+    public static synchronized void handleData(MessagingDTO dto, IMessagingListener delegate){
         if (delegate != null) {
+            String messageId = dto.getMessageId();
+            if(App.wasProcessed(messageId)) {
+                LoggerManager.getLogger(FirebaseHelper.class).info("An already processed message was again received from the server and will be ignored. id: " + messageId);
+                return;
+            }
             String qrCode = dto.getQrcode();
             if (qrCode != null && qrCode.equals(ProjectHelper.getQrCode())) {
+                App.markAsProcessed(messageId);
                 LoggerManager.getLogger(FirebaseHelper.class).info("Qr code matches with opened project.");
                 try {
                     long id = -1L;
@@ -68,12 +72,13 @@ public class MessagingHelper {
                     if (dto.getParentId() != null) {
                         parentId = dto.getParentId();
                     }
-                    boolean shouldNotify = delegate.shouldNotifyChange(qrCode, id, parentId);
-                    if (shouldNotify) {
-                        Resources r;
-                        r = App.getContext().getResources();
-                        AlertHelper.showNotification(r.getString(R.string.projectUpdatedMessage), qrCode);
-                    }
+//                    boolean shouldNotify = false;
+                    delegate.shouldNotifyChange(qrCode, id, parentId);
+//                    if (shouldNotify) {
+//                        Resources r;
+//                        r = App.getContext().getResources();
+//                        AlertHelper.showNotification(r.getString(R.string.projectUpdatedMessage), qrCode);
+//                    }
                 } catch (Exception ex) {
                     LoggerManager.log(MessagingHelper.class, "Error during push message id parse!\n" + ex.getMessage(), ErrorResult.ErrorLevel.SEVERE);
                 }

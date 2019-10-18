@@ -28,13 +28,13 @@ import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.LoggerManager;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.DRAWING_NUMBER_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.PART_NUMBER_KEY;
@@ -42,6 +42,9 @@ import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_NUMBER_KEY
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREDOWNLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTURESREQUEST_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREUPLOAD_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_ITEMPICTURESREQUEST_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_PDFDOCUMENTSREQUEST_KEY;
+import static com.richard.weger.wqc.appconstants.AppConstants.REST_PDFREPORTDOWNLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTUREUPLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
 import static java.io.File.separatorChar;
@@ -59,7 +62,7 @@ public class ProjectHelper {
         if(values == null){
             return new ErrorResult(ErrorResult.ErrorCode.QR_TRANSLATION_FAILED,
                     App.getContext().getResources().getString(R.string.invalidQrCodeString),
-                    ErrorResult.ErrorLevel.SEVERE, ProjectHelper.class);
+                    ErrorResult.ErrorLevel.SEVERE);
         }
         ProjectHelper.qrCode = qrCode;
         return new EmptyResult();
@@ -118,7 +121,9 @@ public class ProjectHelper {
     }
 
     public static void projectLoad(RestTemplateHelper.RestResponseHandler handler, boolean toggleWaitScreen){
-        logger.info("Started project load request routine");
+        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+        StackTraceElement caller = stackTraceElements[5];
+        logger.info("Started project load request routine (Caller: " + caller.getClassName() + "." + caller.getMethodName() + ":" + caller.getLineNumber() + ").");
         Resources r = App.getContext().getResources();
         String message = String.format(r.getConfiguration().getLocales().get(0), "%s, %s",
                 r.getString(R.string.projectLoadingMessage),
@@ -152,7 +157,17 @@ public class ProjectHelper {
         }
     }
 
-    public static List<Item> itemsWithMissingPictures(Project project, boolean forceRefresh){
+    public static List<Item> getReportItems(Project project) {
+        List<Item> ret = project.getDrawingRefs().stream()
+                .flatMap(d -> d.getReports().stream()
+                        .filter(r -> r instanceof ItemReport)
+                        .map(r -> (ItemReport) r)
+                        .flatMap(r -> r.getItems().stream()))
+                .collect(Collectors.toList());
+        return ret;
+    }
+
+    public static List<Item> itemsWithMissingPictures(Project project){
         List<Item> picList = new ArrayList<>();
         for(Report report : project.getDrawingRefs().get(0).getReports()) {
             if (report instanceof ItemReport) {
@@ -161,13 +176,29 @@ public class ProjectHelper {
                     String picsDirPath = StringHelper.getPicturesFolderPath(project);
                     String picFileName = item.getPicture().getFileName();
                     String filePath = picsDirPath.concat(picFileName);
-                    if (!FileHelper.isValidFile(filePath) || forceRefresh) {
+                    if (!FileHelper.isValidFile(filePath)) {
+                        File f = new File(filePath);
+
+                    } else {
                         picList.add(item);
                     }
                 }
             }
         }
         return picList;
+    }
+
+    public List<String> neededReportFiles(Project project) {
+        List<String> ret;
+
+        ret = project.getDrawingRefs().stream()
+                .flatMap(d -> d.getReports().stream()
+                        .filter(r -> r instanceof CheckReport)
+                        .map(r -> (CheckReport) r)
+                        .map(CheckReport::getFileName))
+                .collect(Collectors.toList());
+
+        return ret;
     }
 
     public static int validReportFilesCount(Project project){
@@ -230,51 +261,89 @@ public class ProjectHelper {
         }
     }
 
-    public static void getGenPicturesList(RestTemplateHelper.RestResponseHandler delegate, Project project, boolean deleteOldFiles){
-        logger.info("Started routine to check if general pictures download is necessary");
-        if(deleteOldFiles) {
-            String picFolderPath = StringHelper.getPicturesFolderPath(project);
-            if (FileHelper.isValidFile(picFolderPath)) {
-                File picFolder = new File(picFolderPath);
-                for (File f : picFolder.listFiles()) {
-                    if (f.getName().contains("QP")) {
-                        FileHelper.fileDelete(f.getAbsolutePath());
-                    }
-                }
-            }
-        }
-        FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_GENPICTURESREQUEST_KEY, delegate);
-        resolver.getGeneralPicturesList(StringHelper.getQrText(project));
+    public static void getPdfsList(RestTemplateHelper.RestResponseHandler delegate) {
+        FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_PDFDOCUMENTSREQUEST_KEY, delegate);
+        resolver.getPdfsList(getQrCode());
     }
 
-    public static int getGenPictures(RestTemplateHelper.RestResponseHandler delegate, List<FileDTO> pictures, List<FileRestTemplateHelper> queue, Project project){
-        String code = StringHelper.getQrText(project);
-        int cnt = 0;
-        for(FileDTO dto : pictures) {
-            String fileName = dto.getFileName();
-            boolean isNeeded = true;
-            if(fileName.length() > 0) {
-                File picturesFolder = new File(StringHelper.getPicturesFolderPath(project));
-                if(picturesFolder.exists()) {
-                    for (File f : picturesFolder.listFiles()) {
-                        if (f.getName().contains(fileName)) {
-                            isNeeded = f.length() != dto.getFileSize();
-                            break;
+    public static void getItemPicturesList(RestTemplateHelper.RestResponseHandler delegate) {
+        FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_ITEMPICTURESREQUEST_KEY, delegate);
+        resolver.getItemPicturesList(getQrCode());
+    }
+
+    public static void getGenPicturesList(RestTemplateHelper.RestResponseHandler delegate){
+        FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_GENPICTURESREQUEST_KEY, delegate);
+        resolver.getGeneralPicturesList(getQrCode());
+    }
+
+    private static boolean shouldDeletePicture(List<FileDTO> pictures, File f, String suffixToTest) {
+        return pictures.stream().noneMatch(p -> p.getFileName().equals(f.getName())) && (suffixToTest == null || f.getName().contains(suffixToTest));
+    }
+
+    public static List<String> getObsoletePdfDocuments(List<FileDTO> resourcesToCheck, Project project) {
+        return findObsoleteResources(resourcesToCheck, StringHelper.getPdfsFolderPath(project), null);
+    }
+
+    public static List<String> getObsoleteItemPictures(List<FileDTO> resourcesToCheck, Project project) {
+        return findObsoleteResources(resourcesToCheck, StringHelper.getPicturesFolderPath(project), "Q");
+    }
+
+    public static List<String> getObsoleteGenPictures(List<FileDTO> resourcesToCheck, Project project){
+        return findObsoleteResources(resourcesToCheck, StringHelper.getPicturesFolderPath(project), "QP");
+    }
+
+    private static List<String> findObsoleteResources(List<FileDTO> resourcesToCheck, String rootFolder, String suffixToTest){
+        List<String> toDownload = new ArrayList<>();
+        if(resourcesToCheck != null) {
+            for (FileDTO dto : resourcesToCheck) {
+                String fileName = dto.getFileName();
+                boolean isNeeded = true;
+                if (fileName.length() > 0) {
+                    File picturesFolder = new File(rootFolder);
+                    if (picturesFolder.exists()) {
+                        for (File f : picturesFolder.listFiles()) {
+                            if (f.getName().contains(fileName)) {
+                                isNeeded = f.length() != dto.getFileSize();
+                                break;
+                            } else if (shouldDeletePicture(resourcesToCheck, f, suffixToTest)) {
+                                FileHelper.fileDelete(f.getAbsolutePath());
+                            }
                         }
                     }
-                }
-                if(isNeeded){
-                    cnt ++;
-                    if (fileName.contains("/")) {
-                        fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
+                    if (isNeeded) {
+                        if (fileName.contains("/")) {
+                            fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
+                        }
+                        toDownload.add(fileName);
                     }
-                    FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_GENPICTUREDOWNLOAD_KEY, delegate);
-                    FileRestTemplateHelper helper = resolver.getPicture(fileName, code);
-                    queue.add(helper);
                 }
             }
         }
-        return cnt;
+        return toDownload;
+    }
+
+    public static void getItemPictures(List<String> fileNames, List<FileRestTemplateHelper> queue, RestTemplateHelper.RestResponseHandler delegate) {
+        for(String fileName : fileNames) {
+            FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_GENPICTUREDOWNLOAD_KEY, delegate);
+            FileRestTemplateHelper helper = resolver.getPicture(fileName, getQrCode());
+            queue.add(helper);
+        }
+    }
+
+    public static void getGenPictures(List<String> fileNames, List<FileRestTemplateHelper> queue, RestTemplateHelper.RestResponseHandler delegate) {
+        for(String fileName : fileNames) {
+            FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_GENPICTUREDOWNLOAD_KEY, delegate);
+            FileRestTemplateHelper helper = resolver.getPicture(fileName, getQrCode());
+            queue.add(helper);
+        }
+    }
+
+    public static void getPdfDocuments(List<String> fileNames, List<FileRestTemplateHelper> queue, RestTemplateHelper.RestResponseHandler delegate) {
+        for (String fileName : fileNames) {
+            FileRequestParametersResolver resolver = new FileRequestParametersResolver(REST_PDFREPORTDOWNLOAD_KEY, delegate);
+            FileRestTemplateHelper helper = resolver.getPdf(fileName, getQrCode());
+            queue.add(helper);
+        }
     }
 
     public static boolean hasPendingTasks(List<EntityRestTemplateHelper> entityHelperQueue, List<FileRestTemplateHelper> fileHelperQueue, boolean ignoreLast){

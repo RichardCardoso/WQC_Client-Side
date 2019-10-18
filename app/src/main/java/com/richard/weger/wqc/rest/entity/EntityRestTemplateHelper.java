@@ -51,13 +51,13 @@ public class EntityRestTemplateHelper<T extends DomainEntity> extends RestTempla
                     result = new SingleObjectResult<>(request.getClazz(), response.getBody());
                     appVersion = response.getHeaders().getFirst("version");
                 } else {
-                    result = new ErrorResult(ErrorResult.ErrorCode.INVALID_ENTITYRETURNTYPE,  ErrorUtil.getUnknownErrorMessage(), ErrorResult.ErrorLevel.SEVERE, EntityRestTemplateHelper.class);
+                    result = new ErrorResult(ErrorResult.ErrorCode.INVALID_ENTITYRETURNTYPE,  ErrorUtil.getUnknownErrorMessage(), ErrorResult.ErrorLevel.SEVERE);
                 }
                 if (!(result instanceof ErrorResult) && (appVersion == null || !appVersion.equals(App.getExpectedVersion()))){
                     result = new ErrorResult(ErrorResult.ErrorCode.INVALID_APP_VERSION,
                             App.getContext().getResources().getString(R.string.invalidVersionMessage)
                             + " (" + appVersion + " x " + App.getExpectedVersion() + ")",
-                            ErrorResult.ErrorLevel.SEVERE, getClass());
+                            ErrorResult.ErrorLevel.SEVERE);
                 }
                 break;
             case POST_METHOD:
@@ -76,7 +76,7 @@ public class EntityRestTemplateHelper<T extends DomainEntity> extends RestTempla
                 result = new EmptyResult();
                 break;
             default:
-                result = new ErrorResult(ErrorResult.ErrorCode.INVALID_REST_METHOD,  ErrorUtil.getUnknownErrorMessage(), ErrorResult.ErrorLevel.SEVERE, EntityRestTemplateHelper.class);
+                result = new ErrorResult(ErrorResult.ErrorCode.INVALID_REST_METHOD,  ErrorUtil.getUnknownErrorMessage(), ErrorResult.ErrorLevel.SEVERE);
         }
         return result;
     }

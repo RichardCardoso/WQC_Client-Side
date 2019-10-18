@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 public class MyJsonDateSerializer implements JsonSerializer<Date>, JsonDeserializer<Date> {
 
     public MyJsonDateSerializer(){
-        logger = LoggerManager.getLogger(getClass());
+        logger = LoggerManager.getLogger(MyJsonDateSerializer.class);
     }
 
     private Logger logger;

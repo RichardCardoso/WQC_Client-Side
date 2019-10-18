@@ -13,6 +13,8 @@ import androidx.core.app.NotificationManagerCompat;
 import com.google.android.gms.common.util.Strings;
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.util.App;
+import com.richard.weger.wqc.util.LoggerManager;
+import com.richard.weger.wqc.util.Method;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,12 +54,12 @@ public class AlertHelper {
 
         try {
             builder.create().show();
-        } catch (Exception ignored){
-
+        } catch (Exception ex){
+            LoggerManager.getLogger(AlertHelper.class).warning(ex.getMessage());
         }
     }
 
-    public static void showMessage(Context delegate, String title, String message, String positiveTag, String negativeTag, App.Method positiveCallback, App.Method negativeCallback){
+    public static void showMessage(Context delegate, String title, String message, String positiveTag, String negativeTag, Method positiveCallback, Method negativeCallback){
         AlertDialog.Builder builder = new AlertDialog.Builder(delegate);
         builder.setCancelable(false);
         if(title != null){
@@ -85,7 +87,7 @@ public class AlertHelper {
         } catch (Exception ignored){}
     }
 
-    public static void showMessage(Context delegate, String message, String positiveTag, App.Method method){
+    public static void showMessage(Context delegate, String message, String positiveTag, Method method){
         AlertDialog.Builder builder = new AlertDialog.Builder(delegate);
         builder.setCancelable(false);
         if(message != null){

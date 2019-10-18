@@ -3,7 +3,6 @@ package com.richard.weger.wqc.appconstants;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TimeZone;
 
 public class AppConstants{
 	
@@ -54,6 +53,8 @@ public class AppConstants{
 	public final static String GENERAL_PICTURE_MODE = "generalPictureMode";
 	public final static String PICTURE_FILEPATH_KEY = "pictureFilenameKey";
 	public final static String PARAMCONFIG_KEY = "paramConfigKey";
+	public final static String PICTURES_LIST_KEY = "picturesListKey";
+	public final static String PICTURE_START_INDEX_KEY = "genpictureStartIndexKey";
 
 	public final static int CONFIG_SCREEN_KEY = 0;
 	public final static int CONTROL_CARD_REPORT_ID = 1;
@@ -63,9 +64,10 @@ public class AppConstants{
 	public final static int PICTURE_VIEWER_SCREEN_ID = 5;
 	public final static int PROJECT_FINISH_SCREEN_ID = 6;
 	public final static int INTRINSIC_PERMISSIONS_CODE = 7;
-	public final static int PICTURE_LIST_SCREEN_ID = 8;
+	public final static int GENPICTURE_LIST_SCREEN_ID = 8;
 	public final static int ITEM_REPORT_EDIT_SCREEN_KEY = 9;
 	public final static int WELCOME_ACTIVITY_SCREEN_KEY = 10;
+	public final static int GENPICTURE_CAPTURE_SCREEN_ID = 11;
 
 	public final static String RESTART_KEY = "restartKey";
 
@@ -76,6 +78,8 @@ public class AppConstants{
 	public final static String REST_PICTURESREQUEST_KEY = "httpPicturesRequestKey";
 	public final static String REST_PICTUREDOWNLOAD_KEY = "httpPictureDownloadKey";
 	public final static String REST_PICTUREUPLOAD_KEY = "httpPictureUploadKey";
+	public final static String REST_PDFDOCUMENTSREQUEST_KEY = "httpPdfDocumentsRequestKey";
+	public final static String REST_ITEMPICTURESREQUEST_KEY = "httpItemPicturesRequestKey";
 	public final static String REST_GENPICTURESREQUEST_KEY = "httpGenPicturesRequestKey";
 	public final static String REST_GENPICTUREDOWNLOAD_KEY = "httpGenPictureDownloadKey";
 	public final static String REST_GENPICTUREUPLOAD_KEY = "httpGenPictureUploadKey";

@@ -65,7 +65,7 @@ public class RestTemplateResponseErrorHandler implements ResponseErrorHandler {
             level = ErrorResult.ErrorLevel.SEVERE;
         }
 
-        err = new ErrorResult(code, description, level, getClass());
+        err = new ErrorResult(code, description, level);
         err.setRequestCode(requestCode);
 
         throw new ServerException(err);

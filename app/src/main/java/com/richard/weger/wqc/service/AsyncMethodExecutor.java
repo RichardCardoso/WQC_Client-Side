@@ -2,27 +2,46 @@ package com.richard.weger.wqc.service;
 
 import android.os.AsyncTask;
 
-import com.richard.weger.wqc.util.App;
+import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.util.LoggerManager;
+import com.richard.weger.wqc.util.Method;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+public class AsyncMethodExecutor extends AsyncTask<Method, Void, Boolean> {
 
-public class AsyncMethodExecutor extends AsyncTask<App.Method, Void, Boolean> {
+    public PostExecutionListener getListener() {
+        return listener;
+    }
+
+    public void setListener(PostExecutionListener listener) {
+        this.listener = listener;
+    }
+
+    public interface PostExecutionListener {
+        void onPostExecute(Boolean result);
+    }
+
+    private PostExecutionListener listener;
 
     @Override
-    protected Boolean doInBackground(App.Method... methods) {
+    protected Boolean doInBackground(Method... methods) {
         try {
-            App.Method m;
+            Method m;
             m = methods[0];
             m.execute();
             return true;
         } catch (Exception e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            String ex = sw.toString();
+            String ex = StringHelper.getStackTraceAsString(e);
             LoggerManager.getLogger(AsyncMethodExecutor.class).severe(ex);
             return false;
         }
     }
+
+
+    @Override
+    protected void onPostExecute(Boolean result){
+        if(listener != null){
+            listener.onPostExecute(result);
+        }
+    }
+
 }

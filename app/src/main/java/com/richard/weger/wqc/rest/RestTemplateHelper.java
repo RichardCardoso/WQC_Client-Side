@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import com.richard.weger.wqc.converter.MyHttpMessageConverter;
 import com.richard.weger.wqc.exception.ServerException;
 import com.richard.weger.wqc.helper.ActivityHelper;
+import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
@@ -19,8 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.URI;
 import java.util.logging.Logger;
 
@@ -36,7 +35,7 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
     public RestTemplateHelper(RestResponseHandler delegate, boolean toggleControlsOnCompletion){
         this.delegate = delegate;
         this.toggleControlsOnCompletion = toggleControlsOnCompletion;
-        logger = LoggerManager.getLogger(getClass());
+        logger = LoggerManager.getLogger(RestTemplateHelper.class);
     }
 
     protected abstract AbstractResult executionStrategy(RestTemplate restTemplate, Params request) throws Exception;
@@ -58,7 +57,7 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
             try {
                 delegate.runOnUiThread(() -> ActivityHelper.disableHandlerControls(delegate, true));
             } catch (Exception ex) {
-                warnUnknownException(ex);
+                fatalUnknownException(ex);
             }
 
              result = executionStrategy(restTemplate, request);
@@ -66,13 +65,14 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
         } catch (ServerException ex){
             return ex.getErr();
         } catch (Exception ex){
-            warnUnknownException(ex);
+            fatalUnknownException(ex);
         }
 
         if(result == null) {
-            result = new ErrorResult(ErrorResult.ErrorCode.REST_OPERATION_ERROR, ErrorUtil.getUnknownErrorMessage(), ErrorResult.ErrorLevel.SEVERE, getClass());
+            result = new ErrorResult(ErrorResult.ErrorCode.REST_OPERATION_ERROR, ErrorUtil.getUnknownErrorMessage(), ErrorResult.ErrorLevel.SEVERE);
         }
         result.setRequestCode(requestCode);
+        result.setRequest(req[0]);
 
         return result;
     }
@@ -81,14 +81,6 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
     protected String requestCode;
     private Logger logger;
     private boolean toggleControlsOnCompletion;
-
-    private String getStackTrace(Exception ex){
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        ex.printStackTrace(pw);
-        return sw.toString();
-    }
-
 
     @Override
     protected final void onPostExecute(AbstractResult result) {
@@ -102,18 +94,19 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
         try {
             delegate.RestTemplateCallback(result);
         } catch (Exception ex){
-            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.UNKNOWN_ERROR, ErrorUtil.getUnknownErrorMessage(), ErrorResult.ErrorLevel.SEVERE, getClass());
+            String message = StringHelper.getStackTraceAsString(ex);
+            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.REST_POST_EXECUTOR_ERROR, message, ErrorResult.ErrorLevel.SEVERE);
             ErrorResponseHandler.handle(err, App.getContext(), null);
             try{
                 delegate.onFatalError();
             } catch (Exception e2) {
-                warnUnknownException(e2);
+                fatalUnknownException(e2);
             }
         }
     }
 
-    private void warnUnknownException(Exception ex){
-        logger.warning(getStackTrace(ex));
+    private void fatalUnknownException(Exception ex){
+        logger.severe(StringHelper.getStackTraceAsString(ex));
     }
 
     protected final <E, S> ResponseEntity<S> getResponseEntity(Class<S> responseClazz, HttpEntity<E> entity, URI uri, HttpMethod method, RestTemplate restTemplate) {
