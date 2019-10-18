@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2">
+    <string msgid="7903180715631665059" name="abc_action_bar_home_description">"Zur Startseite"</string>
+    <string msgid="6794660482873516081" name="abc_action_bar_up_description">"Nach oben"</string>
+    <string msgid="1155814932213556626" name="abc_action_menu_overflow_description">"Weitere Optionen"</string>
+    <string msgid="2571498368472823490" name="abc_action_mode_done">"Fertig"</string>
+    <string msgid="3732416590524162402" name="abc_activity_chooser_view_see_all">"Alle anzeigen"</string>
+    <string msgid="1798588241954930982" name="abc_activitychooserview_choose_application">"App auswählen"</string>
+    <string msgid="3403923230105792483" name="abc_capital_off">"AUS"</string>
+    <string msgid="7831734969929204599" name="abc_capital_on">"AN"</string>
+    <string msgid="5725160506500770567" name="abc_menu_alt_shortcut_label">"Alt +"</string>
+    <string msgid="944415252197684443" name="abc_menu_ctrl_shortcut_label">"Strg +"</string>
+    <string msgid="129742188101734366" name="abc_menu_delete_shortcut_label">"Löschen"</string>
+    <string msgid="6840127756824236027" name="abc_menu_enter_shortcut_label">"Eingabetaste"</string>
+    <string msgid="4974283687810130415" name="abc_menu_function_shortcut_label">"Funktionstaste +"</string>
+    <string msgid="8046416353848716905" name="abc_menu_meta_shortcut_label">"Meta-Taste +"</string>
+    <string msgid="3271697756921353410" name="abc_menu_shift_shortcut_label">"Umschalttaste +"</string>
+    <string msgid="2304645930658438191" name="abc_menu_space_shortcut_label">"Leertaste"</string>
+    <string msgid="8327365089695024394" name="abc_menu_sym_shortcut_label">"Sym-Taste +"</string>
+    <string msgid="3570106412128999382" name="abc_prepend_shortcut_label">"Menütaste +"</string>
+    <string msgid="940844115270746197" name="abc_search_hint">"Suchen…"</string>
+    <string msgid="1769270744562318534" name="abc_searchview_description_clear">"Suchanfrage löschen"</string>
+    <string msgid="908784302972860853" name="abc_searchview_description_query">"Suchanfrage"</string>
+    <string msgid="5466662225065974044" name="abc_searchview_description_search">"Suche"</string>
+    <string msgid="8203855622131699655" name="abc_searchview_description_submit">"Anfrage senden"</string>
+    <string msgid="3478748990613108725" name="abc_searchview_description_voice">"Sprachsuche"</string>
+    <string msgid="2650565705514630347" name="abc_shareactionprovider_share_with">"Teilen mit"</string>
+    <string msgid="9009661856846212431" name="abc_shareactionprovider_share_with_application">"Mit <ns1:g id="APPLICATION_NAME">%s</ns1:g> teilen"</string>
+    <string msgid="6389460216547290468" name="abc_toolbar_collapse_description">"Minimieren"</string>
+    <string name="accessDisabledMessage">Der Systemzugriff für dieses Gerät ist deaktiviert. Bitte wenden Sie sich an Ihren Systemadministrator.</string>
+    <string name="addeddateTag">Hinzugefügt zu</string>
+    <string name="app_name">WQC</string>
+    <string name="automationComponentsButton">Automatisierungskomponenten</string>
+    <string name="beginServerConnectionMessage">Versuchen, den Server zu kontaktieren.  Bitte warte eine Weile.</string>
+    <string name="beginUploadQuestion">Möchten Sie die aufgenommenen Fotos hochladen?</string>
+    <string name="btnAddAltText">Abbrechen hinzufügen</string>
+    <string name="btnAddMark">Markierung</string>
+    <string name="btnContinueProject">Bestehendes Projekt fortsetzen</string>
+    <string name="btnErasePicture">Bild löschen</string>
+    <string name="btnGetProjectFromServer">Beende das Projekt vom Server</string>
+    <string name="btnNextText">></string>
+    <string name="btnPreviousText">&lt;</string>
+    <string name="btnReportSubmit">Berichte einreichen</string>
+    <string name="btnTakePicture">Ein Bild machen</string>
+    <string name="btnUndo">Rückgängig machen</string>
+    <string name="cablelessDatasheetLabel">Datenblatt</string>
+    <string name="cablelessDrawingLabel">Zeichnung</string>
+    <string name="cancelButton">Stornieren</string>
+    <string name="cancelQuestion">Möchten Sie den aktuellen Vorgang abbrechen?</string>
+    <string name="cancelTag">Abbrechen</string>
+    <string name="changesSavedMessage">Änderungen erfolgreich gespeichert!</string>
+    <string name="clientNameInformMessage">Bitte geben Sie den Kundennamen an</string>
+    <string name="closeQuestion">Möchten Sie die App schließen?</string>
+    <string name="closeTag">Schließen</string>
+    <string name="commentsLabel">Kommentare hier …</string>
+    <string msgid="8585111718777012708" name="common_google_play_services_enable_button">"Aktivieren"</string>
+    <string msgid="7045129128108380659" name="common_google_play_services_enable_text">"<ns1:g id="APP_NAME">%1$s</ns1:g> funktioniert erst nach der Aktivierung der Google Play-Dienste."</string>
+    <string msgid="3147157405986503375" name="common_google_play_services_enable_title">"Google Play-Dienste aktivieren"</string>
+    <string msgid="9115728400623041681" name="common_google_play_services_install_button">"Installieren"</string>
+    <string msgid="8179894293032530091" name="common_google_play_services_install_text">"Zur Nutzung von <ns1:g id="APP_NAME">%1$s</ns1:g> sind die Google Play-Dienste erforderlich, die auf deinem Gerät nicht installiert sind."</string>
+    <string msgid="7442193194585196676" name="common_google_play_services_install_title">"Google Play-Dienste installieren"</string>
+    <string msgid="4293541511340436975" name="common_google_play_services_notification_channel_name">"Verfügbarkeit von Google Play-Diensten"</string>
+    <string msgid="180394615667698242" name="common_google_play_services_notification_ticker">"Fehler bei Zugriff auf Google Play-Dienste"</string>
+    <string msgid="2518680582564677258" name="common_google_play_services_unknown_issue">"<ns1:g id="APP_NAME">%1$s</ns1:g> hat Probleme mit Google Play-Diensten. Bitte versuche es noch einmal."</string>
+    <string msgid="5501187292256987189" name="common_google_play_services_unsupported_text">"Zur Nutzung von <ns1:g id="APP_NAME">%1$s</ns1:g> sind Google Play-Dienste erforderlich, die auf deinem Gerät nicht unterstützt werden."</string>
+    <string msgid="8172070149091615356" name="common_google_play_services_update_button">"Aktualisieren"</string>
+    <string msgid="7773943415006962566" name="common_google_play_services_update_text">"<ns1:g id="APP_NAME">%1$s</ns1:g> wird nur ausgeführt, wenn du die Google Play-Dienste aktualisierst."</string>
+    <string msgid="8706675115216073244" name="common_google_play_services_update_title">"Google Play-Dienste aktualisieren"</string>
+    <string msgid="7894275749778928941" name="common_google_play_services_updating_text">"Zur Nutzung von <ns1:g id="APP_NAME">%1$s</ns1:g> sind Google Play-Dienste erforderlich, die gerade aktualisiert werden."</string>
+    <string msgid="2804989272736383918" name="common_google_play_services_wear_update_text">"Eine neue Version der Google Play-Dienste wird benötigt. Diese wird in Kürze automatisch aktualisiert."</string>
+    <string msgid="5201977337835724196" name="common_open_on_phone">"Auf Smartphone öffnen"</string>
+    <string msgid="3441753203274453993" name="common_signin_button_text">"Anmelden"</string>
+    <string msgid="669893613918351210" name="common_signin_button_text_long">"Über Google anmelden"</string>
+    <string name="configButton">Konfig</string>
+    <string name="configLoadingMessage">Konfigurationen werden geladen</string>
+    <string name="configScreenTitle">WQC-Parameter</string>
+    <string name="confirmationNeeded">Bitte bestätigen Sie Ihre Aktion</string>
+    <string name="controlCardLabel">Kontrollkarte</string>
+    <string name="controlCardReportButton">Kontrollkarte</string>
+    <string name="dataRecoverError">Die angeforderten Daten konnten nicht wiederhergestellt werden. Bitte versuche es später erneut.</string>
+    <string name="datasheetCheckButton">Datenblatt</string>
+    <string name="deviceNotAuthorizedMessage">Für Ihr Gerät wurde keine Autorisierung gefunden. Bitte zeigen Sie diesen Bildschirm dem Systemadministrator.</string>
+    <string name="drawingCheckButton">Zeichnung</string>
+    <string name="drawingLabel">Zeichnung</string>
+    <string name="drawingNumberPrefix">Zeichnungsnummer:</string>
+    <string name="editCommentsHint">Kommentare hier …</string>
+    <string name="elTag">EL</string>
+    <string name="electricalReportButton">Elektrischer Bericht</string>
+    <string name="emptyFieldsError">Kann nicht fortgesetzt werden, wenn leere Felder vorhanden sind</string>
+    <string name="errorMsgMalformedRequest">Es liegt ein Problem mit der aktuellen Anforderung vor.</string>
+    <string name="exitButton">Ausgang</string>
+    <string name="factoryTestReportButton">Werksprüfung</string>
+    <string msgid="4133737464567140336" name="fcm_fallback_notification_channel_label">"Sonstiges"</string>
+    <string name="fileNotFoundMessage">Diese Datei kann derzeit nicht gefunden oder abgerufen werden. Bitte kontaktieren Sie Ihren Systemadministrator!</string>
+    <string name="fileSelectMessage">Wählen Sie ein Projekt aus der Liste</string>
+    <string name="finishedTag">Fertig</string>
+    <string name="getMorePicturesTag">Möchten Sie mehr Fotos machen?</string>
+    <string name="invalidDocumentCodesMessage">Nicht in der Lage, fortzufahren. Bitte überprüfen Sie die App-Parameter (Zeichencode + Erweiterung und Datenblattcode + Erweiterung)</string>
+    <string name="invalidEntityError">Es können keine Projekt- / Berichtsdaten abgerufen werden.</string>
+    <string name="invalidItemIdError">Die Daten des ausgewählten Elements können nicht abgerufen werden.</string>
+    <string name="invalidPasswordMessage">Ungültiges Passwort!</string>
+    <string name="invalidPictureFilenameMessage">Die Änderungen können aufgrund eines ungültigen Bilddateinamens nicht gespeichert werden!</string>
+    <string name="invalidQrCodeString">Das angegebene qr-Code-Format ist ungültig</string>
+    <string name="invalidServerFileMessage">Die Datei auf dem Server ist ungültig / beschädigt. Bitte ersetzen Sie es durch ein gültiges und versuchen Sie es erneut.</string>
+    <string name="invalidUsernameMessage">Der Benutzername dieses Geräts ist ungültig. Bitte wenden Sie sich an Ihren Systemadministrator.</string>
+    <string name="invalidVersionMessage">Die Version des Servers stimmt nicht mit der Version des Clients überein!</string>
+    <string name="itemTag">Artikel</string>
+    <string name="magTag">MG</string>
+    <string name="messagingServiceConnectingMessage">Herstellen einer Verbindung zum Nachrichtendienst</string>
+    <string name="mustWaitCompletion">Bitte warten Sie, bis die aktuelle Aufgabe abgeschlossen ist</string>
+    <string name="newPicturesTag">Neue Bilder</string>
+    <string name="noDataTag">Keine Daten</string>
+    <string name="noMarksMessage">Sie können einen Bericht, der keine Punkte enthält, nicht als abgeschlossen festlegen!</string>
+    <string name="noPermissionsGrantedTitle">Berechtigungen fehlen</string>
+    <string name="noRolesMessage">Die Rollenliste dieses Geräts ist leer. Bitte wenden Sie sich an Ihren Systemadministrator.</string>
+    <string name="noTag">Nein</string>
+    <string name="notImplementedMessage">Noch nicht implementiert!</string>
+    <string name="okTag">Ok</string>
+    <string name="operationProgressLabel">Betriebsfortschritt:</string>
+    <string name="overallProgressLabel">Gesamtfortschritt:</string>
+    <string name="partLabel">Teil</string>
+    <string name="partNumberPrefix">Artikelnummer:</string>
+    <string name="passwordProtectedTitle">Bitte geben Sie das Passwort ein</string>
+    <string name="pendingItemsLabel">Gegenstände in Bearbeitung</string>
+    <string name="pendingItemsMessage">Sie können keinen Bericht als abgeschlossen festlegen, der noch nicht überprüfte Elemente enthält!</string>
+    <string name="permissionsNeededMessage">Nicht alle erforderlichen Berechtigungen wurden der App gewährt. Ohne sie ist es unmöglich fortzufahren. Die App wird jetzt geschlossen.</string>
+    <string name="photoCaptureError">Fehler beim Einstellen der Fotoaufnahme!</string>
+    <string name="pictureRemoveQuestion">Möchten Sie dieses Bild aus der Upload-Liste entfernen?</string>
+    <string name="picturesListTag">" Allgemeine Bilderliste"</string>
+    <string name="picturesUploadTag">Bilder hochladen</string>
+    <string name="pleaseWaitMessage">Bitte warte eine Weile…</string>
+    <string name="projectCreationRequestFailed">Eine Anfrage für eine Projekterstellung ist fehlgeschlagen.</string>
+    <string name="projectFinishButton">Fertig</string>
+    <string name="projectFinishConfirmation">Sind Sie sicher, dass Sie das Projekt beenden möchten?</string>
+    <string name="projectInfoTitle">Projektinfo</string>
+    <string name="projectLabel">Projekt</string>
+    <string name="projectLoadingMessage">Projektinformationen werden geladen</string>
+    <string name="projectNumberPrefix">Projektnummer:</string>
+    <string name="projectUpdatedMessage">Projekt aktualisiert</string>
+    <string name="pushMessageConnectionFailed">Verbindung zum Echtzeit-Aktualisierungsdienst fehlgeschlagen. App wird jetzt geschlossen.</string>
+    <string name="qrScanButton">QR-Code scannen</string>
+    <string name="qrScanQuestion">Möchten Sie einen neuen QR-Code-Scan durchführen?</string>
+    <string name="qrWelcome">Willkommen bei der Weger Qualitätskontrolle!</string>
+    <string name="rdAproved">Genehmigt</string>
+    <string name="rdNotAplicable">Unzutreffend</string>
+    <string name="rdNotAproved">Nicht bestätigt</string>
+    <string name="rdNotChecked">Nicht geprüft</string>
+    <string name="remainingTag">" Restliche Artikel: %d"</string>
+    <string name="removeTag">Löschen</string>
+    <string name="reportButtonWidth">200dp</string>
+    <string name="reportComentsHint">Allgemeine Kommentare hier …</string>
+    <string name="reportFinishMessage">Möchten Sie diesen Bericht als abgeschlossen festlegen? Es sind keine Änderungen zulässig, solange der Bericht als abgeschlossen festgelegt ist!</string>
+    <string name="reportPageLoadFailed">Fehler beim Laden der Seite dieses Berichts!</string>
+    <string name="reportUnfinishMessage">Möchten Sie diesen Bericht als nicht abgeschlossen festlegen? Dadurch kann der Bericht bearbeitet werden!</string>
+    <string name="retrievingFilesTag">" 28/5000 Dateien vom Server abrufen"</string>
+    <string name="retrievingGeneralPicturesTag">" Allgemeine Fotos abrufen"</string>
+    <string name="retrievingPdfsTag">" Pdf-Dateien abrufen"</string>
+    <string name="retrievingReportPicturesTag">Bilder der Steuerkarte abrufen</string>
+    <string name="roleTag">Rolle</string>
+    <string msgid="368094699078615544" name="s1">"Bild speichern"</string>
+    <string msgid="4550830452390689489" name="s2">"Der Werbeanzeige erlauben, das Bild in der Bildergalerie zu speichern?"</string>
+    <string msgid="2435407834265420668" name="s3">"Zustimmen"</string>
+    <string msgid="9167523597401839819" name="s4">"Ablehnen"</string>
+    <string msgid="1566682516266724847" name="s5">"Kalendertermin erstellen"</string>
+    <string msgid="5996672174517137271" name="s6">"Der Werbeanzeige erlauben, einen Kalendertermin zu erstellen?"</string>
+    <string msgid="7163549807207034258" name="s7">"Testanzeige"</string>
+    <string name="saveButton">Speichern</string>
+    <string msgid="730395136688082741" name="search_menu_title">"Suche"</string>
+    <string name="sendToServerTag">An Server senden</string>
+    <string name="serverConnectErrorMessage">Es konnte keine Verbindung zum Server hergestellt werden. Bitte überprüfen Sie die Adresse und versuchen Sie es erneut.</string>
+    <string name="serverPathRequestMessage">Bitte geben Sie den Serverpfad ein</string>
+    <string name="smbConnectError">Verbindung zum Server nicht möglich. Bitte überprüfen Sie Ihre Netzwerkverbindung und / oder versuchen Sie es später erneut.</string>
+    <string name="staleDataMessage">Ihre Daten sind veraltet. Bitte versuche es erneut. Dieser Fehler tritt auf, weil jemand etwas geändert hat und Sie nicht die letzte Kopie erhalten haben.</string>
+    <string msgid="8106346172024741305" name="status_bar_notification_info_overflow">"999+"</string>
+    <string name="successfulServerUploadMessage">Projekt erfolgreich hochgeladen!</string>
+    <string name="sucessfulServerConnectionMessage">Verbindung zum Server erfolgreich hergestellt!</string>
+    <string name="title_activity_project_main">Hauptseite</string>
+    <string name="tryAgainLaterMessage">Bitte versuchen Sie es später noch einmal.</string>
+    <string name="tryAgainMessage">Möchtest du es noch einmal versuchen?</string>
+    <string name="tryAgainTag">Wieder</string>
+    <string name="tvAppPassword">App-Passwort</string>
+    <string name="tvClientText">Klient</string>
+    <string name="tvComissionText">Kommission</string>
+    <string name="tvConstructionDrawingPath">Zeichnungsordner</string>
+    <string name="tvDatasheetCode">Datenblattcode</string>
+    <string name="tvDatasheetExtension">Datenblatt-Erweiterung</string>
+    <string name="tvDrawingCode">Zeichnungscode</string>
+    <string name="tvDrawingExtension">Zeichnungsverlängerung</string>
+    <string name="tvGeneralCommentsHint">Allgemeine Bemerkungen zur Inspektion</string>
+    <string name="tvReportCommentsText">Allgemeine Kommentare</string>
+    <string name="tvRootPath">Root-Pfad</string>
+    <string name="tvServerPassword">Server-Passwort</string>
+    <string name="tvServerPath">Serverpfad</string>
+    <string name="tvServerUsername">Server-Benutzername</string>
+    <string name="tvTechnicDatasheetPath">Datenblattordner</string>
+    <string name="tvTestedBy">Getestet von</string>
+    <string name="tvYearPrefix">Jahresvorwahl</string>
+    <string name="unableToProcced">Nicht in der Lage, fortzufahren</string>
+    <string name="unfinishedReportsMessage">Es gibt noch einige unvollendete Berichte</string>
+    <string name="unknownDeviceMessage">Unbekanntes Gerät</string>
+    <string name="unknownErrorMessage">Unbekannter Fehler</string>
+    <string name="updatesChannelDescription">Informiert den Benutzer über externe Aktualisierungen von Projekten für den Echtzeitbetrieb</string>
+    <string name="updatesChannelName">Projektaktualisierungen</string>
+    <string name="usernameTag">Nutzername</string>
+    <string name="valuesSavedMessage">Werte wurden erfolgreich gespeichert</string>
+    <string name="wiredDatasheetLabel">Datenblatt (EL)</string>
+    <string name="wiredDrawingLabel">Zeichnung (EL)</string>
+    <string name="yesTAG">Ja</string>
+</resources>
