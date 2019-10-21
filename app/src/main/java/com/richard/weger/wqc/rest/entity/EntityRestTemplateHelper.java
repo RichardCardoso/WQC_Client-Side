@@ -53,7 +53,7 @@ public class EntityRestTemplateHelper<T extends DomainEntity> extends RestTempla
                 } else {
                     result = new ErrorResult(ErrorResult.ErrorCode.INVALID_ENTITYRETURNTYPE,  ErrorUtil.getUnknownErrorMessage(), ErrorResult.ErrorLevel.SEVERE);
                 }
-                if (!(result instanceof ErrorResult) && (appVersion == null || !appVersion.equals(App.getExpectedVersion()))){
+                if (!(result instanceof ErrorResult) && (appVersion == null || !App.isValidVersion(appVersion))){
                     result = new ErrorResult(ErrorResult.ErrorCode.INVALID_APP_VERSION,
                             App.getContext().getResources().getString(R.string.invalidVersionMessage)
                             + " (" + appVersion + " x " + App.getExpectedVersion() + ")",

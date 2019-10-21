@@ -23,6 +23,18 @@ public class App extends Application {
 
     private static Set<String> processedMessages = new HashSet<>();
 
+    public static boolean isValidVersion(String serverVersion) {
+        if(serverVersion == null){
+            return true;
+        }
+
+        String majorS, majorA;
+        majorS = serverVersion.substring(0, serverVersion.lastIndexOf("."));
+        majorA = getExpectedVersion().substring(0, getExpectedVersion().lastIndexOf("."));
+        return (majorS.equals(majorA));
+
+    }
+
     public static void markAsProcessed(String messageId){
         processedMessages.add(messageId);
     }

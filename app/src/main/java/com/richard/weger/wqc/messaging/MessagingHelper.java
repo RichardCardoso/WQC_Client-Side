@@ -56,8 +56,8 @@ public class MessagingHelper {
         if (delegate != null) {
             String messageId = dto.getMessageId();
             if(App.wasProcessed(messageId)) {
-                LoggerManager.getLogger(FirebaseHelper.class).info("An already processed message was again received from the server and will be ignored. id: " + messageId);
-                return;
+                LoggerManager.getLogger(FirebaseHelper.class).info("An already processed message was again received from the server. id: " + messageId);
+//                return;
             }
             String qrCode = dto.getQrcode();
             if (qrCode != null && qrCode.equals(ProjectHelper.getQrCode())) {

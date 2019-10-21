@@ -105,7 +105,7 @@ public class FileRequestHelper {
             request.setEntity(entity);
         }
 
-        url = url.replace("//", "/");
+        url = url.replace("//", "/").replace("http:/", "http://");
         request.setUri(UriComponentsBuilder.fromUriString(url)
                 .build()
                 .encode()

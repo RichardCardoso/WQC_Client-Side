@@ -2,6 +2,7 @@ package com.richard.weger.wqc.rest;
 
 import android.os.AsyncTask;
 
+import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.converter.MyHttpMessageConverter;
 import com.richard.weger.wqc.exception.ServerException;
 import com.richard.weger.wqc.helper.ActivityHelper;
@@ -20,6 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URI;
 import java.util.logging.Logger;
 
@@ -59,8 +63,13 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
             } catch (Exception ex) {
                 fatalUnknownException(ex);
             }
-
-             result = executionStrategy(restTemplate, request);
+            String host = request.getUri().getHost();
+            int port = request.getUri().getPort();
+            if (isReachable(host, port, 3000)) {
+                result = executionStrategy(restTemplate, request);
+            } else {
+                result = new ErrorResult(ErrorResult.ErrorCode.CLIENT_SERVER_CONNECTION_FAILED_WARNING, App.getContext().getResources().getString(R.string.serverConnectErrorMessage), ErrorResult.ErrorLevel.SEVERE);
+            }
 
         } catch (ServerException ex){
             return ex.getErr();
@@ -75,6 +84,19 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
         result.setRequest(req[0]);
 
         return result;
+    }
+
+    private static boolean isReachable(String addr, int openPort, int timeOutMillis) {
+        // Any Open port on other machine
+        // openPort =  22 - ssh, 80 or 443 - webserver, 25 - mailserver etc.
+        try {
+            try (Socket soc = new Socket()) {
+                soc.connect(new InetSocketAddress(addr, openPort), timeOutMillis);
+            }
+            return true;
+        } catch (IOException ex) {
+            return false;
+        }
     }
 
     protected RestResponseHandler delegate;

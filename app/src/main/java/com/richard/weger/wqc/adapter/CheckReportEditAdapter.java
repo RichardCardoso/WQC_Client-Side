@@ -28,7 +28,7 @@ public class CheckReportEditAdapter extends FragmentStatePagerAdapter {
 
     public CheckReportEditAdapter(@NonNull FragmentManager fm, String fileName, String pdfsFolder, List<Page> pages,
                                   TouchImageView.ImageTouchListener listener, CheckReportEditFragment.MarkTouchListener mListener) {
-        super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+        super(fm);
         this.pages = pages;
         String filePath;
         filePath = pdfsFolder.concat(fileName);

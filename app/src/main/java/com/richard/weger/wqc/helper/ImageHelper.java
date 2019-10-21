@@ -26,6 +26,7 @@ import com.richard.weger.wqc.activity.CameraActivity;
 import com.richard.weger.wqc.activity.PictureViewerActivity;
 import com.richard.weger.wqc.domain.Item;
 import com.richard.weger.wqc.domain.Project;
+import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.util.App;
@@ -402,6 +403,10 @@ public class ImageHelper {
     }
 
     public static void showPicture(List<GeneralPictureDTO> picsList, int position, Activity delegate){
+        if(delegate instanceof RestTemplateHelper.RestResponseHandler) {
+            RestTemplateHelper.RestResponseHandler h = (RestTemplateHelper.RestResponseHandler) delegate;
+            h.toggleControls(false);
+        }
         Intent intent = new Intent(delegate, PictureViewerActivity.class);
         intent.putStringArrayListExtra(PICTURES_LIST_KEY, (ArrayList<String>) picsList.stream().map(GeneralPictureDTO::getFileName).collect(Collectors.toList()));
         intent.putExtra(PICTURE_START_INDEX_KEY, position);

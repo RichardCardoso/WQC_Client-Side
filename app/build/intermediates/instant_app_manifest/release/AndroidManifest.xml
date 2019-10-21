@@ -3,7 +3,7 @@
     package="com.richard.weger.wqc"
     android:targetSandboxVersion="2"
     android:versionCode="2"
-    android:versionName="2.7.1.0" >
+    android:versionName="2.7.1.1" >
 
     <uses-sdk
         android:minSdkVersion="26"
@@ -39,9 +39,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true" >
-        <activity android:name="com.richard.weger.wqc.activity.CameraActivity" />
+        <activity
+            android:name="com.richard.weger.wqc.activity.CameraActivity"
+            android:theme="@style/FullScreenTheme" />
         <activity android:name="com.richard.weger.wqc.activity.GeneralPictureCaptureActivity" />
-        <activity android:name="com.richard.weger.wqc.activity.GeneralPictureListActivity" />
+        <activity
+            android:name="com.richard.weger.wqc.activity.GeneralPictureListActivity"
+            android:label="@string/picturesListTag" />
+        <!-- android:theme="@style/Widget.AppCompat.ActionBar.Solid" -->
         <activity
             android:name="com.richard.weger.wqc.activity.WelcomeActivity"
             android:exported="true" >
@@ -51,9 +56,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="com.richard.weger.wqc.activity.ProjectEditActivity"
-            android:label="@string/app_name" />
+        <activity android:name="com.richard.weger.wqc.activity.ProjectEditActivity" />
         <activity android:name="com.richard.weger.wqc.activity.ItemReportEditActivity" />
         <activity android:name="com.richard.weger.wqc.activity.PictureViewerActivity" />
 

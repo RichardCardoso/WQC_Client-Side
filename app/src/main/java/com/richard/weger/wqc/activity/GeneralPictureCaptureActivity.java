@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_VIEWER_SCREEN_ID;
 import static com.richard.weger.wqc.appconstants.AppConstants.REQUEST_IMAGE_CAPTURE_ACTION;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREUPLOAD_KEY;
 
@@ -205,6 +206,9 @@ public class GeneralPictureCaptureActivity extends Activity implements
                     handleNewPictures(newPictures, processedPictures);
                 }
             }
+        }
+        if(requestCode == PICTURE_VIEWER_SCREEN_ID) {
+            toggleControls(true);
         }
     }
 

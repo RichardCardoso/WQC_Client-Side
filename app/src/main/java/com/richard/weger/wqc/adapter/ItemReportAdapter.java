@@ -76,9 +76,9 @@ public class ItemReportAdapter extends RecyclerView.Adapter<ItemViewHolder> {
         holder.statusSpinner.setEnabled(isEnabled());
         if(holder.rootLayout != null) {
             if (status == 0) {
-                holder.rootLayout.setBackgroundColor(ContextCompat.getColor(holder.rootLayout.getContext(), R.color.red));
+                holder.tvItemDesc.setBackgroundColor(ContextCompat.getColor(holder.rootLayout.getContext(), R.color.red));
             } else {
-                holder.rootLayout.setBackgroundColor(ContextCompat.getColor(holder.rootLayout.getContext(), R.color.design_default_color_background));
+                holder.tvItemDesc.setBackgroundColor(ContextCompat.getColor(holder.rootLayout.getContext(), android.R.color.transparent));
             }
         }
 

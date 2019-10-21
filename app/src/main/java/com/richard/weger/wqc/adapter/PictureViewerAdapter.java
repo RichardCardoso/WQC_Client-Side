@@ -19,7 +19,7 @@ public class PictureViewerAdapter extends FragmentStatePagerAdapter {
     private int mode;
 
     public PictureViewerAdapter(@NonNull FragmentManager fm, List<String> fileNames, String picturesFolderPath) {
-        super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+        super(fm);
         if(fileNames == null || fileNames.size() == 0){
             throw new IllegalArgumentException("Either a null or an empty fileNames list was received at PictureViewerAdapter constructor!");
         }

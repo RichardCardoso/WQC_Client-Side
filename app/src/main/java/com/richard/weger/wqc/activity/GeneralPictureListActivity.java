@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageView;
 
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -26,11 +25,10 @@ import com.richard.weger.wqc.service.AsyncMethodExecutor;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 import com.richard.weger.wqc.util.GeneralPictureDTO;
+import com.richard.weger.wqc.util.LoggerManager;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.GENPICTURE_CAPTURE_SCREEN_ID;
@@ -46,6 +44,8 @@ public class GeneralPictureListActivity extends Activity implements RestTemplate
     Project project;
     private GeneralPicturePreviewAdapter adapter;
     List<FileRestTemplateHelper> queue = new ArrayList<>();
+
+    RecyclerView r;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +93,7 @@ public class GeneralPictureListActivity extends Activity implements RestTemplate
 
     private void inflateActivityLayout(){
         setContentView(R.layout.activity_general_pictures_list);
+        r = findViewById(R.id.recyclerview);
         toggleControls(false);
         setListeners();
     }
@@ -115,13 +116,16 @@ public class GeneralPictureListActivity extends Activity implements RestTemplate
         updateRecyclerView();
     }
 
-    private void addFilesToList(Set<String> pics){
-        List<GeneralPictureDTO> items = pics.stream().map(p -> new GeneralPictureDTO(p, false)).collect(Collectors.toList());
-        items.sort(this::compare);
+    private void addFilesToList(List<String> pics){
+        try {
+            List<GeneralPictureDTO> items = pics.stream().map(p -> new GeneralPictureDTO(p, false)).sorted(this::compare).collect(Collectors.toList());
 
-        picsList.clear();
-        picsList.addAll(items);
-        updateRecyclerView();
+            picsList.clear();
+            picsList.addAll(items);
+            updateRecyclerView();
+        } catch (Exception ex) {
+            LoggerManager.getLogger(GeneralPictureListActivity.class).warning(StringHelper.getStackTraceAsString(ex));
+        }
     }
 
     private int compare(GeneralPictureDTO t0, GeneralPictureDTO t1){
@@ -142,14 +146,18 @@ public class GeneralPictureListActivity extends Activity implements RestTemplate
     }
 
     private void updateRecyclerView(){
-        RecyclerView view = findViewById(R.id.recyclerview);
-        if(view != null) {
+        if(r != null) {
             if (adapter == null) {
                 adapter = new GeneralPicturePreviewAdapter(StringHelper.getPicturesFolderPath(project), picsList, this, false);
             }
-            GridLayoutManager grid = new GridLayoutManager(this, 2, RecyclerView.VERTICAL, false);
-            view.setLayoutManager(grid);
-            view.setAdapter(adapter);
+            if(r.getLayoutManager() == null) {
+                GridLayoutManager grid = new GridLayoutManager(this, 3, RecyclerView.VERTICAL, false);
+                r.setLayoutManager(grid);
+            }
+            if(r.getAdapter() == null) {
+                r.setAdapter(adapter);
+            }
+
             adapter.notifyDataSetChanged();
             toggleControls(true);
         }
@@ -172,9 +180,9 @@ public class GeneralPictureListActivity extends Activity implements RestTemplate
                     ProjectHelper.getGenPicturesList(this);
                     break;
                 case REST_GENPICTURESREQUEST_KEY:
-                    Set<FileDTO> pictures = new HashSet<>(ResultService.getMultipleResult(result, FileDTO.class));
+                    List<FileDTO> pictures = ResultService.getMultipleResult(result, FileDTO.class);
                     inflateActivityLayout();
-                    addFilesToList(new HashSet<>(pictures.stream().map(FileDTO::getFileName).collect(Collectors.toList())));
+                    addFilesToList(pictures.stream().map(FileDTO::getFileName).collect(Collectors.toList()));
                     toggleLoading(true);
                     AsyncMethodExecutor.execute(() -> {
                         List<String> toDownload = ProjectHelper.getObsoleteGenPictures(new ArrayList<>(pictures), project);
@@ -213,10 +221,9 @@ public class GeneralPictureListActivity extends Activity implements RestTemplate
 
     @Override
     public void toggleControls(boolean resume) {
-        ImageView ivPic = findViewById(R.id.ivPicture);
-        if(ivPic != null) {
-            ivPic.setClickable(resume);
-            ivPic.setEnabled(resume);
+        if(r != null) {
+            r.setEnabled(resume);
+            r.setClickable(resume);
         }
         toggleLoading(!resume);
     }

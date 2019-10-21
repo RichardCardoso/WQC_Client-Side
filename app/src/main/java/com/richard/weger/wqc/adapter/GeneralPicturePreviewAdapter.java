@@ -9,6 +9,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -20,6 +22,7 @@ import com.bumptech.glide.signature.StringSignature;
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.helper.FileHelper;
 import com.richard.weger.wqc.helper.ImageHelper;
+import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.GeneralPictureDTO;
 
 import java.io.File;
@@ -53,12 +56,16 @@ public class GeneralPicturePreviewAdapter extends RecyclerView.Adapter<GeneralPi
     }
 
     @Override
+    public void onViewRecycled(@NonNull GeneralPicturesViewHolder holder) {
+//        Glide.clear(holder.ivPicture);
+    }
+
+    @Override
     public void onBindViewHolder(@NonNull GeneralPicturesViewHolder holder, int position) {
         String fileName = files.get(position).getFileName();
         boolean processed = files.get(position).isProcessed();
         boolean error = files.get(position).isError();
 
-        holder.setFileName(fileName);
         holder.ivPicture.setOnClickListener(v -> {
             if(pictureTapHandler != null) {
                 pictureTapHandler.onPictureTap(position);
@@ -78,6 +85,8 @@ public class GeneralPicturePreviewAdapter extends RecyclerView.Adapter<GeneralPi
         }
 
         holder.removeButton.setOnClickListener(v -> pictureTapHandler.onRemoveRequest(position));
+
+        holder.setFileName(fileName);
 
     }
 
@@ -108,11 +117,9 @@ public class GeneralPicturePreviewAdapter extends RecyclerView.Adapter<GeneralPi
             pbLoading.bringToFront();
             pbLoading.setVisibility(View.VISIBLE);
             removeButton.setVisibility(View.GONE);
-            ivPicture.setImageResource(android.R.color.transparent);
             if(FileHelper.isValidFile(filePath)) {
                 File f = new File(filePath);
-                Glide.with(itemView.getContext()).load(f)
-                        .thumbnail(0.5f)
+                Glide.with(App.getContext()).load(f)
                         .signature(new StringSignature(String.valueOf(f.lastModified())))
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .transform(new ImageHelper.RotateTransformation(itemView.getContext(), ImageHelper.getImageRotation(filePath)))
@@ -120,7 +127,7 @@ public class GeneralPicturePreviewAdapter extends RecyclerView.Adapter<GeneralPi
                             @Override
                             public boolean onException(Exception e, File model, Target<GlideDrawable> target, boolean isFirstResource) {
                                 pbLoading.setVisibility(View.INVISIBLE);
-                                ivPicture.setImageResource(R.drawable.ic_error);
+                                ivPicture.setImageDrawable(ContextCompat.getDrawable(App.getContext(), R.drawable.ic_error));
                                 return false;
                             }
 
@@ -133,18 +140,29 @@ public class GeneralPicturePreviewAdapter extends RecyclerView.Adapter<GeneralPi
                                 } else {
                                     removeButton.setVisibility(View.GONE);
                                 }
+                                ivPicture.setLayoutParams(new ConstraintLayout.LayoutParams(ivPicture.getWidth(), ivPicture.getWidth()));
+//                                processFileName(fileName, tvFileName);
                                 return false;
                             }
                         })
                         .into(ivPicture);
             }
-            if(fileName.contains(".")) {
-                tvFileName.setText(fileName.substring(0, fileName.indexOf(".")));
-            } else {
-                tvFileName.setText(fileName);
-            }
         }
 
+    }
+
+    private void processFileName(String fileName, TextView tvFileName) {
+        tvFileName.bringToFront();
+        tvFileName.setBackgroundColor(ContextCompat.getColor(App.getContext(), R.color.white));
+        tvFileName.getBackground().setAlpha(128);
+        if(fileName.contains(".")) {
+            fileName = fileName.substring(0, fileName.indexOf("."));
+        }
+        String project = fileName.substring(0, fileName.indexOf("Z"));
+        String drawingPart = fileName.substring(project.length(), fileName.indexOf("Q"));
+        String picInfo = fileName.substring(fileName.indexOf("Q"));
+        fileName = project.concat("\n").concat(drawingPart).concat("\n").concat(picInfo);
+        tvFileName.setText(fileName);
     }
 }
 

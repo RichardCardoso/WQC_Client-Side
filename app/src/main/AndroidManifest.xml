@@ -22,9 +22,16 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".activity.CameraActivity"></activity>
-        <activity android:name=".activity.GeneralPictureCaptureActivity" />
-        <activity android:name=".activity.GeneralPictureListActivity" />
+        <activity android:name=".activity.CameraActivity"
+            android:theme="@style/FullScreenTheme"
+            />
+        <activity android:name=".activity.GeneralPictureCaptureActivity"
+            />
+        <activity
+            android:name=".activity.GeneralPictureListActivity"
+            android:label="@string/picturesListTag"
+            />
+        <!--android:theme="@style/Widget.AppCompat.ActionBar.Solid"-->
         <activity
             android:name=".activity.WelcomeActivity"
             android:exported="true">
@@ -35,9 +42,9 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.ProjectEditActivity"
-            android:label="@string/app_name" />
-        <activity android:name=".activity.ItemReportEditActivity" />
+            android:name=".activity.ProjectEditActivity" />
+        <activity android:name=".activity.ItemReportEditActivity"
+            />
         <activity android:name=".activity.PictureViewerActivity" />
 
         <provider
