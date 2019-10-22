@@ -13,8 +13,8 @@ import androidx.core.app.NotificationManagerCompat;
 import com.google.android.gms.common.util.Strings;
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.util.App;
+import com.richard.weger.wqc.util.IMethod;
 import com.richard.weger.wqc.util.LoggerManager;
-import com.richard.weger.wqc.util.Method;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +59,7 @@ public class AlertHelper {
         }
     }
 
-    public static void showMessage(Context delegate, String title, String message, String positiveTag, String negativeTag, Method positiveCallback, Method negativeCallback){
+    public static void showMessage(Context delegate, String title, String message, String positiveTag, String negativeTag, IMethod positiveCallback, IMethod negativeCallback){
         AlertDialog.Builder builder = new AlertDialog.Builder(delegate);
         builder.setCancelable(false);
         if(title != null){
@@ -87,15 +87,15 @@ public class AlertHelper {
         } catch (Exception ignored){}
     }
 
-    public static void showMessage(Context delegate, String message, String positiveTag, Method method){
+    public static void showMessage(Context delegate, String message, String positiveTag, IMethod IMethod){
         AlertDialog.Builder builder = new AlertDialog.Builder(delegate);
         builder.setCancelable(false);
         if(message != null){
             builder.setMessage(message);
         }
         if(positiveTag != null){
-            if (method != null) {
-                builder.setPositiveButton(positiveTag, (dialog, which) -> method.execute());
+            if (IMethod != null) {
+                builder.setPositiveButton(positiveTag, (dialog, which) -> IMethod.execute());
             } else {
                 builder.setPositiveButton(positiveTag, (dialog, which) -> {});
             }

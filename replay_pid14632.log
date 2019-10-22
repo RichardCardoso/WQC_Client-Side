@@ -3814,7 +3814,7 @@ instanceKlass org/gradle/model/internal/inspect/ModelRuleExtractor$ExtractedRule
 instanceKlass org/gradle/model/internal/inspect/MethodRuleAction
 instanceKlass org/gradle/model/internal/inspect/AbstractExtractedModelRule
 instanceKlass org/gradle/model/internal/core/Hidden
-instanceKlass org/gradle/model/internal/method/WeaklyTypeReferencingMethod$2
+instanceKlass org/gradle/model/internal/IMethod/WeaklyTypeReferencingMethod$2
 instanceKlass org/gradle/model/internal/inspect/DefaultMethodRuleDefinition$1
 instanceKlass org/gradle/model/internal/inspect/DefaultMethodRuleDefinition
 instanceKlass org/gradle/model/internal/inspect/MethodRuleDefinition
@@ -3824,8 +3824,8 @@ instanceKlass org/gradle/model/internal/manage/schema/AbstractStructSchema$1
 instanceKlass org/apache/commons/lang/builder/EqualsBuilder
 instanceKlass org/gradle/model/internal/manage/schema/StructSchema
 instanceKlass org/gradle/model/internal/manage/schema/extract/StructSchemaExtractionStrategySupport$1
-instanceKlass org/gradle/model/internal/method/WeaklyTypeReferencingMethod$1
-instanceKlass org/gradle/model/internal/method/WeaklyTypeReferencingMethod
+instanceKlass org/gradle/model/internal/IMethod/WeaklyTypeReferencingMethod$1
+instanceKlass org/gradle/model/internal/IMethod/WeaklyTypeReferencingMethod
 instanceKlass org/gradle/model/internal/manage/schema/extract/StructSchemaExtractionStrategySupport$3
 instanceKlass org/gradle/model/internal/manage/schema/extract/StructSchemaExtractionStrategySupport$2
 instanceKlass org/gradle/model/internal/manage/schema/extract/StructSchemaExtractionStrategySupport$4
@@ -4876,12 +4876,12 @@ instanceKlass javax/net/ssl/HostnameVerifier
 instanceKlass org/gradle/internal/resource/transport/http/DefaultHttpSettings
 instanceKlass org/gradle/internal/resource/transport/http/HttpSettings
 instanceKlass org/apache/http/message/AbstractHttpMessage
-instanceKlass org/apache/http/client/methods/AbortableHttpRequest
-instanceKlass org/apache/http/client/methods/HttpExecutionAware
-instanceKlass org/apache/http/client/methods/Configurable
-instanceKlass org/apache/http/client/methods/CloseableHttpResponse
+instanceKlass org/apache/http/client/IMethods/AbortableHttpRequest
+instanceKlass org/apache/http/client/IMethods/HttpExecutionAware
+instanceKlass org/apache/http/client/IMethods/Configurable
+instanceKlass org/apache/http/client/IMethods/CloseableHttpResponse
 instanceKlass org/apache/http/HttpResponse
-instanceKlass org/apache/http/client/methods/HttpUriRequest
+instanceKlass org/apache/http/client/IMethods/HttpUriRequest
 instanceKlass org/apache/http/HttpRequest
 instanceKlass org/apache/http/HttpMessage
 instanceKlass org/apache/http/protocol/HttpContext

@@ -219,16 +219,16 @@ Heap after GC invocations=9 (full 2):
 }
 
 Deoptimization events (10 events):
-Event: 11.775 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00000000058dcea0 method=org.gradle.model.internal.type.ModelType.wrap(Ljava/lang/reflect/Type;)Lorg/gradle/model/internal/type/TypeWrapper; @ 83
-Event: 11.776 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00000000058dce30 method=org.gradle.model.internal.type.ModelType.wrap(Ljava/lang/reflect/Type;)Lorg/gradle/model/internal/type/TypeWrapper; @ 33
-Event: 11.776 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00000000058dcea0 method=org.gradle.model.internal.type.ModelType.wrap(Ljava/lang/reflect/Type;)Lorg/gradle/model/internal/type/TypeWrapper; @ 83
-Event: 11.851 Thread 0x0000000004c56800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000051e6194 method=java.util.WeakHashMap.expungeStaleEntries()V @ 9
-Event: 11.851 Thread 0x0000000004c56800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000052f71ec method=java.util.WeakHashMap.expungeStaleEntries()V @ 9
-Event: 11.895 Thread 0x000000001b625800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000005e36084 method=org.gradle.internal.reflect.PropertyAccessorType.of(Ljava/lang/reflect/Method;)Lorg/gradle/internal/reflect/PropertyAccessorType; @ 4
-Event: 11.962 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000005e84e38 method=com.google.common.collect.AbstractMapBasedMultimap.put(Ljava/lang/Object;Ljava/lang/Object;)Z @ 10
-Event: 11.962 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000005e84e38 method=com.google.common.collect.AbstractMapBasedMultimap.put(Ljava/lang/Object;Ljava/lang/Object;)Z @ 10
-Event: 11.962 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000005e84e38 method=com.google.common.collect.AbstractMapBasedMultimap.put(Ljava/lang/Object;Ljava/lang/Object;)Z @ 10
-Event: 11.962 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000005e84e38 method=com.google.common.collect.AbstractMapBasedMultimap.put(Ljava/lang/Object;Ljava/lang/Object;)Z @ 10
+Event: 11.775 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00000000058dcea0 IMethod=org.gradle.model.internal.type.ModelType.wrap(Ljava/lang/reflect/Type;)Lorg/gradle/model/internal/type/TypeWrapper; @ 83
+Event: 11.776 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00000000058dce30 IMethod=org.gradle.model.internal.type.ModelType.wrap(Ljava/lang/reflect/Type;)Lorg/gradle/model/internal/type/TypeWrapper; @ 33
+Event: 11.776 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00000000058dcea0 IMethod=org.gradle.model.internal.type.ModelType.wrap(Ljava/lang/reflect/Type;)Lorg/gradle/model/internal/type/TypeWrapper; @ 83
+Event: 11.851 Thread 0x0000000004c56800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000051e6194 IMethod=java.util.WeakHashMap.expungeStaleEntries()V @ 9
+Event: 11.851 Thread 0x0000000004c56800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000052f71ec IMethod=java.util.WeakHashMap.expungeStaleEntries()V @ 9
+Event: 11.895 Thread 0x000000001b625800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000005e36084 IMethod=org.gradle.internal.reflect.PropertyAccessorType.of(Ljava/lang/reflect/Method;)Lorg/gradle/internal/reflect/PropertyAccessorType; @ 4
+Event: 11.962 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000005e84e38 IMethod=com.google.common.collect.AbstractMapBasedMultimap.put(Ljava/lang/Object;Ljava/lang/Object;)Z @ 10
+Event: 11.962 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000005e84e38 IMethod=com.google.common.collect.AbstractMapBasedMultimap.put(Ljava/lang/Object;Ljava/lang/Object;)Z @ 10
+Event: 11.962 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000005e84e38 IMethod=com.google.common.collect.AbstractMapBasedMultimap.put(Ljava/lang/Object;Ljava/lang/Object;)Z @ 10
+Event: 11.962 Thread 0x000000001b625800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000005e84e38 IMethod=com.google.common.collect.AbstractMapBasedMultimap.put(Ljava/lang/Object;Ljava/lang/Object;)Z @ 10
 
 Classes redefined (0 events):
 No events

@@ -1,4 +1,4 @@
-#Mon Oct 21 12:27:08 BRST 2019
+#Tue Oct 22 10:55:05 BRST 2019
 base.0=C\:\\Users\\vendas1\\AndroidStudioProjects\\WQC\\app\\build\\intermediates\\transforms\\dexMerger\\debug\\4
 path.0=classes.dex
 renamed.0=classes.dex

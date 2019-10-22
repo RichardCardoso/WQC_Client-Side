@@ -34,7 +34,6 @@ public class EntityRestTemplateHelper<T extends DomainEntity> extends RestTempla
 
     @Override
     protected final AbstractResult executionStrategy(RestTemplate restTemplate, EntityRequest<T> request) {
-
         AbstractResult result;
         String appVersion = null;
 

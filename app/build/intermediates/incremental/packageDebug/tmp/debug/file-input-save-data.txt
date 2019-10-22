@@ -1,5 +1,5 @@
 #Internal package file, do not edit.
-#Fri Oct 18 16:07:06 BRT 2019
+#Tue Oct 22 10:55:05 BRST 2019
 4.path=classes.dex
 8.set=DEX
 6.path=classes.dex

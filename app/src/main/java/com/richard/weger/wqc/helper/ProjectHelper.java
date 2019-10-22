@@ -157,6 +157,14 @@ public class ProjectHelper {
         }
     }
 
+    public static List<String> getReportPdfNames(Project project) {
+        return project.getDrawingRefs().stream()
+                .flatMap(d -> d.getReports().stream()
+                        .filter(r -> r instanceof CheckReport)
+                        .map(r -> ((CheckReport) r).getFileName()))
+                .collect(Collectors.toList());
+    }
+
     public static List<Item> getReportItems(Project project) {
         List<Item> ret = project.getDrawingRefs().stream()
                 .flatMap(d -> d.getReports().stream()

@@ -81,10 +81,10 @@ A) Functional changes:
 B) Structure changes
 -Changed ORM framework from 'pure' hibernate to Spring JPA
 -DB connections pooling is now done by the default configurations of Spring JPA - in order to avoid pooling exceptions due to custom parameters
--Changed controller's methods in order to have generic methods (one for each operation and reusable for all entities - devices, roles, etc)
--Changed rest methods endpoints naming strategy
+-Changed controller's IMethods in order to have generic IMethods (one for each operation and reusable for all entities - devices, roles, etc)
+-Changed rest IMethods endpoints naming strategy
 -Database settings on the server should now be set at a file named 'database.properties'. After any changes to this file, tomcat must be restarted in order to apply the changes
--Code lines ammount was substantially reduced (both for server and app) due to the generic methods creation, enpoints naming strategy change and DomainEntity concept application.
+-Code lines ammount was substantially reduced (both for server and app) due to the generic IMethods creation, enpoints naming strategy change and DomainEntity concept application.
 
 Version: 2.6.0.0
 Date: 2019/08/22
@@ -93,7 +93,7 @@ Date: 2019/08/22
 
 Version: 2.6.0.1
 Date: 2019/09/02
--RestFaccade methods are now 'forced' to produce a json return (in order to prevent producing octet-streams, which leads to a "no HttpMessageConverter found" error)
+-RestFaccade IMethods are now 'forced' to produce a json return (in order to prevent producing octet-streams, which leads to a "no HttpMessageConverter found" error)
 
 Version: 2.6.0.2
 Date: 2019/09/05

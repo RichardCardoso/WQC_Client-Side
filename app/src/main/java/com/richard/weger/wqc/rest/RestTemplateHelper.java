@@ -43,9 +43,9 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
     }
 
     protected abstract AbstractResult executionStrategy(RestTemplate restTemplate, Params request) throws Exception;
-
-    @SafeVarargs
+    
     @Override
+    @SafeVarargs
     protected final AbstractResult doInBackground(Params... req) {
         RestTemplate restTemplate = new RestTemplate();
         AbstractResult result = null;

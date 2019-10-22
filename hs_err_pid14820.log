@@ -216,16 +216,16 @@ Heap after GC invocations=5 (full 1):
 }
 
 Deoptimization events (10 events):
-Event: 5.033 Thread 0x000000001abb6800 Uncommon trap: reason=range_check action=make_not_entrant pc=0x0000000004a9c144 method=java.lang.String.charAt(I)C @ 27
-Event: 5.086 Thread 0x000000001abb6800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000049bbae0 method=java.net.URI.match(CJJ)Z @ 45
-Event: 5.550 Thread 0x000000001abb6800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000004b38ae4 method=com.esotericsoftware.kryo.io.Output.writeString(Ljava/lang/CharSequence;)V @ 1
-Event: 5.596 Thread 0x000000001abb6800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000046f2778 method=java.util.concurrent.ConcurrentHashMap.putVal(Ljava/lang/Object;Ljava/lang/Object;Z)Ljava/lang/Object; @ 113
-Event: 5.596 Thread 0x000000001abb6800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000465864c method=java.util.concurrent.ConcurrentHashMap.transfer([Ljava/util/concurrent/ConcurrentHashMap$Node;[Ljava/util/concurrent/ConcurrentHashMap$Node;)V @ 34
-Event: 5.597 Thread 0x000000001ae80800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000465867c method=java.util.concurrent.ConcurrentHashMap.transfer([Ljava/util/concurrent/ConcurrentHashMap$Node;[Ljava/util/concurrent/ConcurrentHashMap$Node;)V @ 277
-Event: 5.597 Thread 0x000000001ae80800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000046f2894 method=java.util.concurrent.ConcurrentHashMap.addCount(JI)V @ 168
-Event: 5.597 Thread 0x000000001ae85800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000046f2894 method=java.util.concurrent.ConcurrentHashMap.addCount(JI)V @ 168
-Event: 5.597 Thread 0x000000001ae87000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000004b002e4 method=java.util.concurrent.ConcurrentHashMap.get(Ljava/lang/Object;)Ljava/lang/Object; @ 86
-Event: 5.952 Thread 0x000000001abb6800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000004761500 method=java.lang.Throwable.<init>(Ljava/lang/String;Ljava/lang/Throwable;)V @ 24
+Event: 5.033 Thread 0x000000001abb6800 Uncommon trap: reason=range_check action=make_not_entrant pc=0x0000000004a9c144 IMethod=java.lang.String.charAt(I)C @ 27
+Event: 5.086 Thread 0x000000001abb6800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000049bbae0 IMethod=java.net.URI.match(CJJ)Z @ 45
+Event: 5.550 Thread 0x000000001abb6800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000004b38ae4 IMethod=com.esotericsoftware.kryo.io.Output.writeString(Ljava/lang/CharSequence;)V @ 1
+Event: 5.596 Thread 0x000000001abb6800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000046f2778 IMethod=java.util.concurrent.ConcurrentHashMap.putVal(Ljava/lang/Object;Ljava/lang/Object;Z)Ljava/lang/Object; @ 113
+Event: 5.596 Thread 0x000000001abb6800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000465864c IMethod=java.util.concurrent.ConcurrentHashMap.transfer([Ljava/util/concurrent/ConcurrentHashMap$Node;[Ljava/util/concurrent/ConcurrentHashMap$Node;)V @ 34
+Event: 5.597 Thread 0x000000001ae80800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000465867c IMethod=java.util.concurrent.ConcurrentHashMap.transfer([Ljava/util/concurrent/ConcurrentHashMap$Node;[Ljava/util/concurrent/ConcurrentHashMap$Node;)V @ 277
+Event: 5.597 Thread 0x000000001ae80800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000046f2894 IMethod=java.util.concurrent.ConcurrentHashMap.addCount(JI)V @ 168
+Event: 5.597 Thread 0x000000001ae85800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000046f2894 IMethod=java.util.concurrent.ConcurrentHashMap.addCount(JI)V @ 168
+Event: 5.597 Thread 0x000000001ae87000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000004b002e4 IMethod=java.util.concurrent.ConcurrentHashMap.get(Ljava/lang/Object;)Ljava/lang/Object; @ 86
+Event: 5.952 Thread 0x000000001abb6800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000004761500 IMethod=java.lang.Throwable.<init>(Ljava/lang/String;Ljava/lang/Throwable;)V @ 24
 
 Classes redefined (0 events):
 No events

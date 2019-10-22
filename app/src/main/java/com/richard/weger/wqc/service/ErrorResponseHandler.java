@@ -8,7 +8,7 @@ import com.richard.weger.wqc.helper.AlertHelper;
 import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.LoggerManager;
-import com.richard.weger.wqc.util.Method;
+import com.richard.weger.wqc.util.IMethod;
 
 public abstract class ErrorResponseHandler {
 
@@ -25,18 +25,18 @@ public abstract class ErrorResponseHandler {
         return message;
     }
 
-    public static void handle(ErrorResult result, Context delegate, Method method){
+    public static void handle(ErrorResult result, Context delegate, IMethod IMethod){
         String message;
         message = handle(result);
         LoggerManager.log(ErrorResponseHandler.class, result);
-        AlertHelper.showMessage(delegate, message, delegate.getResources().getString(R.string.okTag), method);
+        AlertHelper.showMessage(delegate, message, delegate.getResources().getString(R.string.okTag), IMethod);
     }
 
-    public static void handle(ErrorResult result, Context delegate, String positiveTag, String negativeTag, Method positiveMethod, Method negativeMethod){
+    public static void handle(ErrorResult result, Context delegate, String positiveTag, String negativeTag, IMethod positiveIMethod, IMethod negativeIMethod){
         String message;
         message = handle(result);
         LoggerManager.log(ErrorResponseHandler.class, result);
-        AlertHelper.showMessage(delegate, null, message, positiveTag, negativeTag, positiveMethod, negativeMethod);
+        AlertHelper.showMessage(delegate, null, message, positiveTag, negativeTag, positiveIMethod, negativeIMethod);
     }
 
 }

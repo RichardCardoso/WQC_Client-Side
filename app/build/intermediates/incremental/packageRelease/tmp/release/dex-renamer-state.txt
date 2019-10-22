@@ -1,4 +1,4 @@
-#Mon Oct 21 12:30:37 BRST 2019
+#Tue Oct 22 12:10:40 BRST 2019
 base.0=C\:\\Users\\vendas1\\AndroidStudioProjects\\WQC\\app\\build\\intermediates\\transforms\\dexMerger\\release\\0
 path.1=classes2.dex
 renamed.1=classes2.dex

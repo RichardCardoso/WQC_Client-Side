@@ -3,10 +3,10 @@ package com.richard.weger.wqc.service;
 import android.os.AsyncTask;
 
 import com.richard.weger.wqc.helper.StringHelper;
+import com.richard.weger.wqc.util.IMethod;
 import com.richard.weger.wqc.util.LoggerManager;
-import com.richard.weger.wqc.util.Method;
 
-public class AsyncMethodExecutor extends AsyncTask<Method, Void, Boolean> {
+public class AsyncMethodExecutor extends AsyncTask<IMethod, Void, Boolean> {
 
     public PostExecutionListener getListener() {
         return listener;
@@ -23,10 +23,10 @@ public class AsyncMethodExecutor extends AsyncTask<Method, Void, Boolean> {
     private PostExecutionListener listener;
 
     @Override
-    protected Boolean doInBackground(Method... methods) {
+    protected Boolean doInBackground(IMethod... IMethods) {
         try {
-            Method m;
-            m = methods[0];
+            IMethod m;
+            m = IMethods[0];
             m.execute();
             return true;
         } catch (Exception e) {

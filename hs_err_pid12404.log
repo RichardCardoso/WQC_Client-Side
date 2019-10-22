@@ -216,16 +216,16 @@ Heap after GC invocations=5 (full 1):
 }
 
 Deoptimization events (10 events):
-Event: 4.395 Thread 0x000000001b00f800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000004bd4800 method=java.lang.reflect.Method.equals(Ljava/lang/Object;)Z @ 5
-Event: 4.478 Thread 0x000000001b00f800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000489d7b0 method=java.util.LinkedHashMap.afterNodeInsertion(Z)V @ 1
-Event: 4.494 Thread 0x000000001b00f800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000004bd4800 method=java.lang.reflect.Method.equals(Ljava/lang/Object;)Z @ 5
-Event: 4.494 Thread 0x000000001b00f800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000004bd4800 method=java.lang.reflect.Method.equals(Ljava/lang/Object;)Z @ 5
-Event: 4.682 Thread 0x000000001b00f800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000004bc4e78 method=sun.misc.URLClassPath.getLoader(I)Lsun/misc/URLClassPath$Loader; @ 94
-Event: 4.779 Thread 0x000000001b00f800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000488ad3c method=java.io.WinNTFileSystem.resolve(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String; @ 49
-Event: 4.906 Thread 0x00000000045f2000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000004be1838 method=java.lang.ref.Reference.tryHandlePending(Z)Z @ 104
-Event: 4.950 Thread 0x000000001b00f800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000004a7e300 method=java.util.WeakHashMap.expungeStaleEntries()V @ 9
-Event: 5.753 Thread 0x000000001b00f800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000004decb20 method=java.net.URI.match(CJJ)Z @ 45
-Event: 6.123 Thread 0x000000001b00f800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000004f73c2c method=com.esotericsoftware.kryo.io.Output.writeString(Ljava/lang/CharSequence;)V @ 1
+Event: 4.395 Thread 0x000000001b00f800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000004bd4800 IMethod=java.lang.reflect.Method.equals(Ljava/lang/Object;)Z @ 5
+Event: 4.478 Thread 0x000000001b00f800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000489d7b0 IMethod=java.util.LinkedHashMap.afterNodeInsertion(Z)V @ 1
+Event: 4.494 Thread 0x000000001b00f800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000004bd4800 IMethod=java.lang.reflect.Method.equals(Ljava/lang/Object;)Z @ 5
+Event: 4.494 Thread 0x000000001b00f800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000004bd4800 IMethod=java.lang.reflect.Method.equals(Ljava/lang/Object;)Z @ 5
+Event: 4.682 Thread 0x000000001b00f800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000004bc4e78 IMethod=sun.misc.URLClassPath.getLoader(I)Lsun/misc/URLClassPath$Loader; @ 94
+Event: 4.779 Thread 0x000000001b00f800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000488ad3c IMethod=java.io.WinNTFileSystem.resolve(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String; @ 49
+Event: 4.906 Thread 0x00000000045f2000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000004be1838 IMethod=java.lang.ref.Reference.tryHandlePending(Z)Z @ 104
+Event: 4.950 Thread 0x000000001b00f800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000004a7e300 IMethod=java.util.WeakHashMap.expungeStaleEntries()V @ 9
+Event: 5.753 Thread 0x000000001b00f800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000004decb20 IMethod=java.net.URI.match(CJJ)Z @ 45
+Event: 6.123 Thread 0x000000001b00f800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000004f73c2c IMethod=com.esotericsoftware.kryo.io.Output.writeString(Ljava/lang/CharSequence;)V @ 1
 
 Classes redefined (0 events):
 No events

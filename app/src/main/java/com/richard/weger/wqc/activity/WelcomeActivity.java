@@ -12,7 +12,6 @@ import androidx.annotation.NonNull;
 
 import com.google.android.gms.common.util.Strings;
 import com.google.zxing.Result;
-import com.richard.weger.wqc.BuildConfig;
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.domain.Device;
 import com.richard.weger.wqc.domain.ParamConfigurations;
@@ -38,8 +37,8 @@ import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.Configurations;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 import com.richard.weger.wqc.util.ErrorUtil;
+import com.richard.weger.wqc.util.IMethod;
 import com.richard.weger.wqc.util.LoggerManager;
-import com.richard.weger.wqc.util.Method;
 import com.richard.weger.wqc.util.PermissionsManager;
 
 import java.util.ArrayList;
@@ -232,7 +231,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
         handleQrScan(rawResult.getText());
     }
 
-    private void handleQrScan(String res){
+    protected void handleQrScan(String res){
         AbstractResult qrRes;
         qrCode = res;
         if(qrCode != null) {
@@ -356,9 +355,9 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                 log("Device authorized");
                 hasAuthorization = true;
                 layoutRestore();
-                if(BuildConfig.DEBUG){
-                    handleQrScan("\\17-1-435_Z_1_T_1");
-                }
+//                if(BuildConfig.DEBUG){
+//                    handleQrScan("\\17-1-435_Z_1_T_1");
+//                }
             }
         } catch (Exception ex) {
             String message = getResources().getString(R.string.deviceNotAuthorizedMessage).concat("\n(").concat(App.getUniqueId()).concat(")");
@@ -409,9 +408,11 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                     getExistingPdfDocuments();
                     break;
                 case REST_PDFDOCUMENTSREQUEST_KEY:
+                    LoggerManager.getLogger(WelcomeActivity.class).info("Got response from pdf list request");
                     List<FileDTO> pdfDocuments = ResultService.getMultipleResult(result, FileDTO.class);
                     List<String> toDownload = ProjectHelper.getObsoletePdfDocuments(pdfDocuments, project);
                     if(toDownload.size() > 0) {
+                        LoggerManager.getLogger(WelcomeActivity.class).info("Outdated pdf files exists");
                         fileHelperQueue.clear();
                         String text = getResources().getString(R.string.retrievingPdfsTag)
                                 .concat(" - ")
@@ -419,13 +420,17 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                         tvStatus.setText(text);
                         ProjectHelper.getPdfDocuments(toDownload, fileHelperQueue, this);
                         return;
+                    } else {
+                        LoggerManager.getLogger(WelcomeActivity.class).info("No outdated pdf files were found");
                     }
                     getExistingItemPictures();
                     break;
                 case REST_ITEMPICTURESREQUEST_KEY:
+                    LoggerManager.getLogger(WelcomeActivity.class).info("Got response from item pictures list request");
                     List<FileDTO> itemPictures = ResultService.getMultipleResult(result, FileDTO.class);
                     toDownload = ProjectHelper.getObsoleteItemPictures(itemPictures, project);
                     if(toDownload.size() > 0) {
+                        LoggerManager.getLogger(WelcomeActivity.class).info("Outdated item pictures exists");
                         fileHelperQueue.clear();
                         String text = getResources().getString(R.string.retrievingReportPicturesTag)
                                 .concat(" - ")
@@ -433,29 +438,38 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                         tvStatus.setText(text);
                         ProjectHelper.getItemPictures(toDownload, fileHelperQueue, this);
                         return;
+                    } else {
+                        LoggerManager.getLogger(WelcomeActivity.class).info("No outdated pictures were found");
                     }
                     getExistingGenPictures();
                     break;
                 case REST_GENPICTURESREQUEST_KEY:
+                    LoggerManager.getLogger(WelcomeActivity.class).info("Got response from general pictures list request");
                     List<FileDTO> pictures = ResultService.getMultipleResult(result, FileDTO.class);
                     toDownload = ProjectHelper.getObsoleteGenPictures( pictures, project);
                     if(toDownload.size() > 0) {
+                        LoggerManager.getLogger(WelcomeActivity.class).info("Outdated general pictures exists");
                         String text = getResources().getString(R.string.retrievingGeneralPicturesTag)
                                 .concat(" - ")
                                 .concat(getResources().getString(R.string.remainingTag, pictures.size()));
                         tvStatus.setText(text);
                         ProjectHelper.getGenPictures(toDownload, fileHelperQueue, this);
                         return;
+                    } else {
+                        LoggerManager.getLogger(WelcomeActivity.class).info("No outdated general pictures were found");
                     }
                     startProjectEdit();
                     break;
                 case REST_PDFREPORTDOWNLOAD_KEY:
+                    LoggerManager.getLogger(WelcomeActivity.class).info("Pdf file received");
                     continueIfPossible(getResources().getString(R.string.retrievingPdfsTag), this::getExistingItemPictures);
                     break;
                 case REST_PICTUREDOWNLOAD_KEY:
+                    LoggerManager.getLogger(WelcomeActivity.class).info("Item picture received");
                     continueIfPossible(getResources().getString(R.string.retrievingReportPicturesTag), this::getExistingGenPictures);
                     break;
                 case REST_GENPICTUREDOWNLOAD_KEY:
+                    LoggerManager.getLogger(WelcomeActivity.class).info("General picture received");
                     continueIfPossible(getResources().getString(R.string.retrievingGeneralPicturesTag), this::startProjectEdit);
                     break;
             }
@@ -521,7 +535,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
         }
     }
 
-    private void continueIfPossible(String message, Method nextChain){
+    private void continueIfPossible(String message, IMethod nextChain){
         if (message == null){
             message = getResources().getString(R.string.retrievingFilesTag);
         }
