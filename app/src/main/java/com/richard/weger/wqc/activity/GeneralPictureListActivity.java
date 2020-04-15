@@ -37,6 +37,7 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_CONFIGLOAD_KE
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREDOWNLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTURESREQUEST_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
+import static com.richard.weger.wqc.util.App.getLocale;
 
 public class GeneralPictureListActivity extends Activity implements RestTemplateHelper.RestResponseHandler, GeneralPicturePreviewAdapter.PictureTapHandler{
 
@@ -141,7 +142,7 @@ public class GeneralPictureListActivity extends Activity implements RestTemplate
         n0 =  pic.getFileName();
         n0 = n0.substring(n0.indexOf("QP") + 2, n0.lastIndexOf("."));
         iWork = Integer.valueOf(n0);
-        ret = String.format(getResources().getConfiguration().getLocales().get(0), "%05d", iWork);
+        ret = String.format(getLocale(), "%05d", iWork);
         return ret;
     }
 
@@ -167,7 +168,7 @@ public class GeneralPictureListActivity extends Activity implements RestTemplate
     public void RestTemplateCallback(AbstractResult result) {
         if(result instanceof ErrorResult) {
             ErrorResult err = ResultService.getErrorResult(result);
-            ErrorResponseHandler.handle(err, this, this::finishAndRemoveTask);
+            ErrorResponseHandler.handle(err, this::finishAndRemoveTask);
         } else {
             switch (result.getRequestCode()){
                 case REST_CONFIGLOAD_KEY:

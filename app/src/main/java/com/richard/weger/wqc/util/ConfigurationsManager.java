@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.helper.ActivityHelper;
+import com.richard.weger.wqc.helper.QrTextHelper;
 import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.service.ParamConfigurationsRequestParametersResolver;
 
@@ -49,6 +50,7 @@ public class ConfigurationsManager{
         Gson gson = new Gson();
         String json = gson.toJson(config);
         Editor prefsEditor = App.getmPrefs().edit();
+        LoggerManager.getLogger(QrTextHelper.class).severe("Configs json:\n" + json);
         prefsEditor.putString(Configurations.class.getName(), json);
         prefsEditor.apply();
         if(firstTimeSet){

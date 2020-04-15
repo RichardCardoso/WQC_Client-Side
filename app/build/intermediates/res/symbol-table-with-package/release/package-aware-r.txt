@@ -1700,6 +1700,7 @@ string projectNumberPrefix
 string projectUpdatedMessage
 string project_id
 string pushMessageConnectionFailed
+string qrProcessingFailed
 string qrScanButton
 string qrScanQuestion
 string qrWelcome

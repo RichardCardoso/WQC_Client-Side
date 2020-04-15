@@ -3,7 +3,6 @@ package com.richard.weger.wqc.rest;
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.exception.ServerException;
 import com.richard.weger.wqc.result.ErrorResult;
-import com.richard.weger.wqc.util.App;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
@@ -11,12 +10,14 @@ import org.springframework.web.client.ResponseErrorHandler;
 
 import java.io.IOException;
 
+import static com.richard.weger.wqc.util.App.getStringResource;
+
 public class RestTemplateResponseErrorHandler implements ResponseErrorHandler {
 
     private String requestCode;
     private String resource;
 
-    public RestTemplateResponseErrorHandler(String requestCode, String resource){
+    RestTemplateResponseErrorHandler(String requestCode, String resource){
         super();
         this.requestCode = requestCode;
         this.resource = resource;
@@ -41,7 +42,7 @@ public class RestTemplateResponseErrorHandler implements ResponseErrorHandler {
         sCode = null;
         sLevel = null;
         responseStatus = null;
-        description = App.getContext().getResources().getString(R.string.unknownErrorMessage);
+        description = getStringResource(R.string.unknownErrorMessage);
 
         try{
             responseStatus = response.getStatusCode();

@@ -1,5 +1,6 @@
 package com.richard.weger.wqc.util;
 
+import android.app.Activity;
 import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -7,21 +8,44 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 
+import androidx.annotation.DrawableRes;
+import androidx.annotation.StringRes;
+import androidx.core.content.ContextCompat;
+
 import com.richard.weger.wqc.R;
+import com.richard.weger.wqc.helper.StringHelper;
 
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
-public class App extends Application {
+public class App extends Application implements MyActivityLifecycleCallback.ActivityLifecycleCallbackHandler {
+
+    private static Activity currentActivity;
+
     private static App context;
 
     private static SharedPreferences mPrefs;
 
     private static Set<String> processedMessages = new HashSet<>();
+
+    @Override
+    public void onCreate(){
+        super.onCreate();
+        context = this;
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        registerActivityLifecycleCallbacks(new MyActivityLifecycleCallback(this));
+        try {
+            createNotificationChannel();
+        } catch (Exception ex) {
+            String sEx = StringHelper.getStackTraceAsString(ex);
+            LoggerManager.getLogger(App.class).warning("Failed to create a notification channel!\n" + sEx);
+        }
+    }
 
     public static boolean isValidVersion(String serverVersion) {
         if(serverVersion == null){
@@ -61,11 +85,12 @@ public class App extends Application {
         return mPrefs;
     }
 
-    @Override
-    public void onCreate(){
-        super.onCreate();
-        context = this;
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+    public static String getStringResource(@StringRes int id) {
+        return getContext().getString(id);
+    }
+
+    public static Drawable getDrawableResource(@DrawableRes int id) {
+        return ContextCompat.getDrawable(getContext(), id);
     }
 
     public static Context getContext(){
@@ -76,10 +101,20 @@ public class App extends Application {
         return Settings.Secure.getString(getContext().getContentResolver(), Settings.Secure.ANDROID_ID);
     }
 
+
+    public static synchronized Activity getCurrentActivity() {
+        return currentActivity;
+    }
+
+    @Override
+    public synchronized void activityResumed(Activity activity) {
+        App.currentActivity = activity;
+    }
+
     public static void createNotificationChannel(){
-        CharSequence name = App.getContext().getResources().getString(R.string.updatesChannelName);
-        String description = App.getContext().getResources().getString(R.string.updatesChannelDescription);
-        String id = App.getContext().getResources().getString(R.string.updatesChannelId);
+        CharSequence name = getStringResource(R.string.updatesChannelName);
+        String description = getStringResource(R.string.updatesChannelDescription);
+        String id = getStringResource(R.string.updatesChannelId);
         int importance = NotificationManager.IMPORTANCE_DEFAULT;
         NotificationChannel channel = new NotificationChannel(id, name, importance);
         channel.setDescription(description);

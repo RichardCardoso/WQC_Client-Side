@@ -1,10 +1,8 @@
 package com.richard.weger.wqc.result;
 
 import com.richard.weger.wqc.R;
-import com.richard.weger.wqc.util.App;
-import com.richard.weger.wqc.util.LoggerManager;
 
-import java.util.logging.Logger;
+import static com.richard.weger.wqc.util.App.getStringResource;
 
 public class ErrorResult extends AbstractResult {
 	
@@ -73,7 +71,8 @@ public class ErrorResult extends AbstractResult {
 
 		INVALID_REST_METHOD,
 		INVALID_ENTITYRETURNTYPE,
-		INVALID_REQUESTCODE
+		INVALID_REQUESTCODE,
+		RESULT_ISNOT_AN_ERROR
 	}
 	
 	private String code;
@@ -91,7 +90,7 @@ public class ErrorResult extends AbstractResult {
 	public ErrorResult(ErrorCode code, String description, ErrorLevel level) {
 
 		if(description == null){
-			description = App.getContext().getResources().getString(R.string.unknownErrorMessage);
+			description = getStringResource(R.string.unknownErrorMessage);
 		}
 		if(code != null) {
 			setCode(code.toString());

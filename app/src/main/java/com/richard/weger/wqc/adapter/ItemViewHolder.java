@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.richard.weger.wqc.util.App.getStringResource;
+
 public class ItemViewHolder extends RecyclerView.ViewHolder {
     TextView tvItemDesc;
     ImageView ivItemPic;
@@ -42,10 +44,10 @@ public class ItemViewHolder extends RecyclerView.ViewHolder {
         rootLayout = itemView.findViewById(R.id.rootLayout);
 
          List<String> statusStringList = new ArrayList<>(Arrays.asList(
-                App.getContext().getResources().getString(R.string.rdNotChecked),
-                App.getContext().getResources().getString(R.string.rdAproved),
-                App.getContext().getResources().getString(R.string.rdNotAproved),
-                App.getContext().getResources().getString(R.string.rdNotAplicable)));
+                 getStringResource(R.string.rdNotChecked),
+                getStringResource(R.string.rdAproved),
+                getStringResource(R.string.rdNotAproved),
+                getStringResource(R.string.rdNotAplicable)));
 
 //        List<Integer> statusList = new ArrayList<>(Arrays.asList(ITEM_NOT_CHECKED_KEY, ITEM_APROVED_KEY, ITEM_NOT_APROVED_KEY, ITEM_NOT_APLICABLE_KEY));
         ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(App.getContext(), android.R.layout.simple_spinner_dropdown_item, statusStringList);
@@ -61,7 +63,7 @@ public class ItemViewHolder extends RecyclerView.ViewHolder {
         if(comments != null && comments.length() > 0) {
             tvComments.setText(comments);
         } else {
-            tvComments.setText(App.getContext().getResources().getString(R.string.commentsLabel));
+            tvComments.setText(getStringResource(R.string.commentsLabel));
         }
     }
 

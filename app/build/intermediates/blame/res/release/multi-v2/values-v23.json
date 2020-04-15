@@ -4,7 +4,7 @@
             "outputFile": "C:\\Users\\vendas1\\AndroidStudioProjects\\WQC\\app\\build\\intermediates\\incremental\\mergeReleaseResources\\merged.dir\\values-v23\\values-v23.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\vendas1\\.gradle\\caches\\transforms-2\\files-2.1\\9353316781c07baf191ac52c3a8989af\\res\\values-v23\\values-v23.xml",
+                    "source": "C:\\Users\\vendas1\\.gradle\\caches\\transforms-2\\files-2.1\\b6362d95ebb099144b9b7e3d2ca2ff19\\cardview-1.0.0\\res\\values-v23\\values-v23.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -23,7 +23,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\vendas1\\.gradle\\caches\\transforms-2\\files-2.1\\8c4a2618eab26f59999cf1ed3fd0430c\\res\\values-v23\\values-v23.xml",
+                    "source": "C:\\Users\\vendas1\\.gradle\\caches\\transforms-2\\files-2.1\\d3650e5d09b276f8027cd6e2bce33712\\appcompat-1.0.0\\res\\values-v23\\values-v23.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,19,32,33,34,35,36",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4",

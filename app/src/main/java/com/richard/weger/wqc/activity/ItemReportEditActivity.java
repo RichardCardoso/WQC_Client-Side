@@ -38,6 +38,7 @@ import com.richard.weger.wqc.result.SuccessResult;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.service.ItemRequestParametersResolver;
 import com.richard.weger.wqc.service.ReportRequestParametersResolver;
+import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 import com.richard.weger.wqc.util.LoggerManager;
 
@@ -56,6 +57,7 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTUREDOWNLO
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTUREUPLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_REPORTUPLOAD_KEY;
+import static com.richard.weger.wqc.util.App.getStringResource;
 
 public class ItemReportEditActivity extends Activity implements ReportItemActionHandler,
         RestTemplateHelper.RestResponseHandler,
@@ -155,7 +157,7 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
     private void setTextViews(){
         logger.info("Setting text views");
         ((TextView)findViewById(R.id.tvProjectInfo)).setText(
-                String.format(getResources().getConfiguration().getLocales().get(0),
+                String.format(App.getLocale(),
                         "%s - Z%d",
                         project.getReference(),
                         project.getDrawingRefs().get(0).getDnumber()
@@ -180,8 +182,8 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
             if(report.getItems().stream().noneMatch(i -> i.getStatus() == ITEM_NOT_CHECKED_KEY) || report.isFinished()) {
                 shouldChangeReportState();
             } else {
-                ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_UNFINISHED_ITEMREPORT_WARNING, getResources().getString(R.string.pendingItemsMessage), ErrorResult.ErrorLevel.WARNING);
-                ErrorResponseHandler.handle(err, this, this::cancelReportFinish);
+                ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_UNFINISHED_ITEMREPORT_WARNING, getStringResource(R.string.pendingItemsMessage), ErrorResult.ErrorLevel.WARNING);
+                ErrorResponseHandler.handle(err, this::cancelReportFinish);
             }
         });
 
@@ -189,21 +191,20 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
 
     private void shouldChangeReportState(){
         if(!report.isFinished()) {
-            AlertHelper.showMessage(this,
-                    getResources().getString(R.string.confirmationNeeded),
-                    getResources().getString(R.string.reportFinishMessage),
-                    getResources().getString(R.string.yesTAG),
-                    getResources().getString(R.string.noTag),
+            AlertHelper.showMessage(getStringResource(R.string.confirmationNeeded),
+                    getStringResource(R.string.reportFinishMessage),
+                    getStringResource(R.string.yesTAG),
+                    getStringResource(R.string.noTag),
                     () -> reportFinish(true),
-                    this::cancelReportFinish);
+                    this::cancelReportFinish, this);
         } else {
-            AlertHelper.showMessage(this,
-                    getResources().getString(R.string.confirmationNeeded),
-                    getResources().getString(R.string.reportUnfinishMessage),
-                    getResources().getString(R.string.yesTAG),
-                    getResources().getString(R.string.noTag),
+            AlertHelper.showMessage(
+                    getStringResource(R.string.confirmationNeeded),
+                    getStringResource(R.string.reportUnfinishMessage),
+                    getStringResource(R.string.yesTAG),
+                    getStringResource(R.string.noTag),
                     () -> reportFinish(false),
-                    this::cancelReportFinish);
+                    this::cancelReportFinish, this);
         }
     }
 
@@ -215,13 +216,13 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
     private void reportFinish(boolean finish){
         toggleControls(false);
         if(report.getClient() == null || report.getClient().isEmpty()){
-            AlertHelper.getString(this, getResources().getString(R.string.clientNameInformMessage), (content) -> {
+            AlertHelper.getString(getStringResource(R.string.clientNameInformMessage), (content) -> {
                 if(content != null && !content.isEmpty()) {
                     report.setClient(content);
                     reportFinish(!report.isFinished());
                 } else {
-                    ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_EMPTY_FIELDS_WARNING, getResources().getString(R.string.emptyFieldsError), ErrorResult.ErrorLevel.WARNING);
-                    ErrorResponseHandler.handle(err, this, () -> toggleControls(true));
+                    ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_EMPTY_FIELDS_WARNING, getStringResource(R.string.emptyFieldsError), ErrorResult.ErrorLevel.WARNING);
+                    ErrorResponseHandler.handle(err, () -> toggleControls(true));
                 }
             });
         } else {
@@ -235,8 +236,8 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
         logger.info("Updating pending items count");
         long pendingItems = report.getItems().stream().filter(i -> i.getStatus() == ITEM_NOT_CHECKED_KEY).count();
         ((TextView)findViewById(R.id.tvPendingItems)).setText(
-                String.format(getResources().getConfiguration().getLocales().get(0), "%s: %d",
-                        getResources().getString(R.string.pendingItemsLabel),
+                String.format(App.getLocale(), "%s: %d",
+                        getStringResource(R.string.pendingItemsLabel),
                         pendingItems));
     }
 
@@ -316,7 +317,7 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
         storeCurrListPosition();
         paused = true;
         if (FileHelper.isValidFile(StringHelper.getPicturesFolderPath(project) + item.getPicture().getFileName())) {
-            Intent intent = new Intent(ItemReportEditActivity.this, PictureViewerActivity.class);
+            Intent intent = new Intent(getApplicationContext(), PictureViewerActivity.class);
             intent.putStringArrayListExtra(PICTURES_LIST_KEY, new ArrayList<String>() {{
                 add(item.getPicture().getFileName());
             }});
@@ -436,6 +437,7 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
         if(result instanceof SuccessResult){
             switch (result.getRequestCode()) {
                 case REST_ITEMSAVE_KEY:
+                case REST_REPORTUPLOAD_KEY:
                     break;
                 case REST_QRPROJECTLOAD_KEY:
                     logger.info("The response was got from a project load request");
@@ -445,8 +447,8 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
                             .findFirst()
                             .orElse(null);
                     if (report == null) {
-                        ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.INVALID_ENTITY, getResources().getString(R.string.unknownErrorMessage), ErrorResult.ErrorLevel.SEVERE);
-                        ErrorResponseHandler.handle(err, this, () -> close(true));
+                        ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.INVALID_ENTITY, getStringResource(R.string.unknownErrorMessage), ErrorResult.ErrorLevel.SEVERE);
+                        ErrorResponseHandler.handle(err, () -> close(true));
                         return;
                     }
                     inflateActivityLayout();
@@ -454,8 +456,6 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
                     adapter.notifyDataSetChanged();
                     restoreCurrListPosition();
                     isWaiting = false;
-                    break;
-                case REST_REPORTUPLOAD_KEY:
                     break;
                 case REST_PICTUREDOWNLOAD_KEY:
                     toggleControls(true);
@@ -476,7 +476,7 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
             }
         } else {
             ErrorResult err = ResultService.getErrorResult(result);
-            ErrorResponseHandler.handle(err, this, () -> close(true));
+            ErrorResponseHandler.handle(err, () -> close(true));
         }
     }
 

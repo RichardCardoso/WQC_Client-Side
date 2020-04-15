@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Gradle: org.powermock:powermock-classloading-xstream:1.5.5@jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-classloading-xstream/1.5.5/9935c5c34cd650f8a5c85c2822a2aae153a48210/powermock-classloading-xstream-1.5.5.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-classloading-xstream/1.5.5/b00296046f36c63ec6816eb7277cc0b30854789d/powermock-classloading-xstream-1.5.5-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-classloading-xstream/1.5.5/2f288ad85b9db3158908a90a5f0e2c8088056ff6/powermock-classloading-xstream-1.5.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -15,6 +15,8 @@ import com.richard.weger.wqc.util.App;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.richard.weger.wqc.util.App.getStringResource;
+
 public class ActivityHelper {
 
     public static void setWaitingLayout(Activity target){
@@ -38,14 +40,12 @@ public class ActivityHelper {
             btnExit = target.findViewById(R.id.btnExit);
             //                        android.os.Process.killProcess(android.os.Process.myPid());
             btnExit.setOnClickListener((View v) -> AlertHelper.showMessage(
-                    target,
-                    target.getResources().getString(R.string.confirmationNeeded),
-                    target.getResources().getString(R.string.cancelQuestion),
-                    target.getResources().getString(R.string.yesTAG),
-                    target.getResources().getString(R.string.noTag),
-//                        android.os.Process.killProcess(android.os.Process.myPid());
+                    getStringResource(R.string.confirmationNeeded),
+                    getStringResource(R.string.cancelQuestion),
+                    getStringResource(R.string.yesTAG),
+                    getStringResource(R.string.noTag),
                     target::finish,
-                    null)
+                    null, target)
             );
         });
 
@@ -63,7 +63,7 @@ public class ActivityHelper {
         }
     }
 
-    public static void disableActivityControls(Activity target, boolean allowCancel){
+    private static void disableActivityControls(Activity target, boolean allowCancel){
         List<Integer> cancelControls = Arrays.asList(R.id.backButton, R.id.backButton, R.id.btnExit);
         ViewGroup g = (ViewGroup) target.getWindow().getDecorView();
         for (int i = 0; i < g.getChildCount(); i++) {

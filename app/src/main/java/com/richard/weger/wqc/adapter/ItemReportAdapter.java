@@ -17,6 +17,8 @@ import com.richard.weger.wqc.util.App;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.richard.weger.wqc.util.App.getStringResource;
+
 public class ItemReportAdapter extends RecyclerView.Adapter<ItemViewHolder> {
 
     private String rootPath;
@@ -24,7 +26,7 @@ public class ItemReportAdapter extends RecyclerView.Adapter<ItemViewHolder> {
     private ReportItemActionHandler reportItemTapHandler;
     private boolean enabled;
 
-    public boolean isEnabled() {
+    private boolean isEnabled() {
         return enabled;
     }
 
@@ -100,8 +102,8 @@ public class ItemReportAdapter extends RecyclerView.Adapter<ItemViewHolder> {
         holder.tvComments.setEnabled(isEnabled());
         holder.tvComments.setOnClickListener(v -> {
             String message = String.format(App.getLocale(), "%d - %s", position + 1, itemList.get(position).getDescription());
-            String defaultText = App.getContext().getResources().getString(R.string.editCommentsHint);
-            AlertHelper.getString(holder.tvComments.getContext(), message, (content) -> {
+            String defaultText = getStringResource(R.string.editCommentsHint);
+            AlertHelper.getString(message, (content) -> {
                 if (content != null && !content.equals(defaultText) && reportItemTapHandler != null) {
                     reportItemTapHandler.onCommentsChange(position, content);
                 }

@@ -22,6 +22,7 @@ import com.richard.weger.wqc.rest.file.FileRestTemplateHelper;
 import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.EmptyResult;
 import com.richard.weger.wqc.result.ErrorResult;
+import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.service.FileRequestParametersResolver;
 import com.richard.weger.wqc.service.ProjectRequestParametersResolver;
 import com.richard.weger.wqc.util.App;
@@ -47,6 +48,8 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_PDFDOCUMENTSR
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_PDFREPORTDOWNLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_PICTUREUPLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
+import static com.richard.weger.wqc.util.App.getLocale;
+import static com.richard.weger.wqc.util.App.getStringResource;
 import static java.io.File.separatorChar;
 
 public class ProjectHelper {
@@ -58,11 +61,13 @@ public class ProjectHelper {
     private static Logger logger = LoggerManager.getLogger(ProjectHelper.class);
 
     public static AbstractResult setQrCode(String qrCode) {
-        Map<String, String> values = new QrTextHelper(conf).execute(qrCode);
+        Map<String, String> values = translateQrValues(qrCode);
         if(values == null){
             return new ErrorResult(ErrorResult.ErrorCode.QR_TRANSLATION_FAILED,
-                    App.getContext().getResources().getString(R.string.invalidQrCodeString),
-                    ErrorResult.ErrorLevel.SEVERE);
+                    String.format(getLocale(), "%s (%s)",
+                            getStringResource(R.string.invalidQrCodeString),
+                            qrCode),
+                            ErrorResult.ErrorLevel.SEVERE);
         }
         ProjectHelper.qrCode = qrCode;
         return new EmptyResult();
@@ -76,8 +81,8 @@ public class ProjectHelper {
         ProjectHelper.conf = conf;
     }
 
-    public static Project getProject(String qrCode, ParamConfigurations conf){
-        Map<String, String> values = new QrTextHelper(conf).execute(qrCode);
+    public static Project getProject(String qrCode){
+        Map<String, String> values = translateQrValues(qrCode);
 
         Project project = new Project();
         project.setReference(values.get(PROJECT_NUMBER_KEY));
@@ -96,8 +101,18 @@ public class ProjectHelper {
         return project;
     }
 
+    private static Map<String, String> translateQrValues(String qrCode) {
+
+        Map<String, String> ret = new QrTextHelper(conf).execute(qrCode);
+        if(ret == null) {
+            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.QR_TRANSLATION_FAILED, getStringResource(R.string.qrProcessingFailed), ErrorResult.ErrorLevel.SEVERE);
+            ErrorResponseHandler.handle(err, () -> System.exit(0));
+        }
+        return ret;
+    }
+
     public static Project getProject(){
-        Map<String, String> values = new QrTextHelper(conf).execute(getQrCode());
+        Map<String, String> values = translateQrValues(getQrCode());
 
         Project project = new Project();
         project.setReference(values.get(PROJECT_NUMBER_KEY));
@@ -125,7 +140,7 @@ public class ProjectHelper {
         StackTraceElement caller = stackTraceElements[5];
         logger.info("Started project load request routine (Caller: " + caller.getClassName() + "." + caller.getMethodName() + ":" + caller.getLineNumber() + ").");
         Resources r = App.getContext().getResources();
-        String message = String.format(r.getConfiguration().getLocales().get(0), "%s, %s",
+        String message = String.format(App.getLocale(), "%s, %s",
                 r.getString(R.string.projectLoadingMessage),
                 r.getString(R.string.pleaseWaitMessage).toLowerCase());
         if(toggleWaitScreen) {

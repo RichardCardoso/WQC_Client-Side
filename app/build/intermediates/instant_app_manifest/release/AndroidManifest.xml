@@ -3,7 +3,7 @@
     package="com.richard.weger.wqc"
     android:targetSandboxVersion="2"
     android:versionCode="2"
-    android:versionName="2.7.1.5" >
+    android:versionName="2.7.1.7" >
 
     <uses-sdk
         android:minSdkVersion="26"

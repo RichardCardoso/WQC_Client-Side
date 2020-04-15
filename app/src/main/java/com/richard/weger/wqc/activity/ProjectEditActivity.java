@@ -41,6 +41,8 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REPORT_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_CONFIGLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.WELCOME_ACTIVITY_SCREEN_KEY;
+import static com.richard.weger.wqc.util.App.getLocale;
+import static com.richard.weger.wqc.util.App.getStringResource;
 
 public class ProjectEditActivity extends ListActivity
         implements ProjectEditAdapter.ChangeListener,
@@ -85,7 +87,7 @@ public class ProjectEditActivity extends ListActivity
         if(project != null){
             setFields();
         }
-        locale = getApplicationContext().getResources().getConfiguration().getLocales().get(0);
+        locale = getLocale();
     }
 
     private void init(){
@@ -138,38 +140,38 @@ public class ProjectEditActivity extends ListActivity
         button.setOnClickListener(v -> {
             logger.info("Started general picsList list activity");
             toggleControls(false);
-            Intent intent = new Intent(ProjectEditActivity.this, GeneralPictureListActivity.class);
+            Intent intent = new Intent(getApplicationContext(), GeneralPictureListActivity.class);
             startActivityForResult(intent, GENPICTURE_LIST_SCREEN_ID);
         });
 
         button = findViewById(R.id.btnProjectInfo);
 
         button.setOnClickListener(v -> {
-            Intent intent = new Intent(ProjectEditActivity.this, ProjectInfoActivity.class);
+            Intent intent = new Intent(getApplicationContext(), ProjectInfoActivity.class);
             intent.putExtra(PROJECT_KEY, project);
             intent.putExtra(PARAMCONFIG_KEY, conf);
             startActivityForResult(intent, PROJECT_FINISH_SCREEN_ID);
         });
 
         button = findViewById(R.id.btnExit);
-        button.setOnClickListener(v -> AlertHelper.showMessage(this,
-                getResources().getString(R.string.confirmationNeeded),
-                getResources().getString(R.string.qrScanQuestion),
-                getResources().getString(R.string.yesTAG),
-                getResources().getString(R.string.noTag),
+        button.setOnClickListener(v -> AlertHelper.showMessage(
+                getStringResource(R.string.confirmationNeeded),
+                getStringResource(R.string.qrScanQuestion),
+                getStringResource(R.string.yesTAG),
+                getStringResource(R.string.noTag),
                 () -> {
-                    Intent intent = new Intent(ProjectEditActivity.this, WelcomeActivity.class);
+                    Intent intent = new Intent(getApplicationContext(), WelcomeActivity.class);
                     ProjectHelper.setQrCode("");
                     startActivityForResult(intent, WELCOME_ACTIVITY_SCREEN_KEY);
                     finish();
                 },
-                () -> AlertHelper.showMessage(this,
-                        getResources().getString(R.string.app_name),
-                        getResources().getString(R.string.closeQuestion),
-                        getResources().getString(R.string.yesTAG),
-                        getResources().getString(R.string.noTag),
+                () -> AlertHelper.showMessage(
+                        getStringResource(R.string.app_name),
+                        getStringResource(R.string.closeQuestion),
+                        getStringResource(R.string.yesTAG),
+                        getStringResource(R.string.noTag),
                         this::finish,
-                        null)));
+                        null, this),this ));
 
     }
 
@@ -181,15 +183,15 @@ public class ProjectEditActivity extends ListActivity
 
         project.setReference(projectNumber);
         ((TextView)findViewById(R.id.tvProjectInfo)).setText(String.format(locale, "%s%s",
-                getResources().getString(R.string.projectNumberPrefix), projectNumber));
+                getStringResource(R.string.projectNumberPrefix), projectNumber));
 
         project.getDrawingRefs().get(0).setDnumber(Integer.valueOf(drawingNumber));
         ((TextView)findViewById(R.id.tvReportType)).setText(String.format(locale, "%s%s",
-                getResources().getString(R.string.drawingNumberPrefix), drawingNumber));
+                getStringResource(R.string.drawingNumberPrefix), drawingNumber));
 
         project.getDrawingRefs().get(0).getParts().get(0).setNumber(Integer.valueOf(partNumber));
         ((TextView)findViewById(R.id.tvPartNumber)).setText(String.format(locale, "%s%s",
-                getResources().getString(R.string.partNumberPrefix), partNumber));
+                getStringResource(R.string.partNumberPrefix), partNumber));
 
     }
 
@@ -204,7 +206,7 @@ public class ProjectEditActivity extends ListActivity
             Class targetActivityClass;
             targetActivityClass = helper.getTargetActivityClass(report);
             logger.info("Starting report edit screen (class: " + targetActivityClass.getSimpleName() + ")");
-            Intent intent = new Intent(ProjectEditActivity.this, targetActivityClass);
+            Intent intent = new Intent(getApplicationContext(), targetActivityClass);
             intent.putExtra(REPORT_KEY, report);
             intent.putExtra(PROJECT_KEY, project);
             intent.putExtra(REPORT_ID_KEY, report.getId());
@@ -213,7 +215,7 @@ public class ProjectEditActivity extends ListActivity
         } else {
             String message = "Report with id " + id + " not found. Edit activity will not start";
             ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.ENTITY_NOT_FOUND, message, ErrorResult.ErrorLevel.SEVERE);
-            ErrorResponseHandler.handle(err, this, null);
+            ErrorResponseHandler.handle(err, null);
         }
     }
 
@@ -243,7 +245,7 @@ public class ProjectEditActivity extends ListActivity
             }
         } else {
             ErrorResult err = ResultService.getErrorResult(result);
-            ErrorResponseHandler.handle(err, this, null);
+            ErrorResponseHandler.handle(err, null);
         }
     }
 

@@ -151,4 +151,5 @@
     <string name="cancelQuestion">Desideri annullare l\'operazione corrente?</string>
     <string name="beginUploadQuestion">Vuoi caricare le foto scattate?</string>
     <string name="pictureRemoveQuestion">Vuoi rimuovere questa immagine dalla lista di upload?</string>
+    <string name="qrProcessingFailed">Impossibile elaborare i dati del codice qr</string>
 </resources>

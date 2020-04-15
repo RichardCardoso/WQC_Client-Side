@@ -12,8 +12,8 @@ import com.richard.weger.wqc.domain.ItemReport;
 import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.domain.Report;
-import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.helper.AlertHelper;
+import com.richard.weger.wqc.helper.DeviceHelper;
 import com.richard.weger.wqc.helper.ProjectHelper;
 import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.rest.entity.EntityRestTemplateHelper;
@@ -30,6 +30,7 @@ import java.util.List;
 import static com.richard.weger.wqc.appconstants.AppConstants.PARAMCONFIG_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.PROJECT_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_REPORTUPLOAD_KEY;
+import static com.richard.weger.wqc.util.App.getStringResource;
 
 public class ProjectInfoActivity extends Activity implements RestTemplateHelper.RestResponseHandler {
 
@@ -53,8 +54,8 @@ public class ProjectInfoActivity extends Activity implements RestTemplateHelper.
             conf = (ParamConfigurations) b.get(PARAMCONFIG_KEY);
             ProjectHelper.linkReferences(project);
         } else {
-            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_INTENT_DATA_RETRIEVAL_EXCEPTION, getResources().getString(R.string.unknownErrorMessage), ErrorResult.ErrorLevel.SEVERE);
-            ErrorResponseHandler.handle(err, this, () -> close(true));
+            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_INTENT_DATA_RETRIEVAL_EXCEPTION, getStringResource(R.string.unknownErrorMessage), ErrorResult.ErrorLevel.SEVERE);
+            ErrorResponseHandler.handle(err, () -> close(true));
         }
 
         setListeners();
@@ -104,9 +105,9 @@ public class ProjectInfoActivity extends Activity implements RestTemplateHelper.
         editClient = findViewById(R.id.editClient);
         editComments = findViewById(R.id.editReportComments);
         if (editClient.getText().toString().equals("")) {
-            String message = getResources().getString(R.string.emptyFieldsError);
+            String message = getStringResource(R.string.emptyFieldsError);
             ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_EMPTY_FIELDS_WARNING, message, ErrorResult.ErrorLevel.WARNING);
-            ErrorResponseHandler.handle(err, this, () -> toggleControls(true));
+            ErrorResponseHandler.handle(err, () -> toggleControls(true));
             return;
         }
 
@@ -143,10 +144,10 @@ public class ProjectInfoActivity extends Activity implements RestTemplateHelper.
 
     private void completion(){
         if(queue != null && (queue.stream().filter(r -> r.getStatus() == AsyncTask.Status.FINISHED || r.isCancelled() || r.getStatus() == AsyncTask.Status.PENDING).count() - 1) <= 0) {
-            String message = getResources().getString(R.string.changesSavedMessage);
-            AlertHelper.showMessage(this,
+            String message = getStringResource(R.string.changesSavedMessage);
+            AlertHelper.showMessage(
                     message,
-                    getResources().getString(R.string.okTag),
+                    getStringResource(R.string.okTag),
                     () -> close(false)
             );
         }
@@ -158,7 +159,7 @@ public class ProjectInfoActivity extends Activity implements RestTemplateHelper.
             completion();
         } else {
             ErrorResult err = ResultService.getErrorResult(result);
-            ErrorResponseHandler.handle(err, this, () -> close(false));
+            ErrorResponseHandler.handle(err, () -> close(false));
         }
     }
 

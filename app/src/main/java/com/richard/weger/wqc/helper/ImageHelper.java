@@ -29,7 +29,6 @@ import com.richard.weger.wqc.domain.Project;
 import com.richard.weger.wqc.rest.RestTemplateHelper;
 import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
-import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.GeneralPictureDTO;
 import com.richard.weger.wqc.util.LoggerManager;
 
@@ -51,6 +50,7 @@ import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_START_INDE
 import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_VIEWER_SCREEN_ID;
 import static com.richard.weger.wqc.appconstants.AppConstants.REQUEST_IMAGE_CAPTURE_ACTION;
 import static com.richard.weger.wqc.appconstants.AppConstants.SDF;
+import static com.richard.weger.wqc.util.App.getStringResource;
 
 public class ImageHelper {
 
@@ -396,10 +396,10 @@ public class ImageHelper {
     }
 
     private static void pictureCaptureSetupException(Context context, Exception ex){
-        String message = App.getContext().getResources().getString(R.string.photoCaptureError).concat("\n(").concat(App.getContext().getResources().getString(R.string.tryAgainLaterMessage));
+        String message = getStringResource(R.string.photoCaptureError).concat("\n(").concat(getStringResource(R.string.tryAgainLaterMessage));
         LoggerManager.getLogger(PictureViewerActivity.class).severe(StringHelper.getStackTraceAsString(ex));
         ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_PHOTO_CAPTURE_SETTING_EXCEPTION, message, ErrorResult.ErrorLevel.SEVERE);
-        ErrorResponseHandler.handle(err, context, null);
+        ErrorResponseHandler.handle(err, null);
     }
 
     public static void showPicture(List<GeneralPictureDTO> picsList, int position, Activity delegate){

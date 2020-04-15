@@ -1,7 +1,7 @@
-#Tue Oct 22 12:10:40 BRST 2019
-base.0=C\:\\Users\\vendas1\\AndroidStudioProjects\\WQC\\app\\build\\intermediates\\transforms\\dexMerger\\release\\0
+#Wed Apr 15 17:45:06 BRT 2020
+base.0=C\:\\Users\\vendas1\\AndroidStudioProjects\\WQC\\app\\build\\intermediates\\dex\\release\\mergeDexRelease\\out\\classes.dex
 path.1=classes2.dex
 renamed.1=classes2.dex
 path.0=classes.dex
 renamed.0=classes.dex
-base.1=C\:\\Users\\vendas1\\AndroidStudioProjects\\WQC\\app\\build\\intermediates\\transforms\\dexMerger\\release\\0
+base.1=C\:\\Users\\vendas1\\AndroidStudioProjects\\WQC\\app\\build\\intermediates\\dex\\release\\mergeDexRelease\\out\\classes2.dex

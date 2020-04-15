@@ -13,6 +13,8 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import static com.richard.weger.wqc.util.App.*;
+
 public class LoggerManager {
     static private FileHandler infoHandler, warnHandler, severeHandler;
 
@@ -53,8 +55,8 @@ public class LoggerManager {
 
     private static FileHandler getFileHandler(ErrorResult.ErrorLevel level, FileHandler handler){
         if(handler == null) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", App.getContext().getResources().getConfiguration().getLocales().get(0));
-            File pFolder = App.getContext().getExternalFilesDir(null);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", getLocale());
+            File pFolder = getContext().getExternalFilesDir(null);
             String pattern = null;
             if (pFolder != null) {
                 pattern = pFolder.getPath() + "/";

@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import static com.richard.weger.wqc.appconstants.AppConstants.PICTURE_VIEWER_SCREEN_ID;
 import static com.richard.weger.wqc.appconstants.AppConstants.REQUEST_IMAGE_CAPTURE_ACTION;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_GENPICTUREUPLOAD_KEY;
+import static com.richard.weger.wqc.util.App.getStringResource;
 
 public class GeneralPictureCaptureActivity extends Activity implements
         GeneralPicturePreviewAdapter.PictureTapHandler, RestTemplateHelper.RestResponseHandler, GeneralPicturesProcessorScheduler.GeneralPicturesProcessorListener {
@@ -117,29 +118,32 @@ public class GeneralPictureCaptureActivity extends Activity implements
 
     private void setListeners(){
         (findViewById(R.id.backButton)).setOnClickListener(v ->
-                AlertHelper.showMessage(this, null,
-                        getResources().getString(R.string.beginUploadQuestion),
-                        getResources().getString(R.string.yesTAG),
-                        getResources().getString(R.string.noTag),
-                        this::beginUpload, this::close)
+                AlertHelper.showMessage(null,
+                        getStringResource(R.string.beginUploadQuestion),
+                        getStringResource(R.string.yesTAG),
+                        getStringResource(R.string.noTag),
+                        this::beginUpload, this::close, this)
         );
-        (findViewById(R.id.takeButton)).setOnClickListener(v -> takePicture());
+        (findViewById(R.id.takeButton)).setOnClickListener(v -> {
+            (findViewById(R.id.takeButton)).setEnabled(false);
+            takePicture();
+        });
         (findViewById(R.id.uploadButton)).setOnClickListener(v ->
-                AlertHelper.showMessage(this, null,
-                        getResources().getString(R.string.beginUploadQuestion),
-                        getResources().getString(R.string.yesTAG),
-                        getResources().getString(R.string.noTag),
-                        this::beginUpload, null)
+                AlertHelper.showMessage(null,
+                        getStringResource(R.string.beginUploadQuestion),
+                        getStringResource(R.string.yesTAG),
+                        getStringResource(R.string.noTag),
+                        this::beginUpload, null, this)
         );
     }
 
     private void setCancelListener() {
         (findViewById(R.id.backButton)).setOnClickListener(v ->
-                AlertHelper.showMessage(this, null,
-                        getResources().getString(R.string.cancelQuestion),
-                        getResources().getString(R.string.yesTAG),
-                        getResources().getString(R.string.noTag),
-                        this::close, null)
+                AlertHelper.showMessage(null,
+                        getStringResource(R.string.cancelQuestion),
+                        getStringResource(R.string.yesTAG),
+                        getStringResource(R.string.noTag),
+                        this::close, null, this)
         );
     }
 
@@ -260,10 +264,10 @@ public class GeneralPictureCaptureActivity extends Activity implements
             uploadCount--;
         }
         if(uploadCount == 0) {
-            AlertHelper.showMessage(this,
-                    getResources().getString(R.string.changesSavedMessage),
-                    getResources().getString(R.string.okTag), this::setCloseResult
+            AlertHelper.showMessage(getStringResource(R.string.changesSavedMessage),
+                    getStringResource(R.string.okTag), this::setCloseResult
             );
+            toggleControls(true);
         }
     }
 
@@ -287,13 +291,12 @@ public class GeneralPictureCaptureActivity extends Activity implements
     @Override
     public void onRemoveRequest(int position) {
         AlertHelper.showMessage(
-                this,
-                getResources().getString(R.string.confirmationNeeded),
-                getResources().getString(R.string.pictureRemoveQuestion),
-                getResources().getString(R.string.yesTAG),
-                getResources().getString(R.string.noTag),
+                getStringResource(R.string.confirmationNeeded),
+                getStringResource(R.string.pictureRemoveQuestion),
+                getStringResource(R.string.yesTAG),
+                getStringResource(R.string.noTag),
                 () -> removeFromList(position),
-                null);
+                null, this);
     }
 
     private void removeFromList(int position) {

@@ -151,4 +151,5 @@
     <string name="cancelQuestion">Möchten Sie den aktuellen Vorgang abbrechen?</string>
     <string name="beginUploadQuestion">Möchten Sie die aufgenommenen Fotos hochladen?</string>
     <string name="pictureRemoveQuestion">Möchten Sie dieses Bild aus der Upload-Liste entfernen?</string>
+    <string name="qrProcessingFailed">Qr-Code-Daten konnten nicht verarbeitet werden</string>
 </resources>

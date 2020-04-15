@@ -24,6 +24,7 @@ import static com.richard.weger.wqc.appconstants.AppConstants.DELETE_METHOD;
 import static com.richard.weger.wqc.appconstants.AppConstants.GET_METHOD;
 import static com.richard.weger.wqc.appconstants.AppConstants.POST_METHOD;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_MARKREMOVE_KEY;
+import static com.richard.weger.wqc.util.App.getStringResource;
 
 
 public class EntityRestTemplateHelper<T extends DomainEntity> extends RestTemplateHelper<EntityRequest<T>> {
@@ -54,7 +55,7 @@ public class EntityRestTemplateHelper<T extends DomainEntity> extends RestTempla
                 }
                 if (!(result instanceof ErrorResult) && (appVersion == null || !App.isValidVersion(appVersion))){
                     result = new ErrorResult(ErrorResult.ErrorCode.INVALID_APP_VERSION,
-                            App.getContext().getResources().getString(R.string.invalidVersionMessage)
+                            getStringResource(R.string.invalidVersionMessage)
                             + " (" + appVersion + " x " + App.getExpectedVersion() + ")",
                             ErrorResult.ErrorLevel.SEVERE);
                 }

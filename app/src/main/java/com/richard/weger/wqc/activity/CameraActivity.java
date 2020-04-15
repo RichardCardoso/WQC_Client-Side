@@ -33,6 +33,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.richard.weger.wqc.util.App.getStringResource;
+
 @SuppressWarnings("deprecated")
 public class CameraActivity extends AppCompatActivity implements SurfaceHolder.Callback, GeneralPicturesProcessorScheduler.GeneralPicturesProcessorListener {
 
@@ -88,33 +90,40 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
     }
 
     private void capture() {
+        findViewById(R.id.takeButton).setEnabled(false);
         mCamera.takePicture(null, null, null, (data, camera) -> {
-            Toast.makeText(getApplicationContext(), getResources().getString(R.string.okTag) + "!",
-                    Toast.LENGTH_SHORT).show();
-            String newPicName = StringHelper.getGeneralPictureFilename(ProjectHelper.getProject());
-            String filePath = StringHelper.getPicturesFolderPath(ProjectHelper.getProject()) + newPicName;
-            File f = new File(filePath);
-            try (FileOutputStream out = new FileOutputStream(f)){
-                out.write(data);
-                newPictures.add(newPicName);
-                ex.appendAndProccess(Collections.singletonList(newPicName));
+            try {
+                Toast.makeText(getApplicationContext(), getStringResource(R.string.okTag) + "!",
+                        Toast.LENGTH_SHORT).show();
+                String newPicName = StringHelper.getGeneralPictureFilename(ProjectHelper.getProject());
+                String filePath = StringHelper.getPicturesFolderPath(ProjectHelper.getProject()) + newPicName;
+                File f = new File(filePath);
+                try (FileOutputStream out = new FileOutputStream(f)) {
+                    out.write(data);
+                    newPictures.add(newPicName);
+                    ex.appendAndProccess(Collections.singletonList(newPicName));
 
-                TextView tvPicCount = findViewById(R.id.tvPicCount);
-                if(tvPicCount != null) {
-                    tvPicCount.setText(String.valueOf(newPictures.size()));
-                    tvPicCount.setVisibility(View.VISIBLE);
+                    TextView tvPicCount = findViewById(R.id.tvPicCount);
+                    if (tvPicCount != null) {
+                        tvPicCount.setText(String.valueOf(newPictures.size()));
+                        tvPicCount.setVisibility(View.VISIBLE);
+                    }
+                    mCamera.stopPreview();
+                    mCamera.startPreview();
+                    findViewById(R.id.takeButton).setEnabled(true);
+                } catch (Exception ex) {
+                    handleException(ex);
                 }
-
-            } catch (Exception ex) {
-                handleException(ex);
+            } catch (Exception ex2) {
+                handleException(ex2);
             }
         });
     }
 
     private void handleException(Exception e) {
-        ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_PHOTO_CAPTURE_SETTING_EXCEPTION, getResources().getString(R.string.photoCaptureError), ErrorResult.ErrorLevel.SEVERE);
+        ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_PHOTO_CAPTURE_SETTING_EXCEPTION, getStringResource(R.string.photoCaptureError), ErrorResult.ErrorLevel.SEVERE);
         LoggerManager.getLogger(CameraActivity.class).severe(StringHelper.getStackTraceAsString(e));
-        ErrorResponseHandler.handle(err, this, this::finishAndRemoveTask);
+        ErrorResponseHandler.handle(err, this::finishAndRemoveTask);
     }
 
     @Override
@@ -160,47 +169,58 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
             mCamera.setPreviewDisplay(surfaceHolder);
 
             Camera.Parameters parameters = mCamera.getParameters();
-            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+            try {
+                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
 
-            Display display = ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+                Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
 
-            if(display.getRotation() == Surface.ROTATION_0) {
+                if (display.getRotation() == Surface.ROTATION_0) {
 //                parameters.setPreviewSize(height, width);
-                parameters.setRotation(90);
-                mCamera.setDisplayOrientation(90);
-            }
+                    parameters.setRotation(90);
+                    mCamera.setDisplayOrientation(90);
+                }
 
-            if(display.getRotation() == Surface.ROTATION_90) {
+                if (display.getRotation() == Surface.ROTATION_90) {
 //                parameters.setPreviewSize(width, height);
-            }
+                }
 
-            if(display.getRotation() == Surface.ROTATION_180) {
+                if (display.getRotation() == Surface.ROTATION_180) {
 //                parameters.setPreviewSize(height, width);
-            }
+                }
 
-            if(display.getRotation() == Surface.ROTATION_270) {
+                if (display.getRotation() == Surface.ROTATION_270) {
 //                parameters.setPreviewSize(width, height);
-                parameters.setRotation(180);
-                mCamera.setDisplayOrientation(180);
+                    parameters.setRotation(180);
+                    mCamera.setDisplayOrientation(180);
+                }
+
+                mCamera.setParameters(parameters);
+            } catch (Exception ignored) {
+                LoggerManager.getLogger(CameraActivity.class).warning("Failed to set rotation parameters of the camera!");
             }
 
-            Camera.Size defaultSize = parameters.getSupportedPictureSizes().stream().filter(p -> p.width == 1920 && p.height == 1080).findFirst().orElse(null);
-            Camera.Size mSize = null;
-            if(defaultSize != null){
-                mSize = defaultSize;
-            } else {
-                for (Camera.Size size : parameters.getSupportedPictureSizes()) {
-                    if(mSize == null || (size.width > mSize.width && size.height > mSize.height && size.width < 1920 && size.height < 1080)) {
-                        mSize = size;
+            try {
+                Camera.Size defaultSize = parameters.getSupportedPictureSizes().stream().filter(p -> p.width == 1920 && p.height == 1080).findFirst().orElse(null);
+                Camera.Size mSize = null;
+                if (defaultSize != null) {
+                    mSize = defaultSize;
+                } else {
+                    for (Camera.Size size : parameters.getSupportedPictureSizes()) {
+                        if (mSize == null || (size.width > mSize.width && size.height > mSize.height && size.width < 1920 && size.height < 1080)) {
+                            mSize = size;
+                        }
                     }
                 }
-            }
-            if (mSize != null) {
-                parameters.setPictureSize(mSize.width, mSize.height);
-                parameters.setPreviewSize(mSize.width, mSize.height);
-            }
+                if (mSize != null) {
+                    parameters.setPictureSize(mSize.width, mSize.height);
+                    parameters.setPreviewSize(mSize.width, mSize.height);
+                }
 
-            mCamera.setParameters(parameters);
+                mCamera.setParameters(parameters);
+
+            } catch (Exception ignored) {
+                LoggerManager.getLogger(CameraActivity.class).warning("Failed to set size parameters of the camera!");
+            }
 
             mCamera.startPreview();
         } catch (IOException e) {

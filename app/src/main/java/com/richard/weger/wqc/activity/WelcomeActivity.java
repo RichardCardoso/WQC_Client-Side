@@ -29,10 +29,10 @@ import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.result.ResultService;
 import com.richard.weger.wqc.result.SuccessResult;
-import com.richard.weger.wqc.service.AsyncMethodExecutor;
 import com.richard.weger.wqc.service.DeviceRequestParameterResolver;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.service.ProjectRequestParametersResolver;
+import com.richard.weger.wqc.service.QrScannerService;
 import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.Configurations;
 import com.richard.weger.wqc.util.ConfigurationsManager;
@@ -74,8 +74,8 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     boolean hasAuthorization = false;
     TextView tvStatus;
     ParamConfigurations conf;
+    QrScannerService qrService;
 
-    private ZXingScannerView mScannerView;
     String[] permissions = new String[]{
             CAMERA_PERMISSION,
             EXTERNAL_DIR_PERMISSION
@@ -84,8 +84,9 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     @Override
     public void onPause(){
         super.onPause();
-        if(mScannerView != null)
-            mScannerView.stopCamera();
+        if(qrService != null) {
+            qrService.pause();
+        }
     }
 
     @Override
@@ -93,7 +94,6 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
         super.onCreate(savedInstanceState);
 
         ActivityHelper.setWaitingLayout(this);
-        AsyncMethodExecutor.execute(App::createNotificationChannel);
         new App();
 
         if(handlePermissions()){
@@ -132,15 +132,15 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(!PermissionsManager.checkPermission(permissions, this, false)){
-            String message = getResources().getString(R.string.permissionsNeededMessage);
+            String message = App.getStringResource(R.string.permissionsNeededMessage);
             ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_PERMISSIONS_GRANT_WARNING, message, ErrorResult.ErrorLevel.SEVERE);
-            ErrorResponseHandler.handle(err, this, this::finish);
+            ErrorResponseHandler.handle(err,  this::finish);
         } else {
             gotPermissions();
         }
     }
 
-    private void gotPermissions(){
+    public void gotPermissions(){
         log("User-app permissions granting successful");
         entityHelperQueue = new ArrayList<>();
         fileHelperQueue = new ArrayList<>();
@@ -165,11 +165,8 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     }
 
     private void layoutRestore(){
-        if(mScannerView != null) {
-            log("Stopping camera's qr scan");
-            mScannerView.stopCamera();
-            mScannerView = null;
-        }
+        qrService = new QrScannerService(this);
+        qrService.stop();
         log("Restoring layout to 'welcome' one");
         setContentView(R.layout.activity_welcome);
         setListeners();
@@ -179,10 +176,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
 
     public void QrScan(){
         log("Starting camera preview for qr scan");
-        mScannerView = new ZXingScannerView(this);
-        setContentView(mScannerView);
-        mScannerView.setResultHandler(this);
-        mScannerView.startCamera();
+        setContentView(qrService.getContentView());
     }
 
     private void setListeners(){
@@ -191,13 +185,13 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
         findViewById(R.id.buttonQrScan).setOnClickListener(v -> QrScan());
 
         ImageButton button = findViewById(R.id.btnExit);
-        button.setOnClickListener(v -> AlertHelper.showMessage(this,
-                getResources().getString(R.string.confirmationNeeded),
-                getResources().getString(R.string.closeQuestion),
-                getResources().getString(R.string.yesTAG),
-                getResources().getString(R.string.noTag),
+        button.setOnClickListener(v -> AlertHelper.showMessage(
+                App.getStringResource(R.string.confirmationNeeded),
+                App.getStringResource(R.string.closeQuestion),
+                App.getStringResource(R.string.yesTAG),
+                App.getStringResource(R.string.noTag),
                 () -> android.os.Process.killProcess(android.os.Process.myPid()),
-                null));
+                null, this));
     }
 
     private void exit(){
@@ -224,9 +218,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
     @Override
     public void handleResult(Result rawResult) {
         log("Started routine to handle qr scan result");
-        if(mScannerView != null) {
-            mScannerView.stopCamera();
-        }
+        qrService.pause();
         layoutRestore();
         handleQrScan(rawResult.getText());
     }
@@ -239,12 +231,12 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
             qrRes = ProjectHelper.setQrCode(qrCode);
             if (qrRes instanceof ErrorResult) {
                 ErrorResult err = ResultService.getErrorResult(qrRes);
-                ErrorResponseHandler.handle(err, this, null);
+                ErrorResponseHandler.handle(err, null);
                 return;
             }
         } else {
-            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.QR_TRANSLATION_FAILED, getResources().getString(R.string.invalidQrCodeString), ErrorResult.ErrorLevel.SEVERE);
-            ErrorResponseHandler.handle(err, this, null);
+            ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.QR_TRANSLATION_FAILED, App.getStringResource(R.string.invalidQrCodeString), ErrorResult.ErrorLevel.SEVERE);
+            ErrorResponseHandler.handle(err, null);
             return;
         }
         ProjectHelper.projectLoad(this, false);
@@ -253,7 +245,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
 
     private void startProjectEdit(){
         log("Started routine to open the project edit screen");
-        Intent intent = new Intent(WelcomeActivity.this, ProjectEditActivity.class);
+        Intent intent = new Intent(getApplicationContext(), ProjectEditActivity.class);
         intent.putExtra(PROJECT_KEY, project);
         startActivityForResult(intent, PROJECT_EDIT_SCREEN_KEY);
     }
@@ -312,15 +304,15 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
         log("Configuration file not found, starting first run routine");
         String prevPath;
         prevPath = ConfigurationsManager.getLocalConfig().getServerPath();
-        AlertHelper.getString(this, getResources().getString(R.string.serverPathRequestMessage), (path) -> {
-            if(path == null){
-                finish();
-            } else {
-                serverPathReferenceUpdate(path);
-                ConfigurationsManager.loadServerConfig(this);
-            }
-        }
-        , prevPath);
+        AlertHelper.getString(App.getStringResource(R.string.serverPathRequestMessage),
+            (path) -> {
+                if(path == null){
+                    finish();
+                } else {
+                    serverPathReferenceUpdate(path);
+                    ConfigurationsManager.loadServerConfig(this);
+                }
+            }, prevPath);
     }
 
     private void identify(){
@@ -339,17 +331,17 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
             conf.setDeviceId(device.getDeviceid());
 
             if (!device.isEnabled()) {
-                String message = getResources().getString(R.string.accessDisabledMessage);
+                String message = App.getStringResource(R.string.accessDisabledMessage);
                 ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_ACCESS_DISABLED_WARNING, message, ErrorResult.ErrorLevel.SEVERE);
-                ErrorResponseHandler.handle(err, this, this::finish);
+                ErrorResponseHandler.handle(err,  this::finish);
             } else if (conf.getUsername() == null || conf.getUsername().equals("")) {
-                String message = getResources().getString(R.string.invalidUsernameMessage);
+                String message = App.getStringResource(R.string.invalidUsernameMessage);
                 ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_INVALID_USERNAME_WARNING, message, ErrorResult.ErrorLevel.SEVERE);
-                ErrorResponseHandler.handle(err, this, this::finish);
+                ErrorResponseHandler.handle(err,  this::finish);
             } else if (conf.getRoles() == null || conf.getRoles().size() == 0 ){
-                String message = getResources().getString(R.string.noRolesMessage);
+                String message = App.getStringResource(R.string.noRolesMessage);
                 ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_EMPTY_ROLES_LIST_WARNING, message, ErrorResult.ErrorLevel.SEVERE);
-                ErrorResponseHandler.handle(err, this, this::finish);
+                ErrorResponseHandler.handle(err,  this::finish);
             } else {
                 ConfigurationsManager.setLocalConfig(conf);
                 log("Device authorized");
@@ -360,9 +352,9 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
 //                }
             }
         } catch (Exception ex) {
-            String message = getResources().getString(R.string.deviceNotAuthorizedMessage).concat("\n(").concat(App.getUniqueId()).concat(")");
+            String message = App.getStringResource(R.string.deviceNotAuthorizedMessage).concat("\n(").concat(App.getUniqueId()).concat(")");
             ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_DEVICE_NOT_AUTHORIZED_EXCEPTION, message, ErrorResult.ErrorLevel.SEVERE);
-            ErrorResponseHandler.handle(err, this, this::finish);
+            ErrorResponseHandler.handle(err,  this::finish);
             severe(ex.getMessage());
         }
     }
@@ -414,9 +406,9 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                     if(toDownload.size() > 0) {
                         LoggerManager.getLogger(WelcomeActivity.class).info("Outdated pdf files exists");
                         fileHelperQueue.clear();
-                        String text = getResources().getString(R.string.retrievingPdfsTag)
+                        String text = App.getStringResource(R.string.retrievingPdfsTag)
                                 .concat(" - ")
-                                .concat(getResources().getString(R.string.remainingTag, toDownload.size()));
+                                .concat(App.getContext().getResources().getString(R.string.remainingTag, toDownload.size()));
                         tvStatus.setText(text);
                         ProjectHelper.getPdfDocuments(toDownload, fileHelperQueue, this);
                         return;
@@ -432,9 +424,9 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                     if(toDownload.size() > 0) {
                         LoggerManager.getLogger(WelcomeActivity.class).info("Outdated item pictures exists");
                         fileHelperQueue.clear();
-                        String text = getResources().getString(R.string.retrievingReportPicturesTag)
+                        String text = App.getStringResource(R.string.retrievingReportPicturesTag)
                                 .concat(" - ")
-                                .concat(getResources().getString(R.string.remainingTag, toDownload.size()));
+                                .concat(App.getContext().getResources().getString(R.string.remainingTag, toDownload.size()));
                         tvStatus.setText(text);
                         ProjectHelper.getItemPictures(toDownload, fileHelperQueue, this);
                         return;
@@ -449,9 +441,9 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                     toDownload = ProjectHelper.getObsoleteGenPictures( pictures, project);
                     if(toDownload.size() > 0) {
                         LoggerManager.getLogger(WelcomeActivity.class).info("Outdated general pictures exists");
-                        String text = getResources().getString(R.string.retrievingGeneralPicturesTag)
+                        String text = App.getStringResource(R.string.retrievingGeneralPicturesTag)
                                 .concat(" - ")
-                                .concat(getResources().getString(R.string.remainingTag, pictures.size()));
+                                .concat(App.getContext().getResources().getString(R.string.remainingTag, pictures.size()));
                         tvStatus.setText(text);
                         ProjectHelper.getGenPictures(toDownload, fileHelperQueue, this);
                         return;
@@ -462,27 +454,27 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
                     break;
                 case REST_PDFREPORTDOWNLOAD_KEY:
                     LoggerManager.getLogger(WelcomeActivity.class).info("Pdf file received");
-                    continueIfPossible(getResources().getString(R.string.retrievingPdfsTag), this::getExistingItemPictures);
+                    continueIfPossible(App.getStringResource(R.string.retrievingPdfsTag), this::getExistingItemPictures);
                     break;
                 case REST_PICTUREDOWNLOAD_KEY:
                     LoggerManager.getLogger(WelcomeActivity.class).info("Item picture received");
-                    continueIfPossible(getResources().getString(R.string.retrievingReportPicturesTag), this::getExistingGenPictures);
+                    continueIfPossible(App.getStringResource(R.string.retrievingReportPicturesTag), this::getExistingGenPictures);
                     break;
                 case REST_GENPICTUREDOWNLOAD_KEY:
                     LoggerManager.getLogger(WelcomeActivity.class).info("General picture received");
-                    continueIfPossible(getResources().getString(R.string.retrievingGeneralPicturesTag), this::startProjectEdit);
+                    continueIfPossible(App.getStringResource(R.string.retrievingGeneralPicturesTag), this::startProjectEdit);
                     break;
             }
         } else {
             ErrorResult err = ResultService.getErrorResult(result);
-            if(!Strings.isEmptyOrWhitespace(err.getDescription())){
+            if (!Strings.isEmptyOrWhitespace(err.getDescription())) {
                 log(err);
             } else {
                 warning("An unexpected error has occurred while trying to retrieve data from server with request code '" + err.getRequestCode() + "'");
             }
 
             if(err.getCode() != null && err.getCode().equals(ErrorResult.ErrorCode.INVALID_APP_VERSION.toString())){
-                ErrorResponseHandler.handle(err,this, this::finish);
+                ErrorResponseHandler.handle(err,this::finish);
                 return;
             }
 
@@ -490,42 +482,43 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
             ErrorResult err2;
             switch (result.getRequestCode()) {
                 case REST_CONFIGLOAD_KEY:
-                    message = getResources().getString(R.string.serverConnectErrorMessage);
+                    message = App.getStringResource(R.string.serverConnectErrorMessage);
                     err2 = new ErrorResult(ErrorResult.ErrorCode.CLIENT_SERVER_CONNECTION_FAILED_WARNING, message, ErrorResult.ErrorLevel.SEVERE);
-                    ErrorResponseHandler.handle(err2,this, getResources().getString(R.string.yesTAG), getResources().getString(R.string.noTag), this::firstContact, this::finish);
+                    ErrorResponseHandler.handle(err2, App.getStringResource(R.string.yesTAG), App.getStringResource(R.string.noTag), this::firstContact, this::finish);
                     break;
                 case REST_IDENTIFY_KEY:
                     requestServerAuthorization();
-                    message = getResources().getString(R.string.deviceNotAuthorizedMessage).concat("\n(").concat(App.getUniqueId()).concat(")");
+                    message = App.getStringResource(R.string.deviceNotAuthorizedMessage).concat("\n(");
+                    message = message.concat(App.getUniqueId()).concat(")");
                     err2  = new ErrorResult(ErrorResult.ErrorCode.CLIENT_DEVICE_NOT_AUTHORIZED_EXCEPTION, message, ErrorResult.ErrorLevel.SEVERE);
-                    ErrorResponseHandler.handle(err2,this, this::finish);
+                    ErrorResponseHandler.handle(err2, this::finish);
                     break;
                 case REST_QRPROJECTLOAD_KEY:
                     if(err.getCode() != null && err.getCode().equals(ErrorResult.ErrorCode.ENTITY_NOT_FOUND.toString())) {
                         ProjectRequestParametersResolver resolver = new ProjectRequestParametersResolver(REST_QRPROJECTCREATE_KEY, conf, true);
-                        resolver.postEntity(ProjectHelper.getProject(qrCode, conf), this);
+                        resolver.postEntity(ProjectHelper.getProject(qrCode), this);
                     } else {
-                        ErrorResponseHandler.handle(err, this, () -> toggleControls(true));
+                        ErrorResponseHandler.handle(err, () -> toggleControls(true));
                     }
                     break;
                 case REST_QRPROJECTCREATE_KEY:
-                    message = getResources().getString(R.string.projectCreationRequestFailed).concat("\n").concat(getResources().getString(R.string.tryAgainLaterMessage));
+                    message = App.getStringResource(R.string.projectCreationRequestFailed).concat("\n").concat(App.getStringResource(R.string.tryAgainLaterMessage));
                     err2  = new ErrorResult(ErrorResult.ErrorCode.CLIENT_PROJECT_CREATION_REQUEST_EXCEPTION, message, ErrorResult.ErrorLevel.SEVERE);
-                    ErrorResponseHandler.handle(err2,this, null);
+                    ErrorResponseHandler.handle(err2, null);
                     break;
                 case REST_PDFREPORTDOWNLOAD_KEY:
-                    continueIfPossible(getResources().getString(R.string.retrievingPdfsTag), this::getExistingItemPictures);
+                    continueIfPossible(App.getStringResource(R.string.retrievingPdfsTag), this::getExistingItemPictures);
                     break;
                 case REST_PICTUREDOWNLOAD_KEY:
-                    continueIfPossible(getResources().getString(R.string.retrievingReportPicturesTag), this::getExistingGenPictures);
+                    continueIfPossible(App.getStringResource(R.string.retrievingReportPicturesTag), this::getExistingGenPictures);
                     break;
                 case REST_GENPICTUREDOWNLOAD_KEY:
-                    continueIfPossible(getResources().getString(R.string.retrievingGeneralPicturesTag), this::startProjectEdit);
+                    continueIfPossible(App.getStringResource(R.string.retrievingGeneralPicturesTag), this::startProjectEdit);
                     break;
                 default:
-                    AlertHelper.showMessage(this,
+                    AlertHelper.showMessage(
                             ErrorUtil.getErrorMessageWithCode(err),
-                            getResources().getString(R.string.okTag),
+                            App.getStringResource(R.string.okTag),
                             null);
                     break;
             }
@@ -537,7 +530,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
 
     private void continueIfPossible(String message, IMethod nextChain){
         if (message == null){
-            message = getResources().getString(R.string.retrievingFilesTag);
+            message = App.getStringResource(R.string.retrievingFilesTag);
         }
         if (!ProjectHelper.hasPendingTasks(entityHelperQueue, fileHelperQueue, true)) {
             if(nextChain != null) {
@@ -549,7 +542,7 @@ public class WelcomeActivity extends Activity implements ZXingScannerView.Result
             int remaining;
             remaining = fileHelperQueue.size() - 1;
             String text = message.concat(" - ")
-                    .concat(getResources().getString(R.string.remainingTag, remaining));
+                    .concat(App.getContext().getResources().getString(R.string.remainingTag, remaining));
             runOnUiThread(() -> tvStatus.setText(text));
         }
     }

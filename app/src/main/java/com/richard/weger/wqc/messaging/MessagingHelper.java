@@ -45,7 +45,7 @@ public class MessagingHelper {
             String ex = sw.toString();
 
             LoggerManager.getLogger(FirebaseHelper.class).severe(ex);
-            ErrorResponseHandler.handle(err, App.getContext(), () -> FirebaseHelper.delegate.onConnectionFailure());
+            ErrorResponseHandler.handle(err, () -> FirebaseHelper.delegate.onConnectionFailure());
         } else {
             LoggerManager.getLogger(FirebaseHelper.class).warning("Failed to unsubscribe from Firebird service. Maybe subscription was not performed yet.");
         }

@@ -4,13 +4,14 @@ import com.richard.weger.wqc.messaging.IMessagingListener;
 import com.richard.weger.wqc.messaging.IMessagingService;
 import com.richard.weger.wqc.messaging.MessagingHelper;
 import com.richard.weger.wqc.service.AsyncMethodExecutor;
-import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.Configurations;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 import com.richard.weger.wqc.util.LoggerManager;
 
 import java.net.URI;
 import java.util.Locale;
+
+import static com.richard.weger.wqc.util.App.getLocale;
 
 public class WebsocketService implements IMessagingService {
 
@@ -21,7 +22,7 @@ public class WebsocketService implements IMessagingService {
             try {
                 LoggerManager.getLogger(WebsocketService.class).info("Websocket setup event was called");
                 Configurations conf = ConfigurationsManager.getLocalConfig();
-                Locale l = App.getContext().getResources().getConfiguration().getLocales().get(0);
+                Locale l = getLocale();
                 String pathWithPort = conf.getServerPath();
                 URI uri = new URI(String.format(l, "ws://%s/wqc", pathWithPort));
                 socket = new WebsocketClient(uri, listener);

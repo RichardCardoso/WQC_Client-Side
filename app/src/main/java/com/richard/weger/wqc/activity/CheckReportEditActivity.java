@@ -35,6 +35,7 @@ import com.richard.weger.wqc.result.SuccessResult;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
 import com.richard.weger.wqc.service.MarkRequestParametersResolver;
 import com.richard.weger.wqc.service.ReportRequestParametersResolver;
+import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 import com.richard.weger.wqc.util.LoggerManager;
 import com.richard.weger.wqc.views.TouchImageView;
@@ -51,6 +52,7 @@ import static com.richard.weger.wqc.appconstants.AppConstants.REST_MARKSAVE_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_QRPROJECTLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.REST_REPORTUPLOAD_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.SDF;
+import static com.richard.weger.wqc.util.App.getStringResource;
 
 public class CheckReportEditActivity extends FragmentActivity implements TouchImageView.ImageTouchListener,
         RestTemplateHelper.RestResponseHandler,
@@ -149,7 +151,7 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
     private void onPageChanged(){
         adapter.setCurrentPosition(mPager.getCurrentItem());
         TextView tvCurrPage = findViewById(R.id.tvCurrentPage);
-        tvCurrPage.setText(String.format(getResources().getConfiguration().getLocales().get(0), "%d/%d", mPager.getCurrentItem() + 1, adapter.getCount()));
+        tvCurrPage.setText(String.format(App.getLocale(), "%d/%d", mPager.getCurrentItem() + 1, adapter.getCount()));
         toggleControls(true);
     }
 
@@ -173,8 +175,8 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
             if(report.getMarksCount() > 0 || report.isFinished()) {
                 shouldChangeReportState();
             } else {
-                ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_UNFINISHED_CHECKREPORT_WARNING, getResources().getString(R.string.noMarksMessage), ErrorResult.ErrorLevel.WARNING);
-                ErrorResponseHandler.handle(err, this, this::cancelReportFinish);
+                ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.CLIENT_UNFINISHED_CHECKREPORT_WARNING, getStringResource(R.string.noMarksMessage), ErrorResult.ErrorLevel.WARNING);
+                ErrorResponseHandler.handle(err, this::cancelReportFinish);
             }
         });
 
@@ -182,21 +184,21 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
 
     private void shouldChangeReportState(){
         if(!report.isFinished()) {
-            AlertHelper.showMessage(this,
-                    getResources().getString(R.string.confirmationNeeded),
-                    getResources().getString(R.string.reportFinishMessage),
-                    getResources().getString(R.string.yesTAG),
-                    getResources().getString(R.string.noTag),
+            AlertHelper.showMessage(
+                    getStringResource(R.string.confirmationNeeded),
+                    getStringResource(R.string.reportFinishMessage),
+                    getStringResource(R.string.yesTAG),
+                    getStringResource(R.string.noTag),
                     () -> reportFinish(true),
-                    this::cancelReportFinish);
+                    this::cancelReportFinish, this);
         } else {
-            AlertHelper.showMessage(this,
-                    getResources().getString(R.string.confirmationNeeded),
-                    getResources().getString(R.string.reportUnfinishMessage),
-                    getResources().getString(R.string.yesTAG),
-                    getResources().getString(R.string.noTag),
+            AlertHelper.showMessage(
+                    getStringResource(R.string.confirmationNeeded),
+                    getStringResource(R.string.reportUnfinishMessage),
+                    getStringResource(R.string.yesTAG),
+                    getStringResource(R.string.noTag),
                     () -> reportFinish(false),
-                    this::cancelReportFinish);
+                    this::cancelReportFinish, this);
         }
     }
 
@@ -216,13 +218,13 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
         logger.info("Toggling mark add state");
         ImageButton btn = findViewById(R.id.btnAddMark);
         if(mode == 0) {
-            btn.setImageDrawable(getResources().getDrawable(R.drawable.ic_cancel));
+            btn.setImageDrawable(App.getDrawableResource(R.drawable.ic_cancel));
             toggleControls(false);
             findViewById(R.id.pbCheckReportEdit).setVisibility(View.INVISIBLE);
             btn.setEnabled(true);
             mode = 1;
         } else {
-            btn.setImageDrawable(getResources().getDrawable(R.drawable.ic_add));
+            btn.setImageDrawable(App.getDrawableResource(R.drawable.ic_add));
             mode = 0;
             toggleControls(true);
             btn.setEnabled(true);
@@ -332,11 +334,11 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
         notAddingMark();
 
         String message = String.format("%s: %s \n%s: %s \n%s: %s",
-                getResources().getString(R.string.usernameTag),
+                getStringResource(R.string.usernameTag),
                 m.getDevice().getName(),
-                getResources().getString(R.string.roleTag),
+                getStringResource(R.string.roleTag),
                 markRole,
-                getResources().getString(R.string.addeddateTag),
+                getStringResource(R.string.addeddateTag),
                 m.getAddedOn());
         if (!DeviceHelper.isOnlyRole("TE") &&
                 m.getDevice().getDeviceid().equals(DeviceHelper.getCurrentDevice().getDeviceid())
@@ -344,13 +346,13 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
             canRemove = true;
         }
         if (canRemove){
-            AlertHelper.showMessage(this, "", message,
-                    getResources().getString(R.string.removeTag),
-                    getResources().getString(R.string.cancelTag),
-                    () -> remove(m), null);
+            AlertHelper.showMessage("", message,
+                    getStringResource(R.string.removeTag),
+                    getStringResource(R.string.cancelTag),
+                    () -> remove(m), null, this);
         } else {
-            AlertHelper.showMessage(this, message,
-                    getResources().getString(R.string.okTag),
+            AlertHelper.showMessage(message,
+                    getStringResource(R.string.okTag),
                     null);
         }
     }
@@ -372,8 +374,8 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
                             .findFirst()
                             .orElse(null);
                     if (report == null) {
-                        ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.INVALID_ENTITY, getResources().getString(R.string.unknownErrorMessage), ErrorResult.ErrorLevel.SEVERE);
-                        ErrorResponseHandler.handle(err, this, () -> close(true));
+                        ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.INVALID_ENTITY, getStringResource(R.string.unknownErrorMessage), ErrorResult.ErrorLevel.SEVERE);
+                        ErrorResponseHandler.handle(err, () -> close(true));
                         return;
                     }
                     inflateActivityLayout(project);
@@ -389,7 +391,7 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
             }
         } else {
             ErrorResult err = ResultService.getErrorResult(result);
-            ErrorResponseHandler.handle(err, this, () -> ProjectHelper.projectLoad(this));
+            ErrorResponseHandler.handle(err, () -> ProjectHelper.projectLoad(this));
         }
     }
 

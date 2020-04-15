@@ -8,7 +8,6 @@ import com.richard.weger.wqc.domain.CheckReport;
 import com.richard.weger.wqc.domain.ItemReport;
 import com.richard.weger.wqc.domain.ParamConfigurations;
 import com.richard.weger.wqc.domain.Report;
-import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.ConfigurationsManager;
 
 import java.util.HashMap;
@@ -16,6 +15,7 @@ import java.util.Map;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.CHECK_REPORT_EDIT_SCREEN_KEY;
 import static com.richard.weger.wqc.appconstants.AppConstants.ITEM_REPORT_EDIT_SCREEN_KEY;
+import static com.richard.weger.wqc.util.App.getStringResource;
 
 public class ReportHelper {
 
@@ -24,11 +24,11 @@ public class ReportHelper {
         ParamConfigurations conf = ConfigurationsManager.getServerConfig();
 
         mapReportLabel = new HashMap<>();
-        mapReportLabel.put(conf.getControlCardReportCode(), App.getContext().getResources().getString(R.string.controlCardLabel));
-        mapReportLabel.put(conf.getWiredDatasheetCode(), App.getContext().getResources().getString(R.string.wiredDatasheetLabel));
-        mapReportLabel.put(conf.getCablelessDatasheetCode(), App.getContext().getResources().getString(R.string.cablelessDatasheetLabel));
-        mapReportLabel.put(conf.getWiredDrawingCode(), App.getContext().getResources().getString(R.string.wiredDrawingLabel));
-        mapReportLabel.put(conf.getCablelessDrawingCode(), App.getContext().getResources().getString(R.string.cablelessDrawingLabel));
+        mapReportLabel.put(conf.getControlCardReportCode(), getStringResource(R.string.controlCardLabel));
+        mapReportLabel.put(conf.getWiredDatasheetCode(), getStringResource(R.string.wiredDatasheetLabel));
+        mapReportLabel.put(conf.getCablelessDatasheetCode(), getStringResource(R.string.cablelessDatasheetLabel));
+        mapReportLabel.put(conf.getWiredDrawingCode(), getStringResource(R.string.wiredDrawingLabel));
+        mapReportLabel.put(conf.getCablelessDrawingCode(), getStringResource(R.string.cablelessDrawingLabel));
     }
 
     public String getReportLabel(String sCode){

@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Gradle: org.powermock:powermock-module-junit4:1.5.5@jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-module-junit4/1.5.5/b7345c0fb1863da1d318df655baf9c4578ff8717/powermock-module-junit4-1.5.5.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-module-junit4/1.5.5/fce3b43dd199516c646c7f787d080dbc3d30f9ed/powermock-module-junit4-1.5.5-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-module-junit4/1.5.5/f9842dbc035d3e50eb47908c24f4117b37c82ace/powermock-module-junit4-1.5.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

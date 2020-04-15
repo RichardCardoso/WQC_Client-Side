@@ -1,8 +1,14 @@
 package com.richard.weger.wqc.result;
 
-import java.util.List;
+import androidx.annotation.NonNull;
+
+import com.richard.weger.wqc.R;
 
 import org.springframework.http.HttpHeaders;
+
+import java.util.List;
+
+import static com.richard.weger.wqc.util.App.getStringResource;
 
 @SuppressWarnings("unchecked")
 public class ResultService {
@@ -47,12 +53,13 @@ public class ResultService {
 		}
 		return lst;
 	}
-	
+
+	@NonNull
 	public static ErrorResult getErrorResult(AbstractResult res) {
 		if(res instanceof ErrorResult) {
 			return (ErrorResult) res;
 		} else {
-			return null;
+			return new ErrorResult(ErrorResult.ErrorCode.RESULT_ISNOT_AN_ERROR, getStringResource(R.string.unknownErrorMessage), ErrorResult.ErrorLevel.SEVERE);
 		}
 	}
 	

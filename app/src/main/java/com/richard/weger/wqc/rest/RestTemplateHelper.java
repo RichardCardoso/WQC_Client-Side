@@ -10,7 +10,6 @@ import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.result.AbstractResult;
 import com.richard.weger.wqc.result.ErrorResult;
 import com.richard.weger.wqc.service.ErrorResponseHandler;
-import com.richard.weger.wqc.util.App;
 import com.richard.weger.wqc.util.ErrorUtil;
 import com.richard.weger.wqc.util.LoggerManager;
 
@@ -26,6 +25,8 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
 import java.util.logging.Logger;
+
+import static com.richard.weger.wqc.util.App.getStringResource;
 
 public abstract class RestTemplateHelper<Params extends Request> extends AsyncTask<Params, Void, AbstractResult> {
 
@@ -68,7 +69,7 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
             if (isReachable(host, port, 3000)) {
                 result = executionStrategy(restTemplate, request);
             } else {
-                result = new ErrorResult(ErrorResult.ErrorCode.CLIENT_SERVER_CONNECTION_FAILED_WARNING, App.getContext().getResources().getString(R.string.serverConnectErrorMessage), ErrorResult.ErrorLevel.SEVERE);
+                result = new ErrorResult(ErrorResult.ErrorCode.CLIENT_SERVER_CONNECTION_FAILED_WARNING, getStringResource(R.string.serverConnectErrorMessage), ErrorResult.ErrorLevel.SEVERE);
             }
 
         } catch (ServerException ex){
@@ -118,7 +119,7 @@ public abstract class RestTemplateHelper<Params extends Request> extends AsyncTa
         } catch (Exception ex){
             String message = StringHelper.getStackTraceAsString(ex);
             ErrorResult err = new ErrorResult(ErrorResult.ErrorCode.REST_POST_EXECUTOR_ERROR, message, ErrorResult.ErrorLevel.SEVERE);
-            ErrorResponseHandler.handle(err, App.getContext(), null);
+            ErrorResponseHandler.handle(err, null);
             try{
                 delegate.onFatalError();
             } catch (Exception e2) {

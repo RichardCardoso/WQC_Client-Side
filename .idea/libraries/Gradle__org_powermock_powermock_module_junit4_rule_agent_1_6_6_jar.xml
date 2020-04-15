@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Gradle: org.powermock:powermock-module-junit4-rule-agent:1.6.6@jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-module-junit4-rule-agent/1.6.6/3e556fcf101e53a1d3d5a0036ad5917adfca80ec/powermock-module-junit4-rule-agent-1.6.6.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-module-junit4-rule-agent/1.6.6/e852e7f390f5467619e054ef02b984a4c8439080/powermock-module-junit4-rule-agent-1.6.6-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-module-junit4-rule-agent/1.6.6/45b1dcdb1c9928916a2851451ea2a18582b841bf/powermock-module-junit4-rule-agent-1.6.6-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

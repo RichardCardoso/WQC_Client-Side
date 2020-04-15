@@ -19,6 +19,9 @@ import com.richard.weger.wqc.util.LoggerManager;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.richard.weger.wqc.util.App.getCurrentActivity;
+import static com.richard.weger.wqc.util.App.getStringResource;
+
 public class AlertHelper {
 
     private static List<Integer> notificationIds = new ArrayList<>();
@@ -27,15 +30,15 @@ public class AlertHelper {
         void processInputboxResult(String content);
     }
 
-    public static void getString(Context delegate, String message, InputBoxContentHandler handler){
-        getString(delegate, message, handler, null);
+    public static void getString(String message, InputBoxContentHandler handler){
+        getString(message, handler, null);
     }
 
-    public static void getString(Context delegate, String message, InputBoxContentHandler handler, String defaultText){
-        LayoutInflater li = LayoutInflater.from(delegate);
+    public static void getString(String message, InputBoxContentHandler handler, String defaultText){
+        LayoutInflater li = LayoutInflater.from(App.getContext());
         View view = li.inflate(R.layout.input_box, null);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(delegate);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getCurrentActivity());
 
         builder.setView(view);
 
@@ -49,8 +52,8 @@ public class AlertHelper {
         tvMessage.setText(message);
         builder
                 .setCancelable(false)
-                .setPositiveButton(delegate.getResources().getString(R.string.okTag), (dialog, which) -> handler.processInputboxResult(txtContent.getText().toString()))
-                .setNegativeButton(delegate.getResources().getString(R.string.cancelTag), ((dialog, which) -> handler.processInputboxResult(null)));
+                .setPositiveButton(getStringResource(R.string.okTag), (dialog, which) -> handler.processInputboxResult(txtContent.getText().toString()))
+                .setNegativeButton(getStringResource(R.string.cancelTag), ((dialog, which) -> handler.processInputboxResult(null)));
 
         try {
             builder.create().show();
@@ -59,8 +62,8 @@ public class AlertHelper {
         }
     }
 
-    public static void showMessage(Context delegate, String title, String message, String positiveTag, String negativeTag, IMethod positiveCallback, IMethod negativeCallback){
-        AlertDialog.Builder builder = new AlertDialog.Builder(delegate);
+    public static void showMessage(String title, String message, String positiveTag, String negativeTag, IMethod positiveCallback, IMethod negativeCallback, Context context){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setCancelable(false);
         if(title != null){
             builder.setTitle(title);
@@ -87,8 +90,8 @@ public class AlertHelper {
         } catch (Exception ignored){}
     }
 
-    public static void showMessage(Context delegate, String message, String positiveTag, IMethod IMethod){
-        AlertDialog.Builder builder = new AlertDialog.Builder(delegate);
+    public static void showMessage(String message, String positiveTag, IMethod IMethod){
+        AlertDialog.Builder builder = new AlertDialog.Builder(getCurrentActivity());
         builder.setCancelable(false);
         if(message != null){
             builder.setMessage(message);
@@ -107,7 +110,7 @@ public class AlertHelper {
 
     public static void showNotification(String title, String message){
         Context context = App.getContext();
-        String channelId = context.getResources().getString(R.string.updatesChannelId);
+        String channelId = getStringResource(R.string.updatesChannelId);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(R.drawable.ic_logo)
                 .setContentTitle(title)
