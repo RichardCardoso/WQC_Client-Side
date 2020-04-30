@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.richard.weger.wqc.appconstants.AppConstants.PICTURES_AUTHORITY;
@@ -175,7 +176,7 @@ public class ImageHelper {
         }
 
         String returnFilename;
-        returnFilename = getFinalFilepath(filePath);
+        returnFilename = revertTempPicName(filePath, true);
         FileHelper.fileCopy(new File(compressedFilename), new File(returnFilename));
         FileHelper.fileDelete(filePath);
         FileHelper.fileDelete(compressedFilename);
@@ -184,16 +185,35 @@ public class ImageHelper {
 
     }
 
+    public static String getTempPicName(String name) {
+        String ret;
+        if(name.contains(".jpg")) {
+            ret = name.replace(".jpg", "_new" + UUID.randomUUID().toString() + ".jpg");
+        } else {
+            ret = name;
+        }
+        return ret;
+    }
+
+    public static String revertTempPicName(String name, boolean appendExtension){
+        String ret;
+        if(name.contains("_new")) {
+            ret = name.substring(0, name.indexOf("_new"));
+        } else {
+            ret = name;
+        }
+        if(appendExtension && !ret.endsWith(".jpg")) {
+            ret = ret.concat(".jpg");
+        }
+        return ret;
+    }
+
     public static String getFinalFilename(String temporaryFilepath) {
         if (temporaryFilepath == null) {
             return null;
         }
-        String finalFilepath = getFinalFilepath(temporaryFilepath);
-        return finalFilepath.substring(finalFilepath.lastIndexOf(File.separator) + 1).replace("_new","");
-    }
-
-    public static String getFinalFilepath(String temporaryFilepath){
-        return temporaryFilepath.replace("_new","");
+        String finalFilepath = revertTempPicName(temporaryFilepath, true);
+        return finalFilepath.substring(finalFilepath.lastIndexOf(File.separator) + 1);
     }
 
     public static String getFilename() {
@@ -235,7 +255,7 @@ public class ImageHelper {
             imageFileName = folderPath.concat(imageFileName);
 
             try {
-                image = new File(imageFileName.replace(".jpg", "_new.jpg"));
+                image = new File(getTempPicName(imageFileName));
                 if (image.exists()) {
                     image.delete();
                 }

@@ -407,13 +407,13 @@ public class ProjectHelper {
 
     public static int getCurrentPicNumber(Project project){
         File folder = new File(StringHelper.getPicturesFolderPath(project));
-        int currentPicNumber = Integer.MAX_VALUE;
+        int currentPicNumber = 1;
         if(folder.exists() && folder.listFiles().length > 0) {
             List<Integer> qpIdList = new ArrayList<>();
             Arrays.stream(folder.listFiles())
                     .filter(f -> f.getName().contains("QP"))
                     .map(File::getName)
-                    .mapToInt(n -> Integer.valueOf(n.substring(n.lastIndexOf("QP") + 2).replace(".jpg","").replace("_new","")))
+                    .mapToInt(n -> Integer.valueOf(n.substring(ImageHelper.revertTempPicName(n, false).lastIndexOf("QP") + 2).replace(".jpg","")))
                     .forEach(qpIdList::add);
             currentPicNumber = qpIdList.stream().mapToInt(i -> i).max().orElse(currentPicNumber);
             if(currentPicNumber < Integer.MAX_VALUE){

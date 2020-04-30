@@ -50,7 +50,7 @@ public class ConfigurationsManager{
         Gson gson = new Gson();
         String json = gson.toJson(config);
         Editor prefsEditor = App.getmPrefs().edit();
-        LoggerManager.getLogger(QrTextHelper.class).severe("Configs json:\n" + json);
+        LoggerManager.getLogger(QrTextHelper.class).info("Configs json:\n" + json);
         prefsEditor.putString(Configurations.class.getName(), json);
         prefsEditor.apply();
         if(firstTimeSet){

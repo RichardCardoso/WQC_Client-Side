@@ -27,6 +27,8 @@ import com.richard.weger.wqc.service.FileRequestParametersResolver;
 import com.richard.weger.wqc.util.GeneralPictureDTO;
 import com.richard.weger.wqc.util.GeneralPicturesProcessorScheduler;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -87,7 +89,11 @@ public class GeneralPictureCaptureActivity extends Activity implements
         updateRecyclerView();
     }
 
-    private void updateRecyclerView(){
+    private void updateRecyclerView() {
+        updateRecyclerView(false);
+    }
+
+    private void updateRecyclerView(boolean disableRemoveIcon){
 
         if(adapter == null) {
             recyclerViewSetup();
@@ -100,6 +106,8 @@ public class GeneralPictureCaptureActivity extends Activity implements
             (findViewById(R.id.uploadButton)).setVisibility(View.VISIBLE);
             setListeners();
         }
+
+        adapter.setCanRemove(!disableRemoveIcon);
 
         adapter.notifyDataSetChanged();
         toggleControls(true);
@@ -151,7 +159,18 @@ public class GeneralPictureCaptureActivity extends Activity implements
         toggleControls(false);
         processesList.forEach(p -> p.cancel(true));
         uploadList.forEach(u -> u.cancel(true));
-        ex.stopAndGetNotProcessedPics();
+        List<String> nonProcessed = ex.stopAndGetNotProcessedPics();
+        nonProcessed.addAll(picsList.stream().filter(x -> !x.isProcessed()).map(GeneralPictureDTO::getFileName).collect(Collectors.toList()));
+        nonProcessed.forEach(x -> {
+            String fName = StringHelper.getPicturesFolderPath(ProjectHelper.getProject());
+            if(!fName.endsWith(File.separator)) {
+                fName = fName.concat(File.separator);
+            }
+            fName = fName.concat(x);
+            try {
+                Files.delete(new File(fName).toPath());
+            } catch (Exception ignored) {}
+        });
         setCloseResult();
     }
 
@@ -221,6 +240,8 @@ public class GeneralPictureCaptureActivity extends Activity implements
         setCancelListener();
         uploadCount = 0;
         for(GeneralPictureDTO pic : picsList) {
+            pic.setProcessing(true);
+            adapter.notifyDataSetChanged();
             String filePath = StringHelper.getPicturesFolderPath(ProjectHelper.getQrCode()) + pic.getFileName();
             String fileName = pic.getFileName();
             if(FileHelper.isValidFile(filePath)) {
@@ -229,7 +250,7 @@ public class GeneralPictureCaptureActivity extends Activity implements
                 uploadCount++;
             } else {
                 pic.setError(true);
-                updateRecyclerView();
+                updateRecyclerView(true);
             }
         }
     }

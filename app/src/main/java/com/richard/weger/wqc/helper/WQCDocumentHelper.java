@@ -9,16 +9,12 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.graphics.pdf.PdfDocument;
 
 import com.richard.weger.wqc.domain.Mark;
-import com.richard.weger.wqc.domain.Project;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
+
+import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
 
 public abstract class WQCDocumentHelper {
 
@@ -48,8 +44,16 @@ public abstract class WQCDocumentHelper {
 
       canvas.drawBitmap(originalBitmap, 0, 0, paint);
       for (Mark mark : markList) {
-        float x = mark.getX() * originalBitmap.getWidth(),
-                y = mark.getY() * originalBitmap.getHeight();
+        float x, y;
+
+        if(resources.getConfiguration().orientation == ORIENTATION_PORTRAIT) {
+          x = mark.getX() * originalBitmap.getWidth();
+          y = mark.getY() * originalBitmap.getHeight();
+        } else {
+          x = mark.getX() * originalBitmap.getWidth();
+          y = mark.getY() * originalBitmap.getHeight();
+        }
+
         drawMark(mark, canvas, paint, x, y);
       }
       return currentBitmap;

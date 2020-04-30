@@ -4,6 +4,7 @@ import android.content.res.Resources;
 
 import com.richard.weger.wqc.R;
 import com.richard.weger.wqc.helper.ProjectHelper;
+import com.richard.weger.wqc.helper.StringHelper;
 import com.richard.weger.wqc.messaging.firebird.FirebaseHelper;
 import com.richard.weger.wqc.messaging.websocket.MessagingDTO;
 import com.richard.weger.wqc.messaging.websocket.WebsocketService;
@@ -37,17 +38,19 @@ public class MessagingHelper {
     }
 
     public static void failureHandler(Exception e, boolean subscribeError){
-        if(subscribeError){
+        if(subscribeError && !e.getMessage().contains("Software caused connection abort")){
             ErrorResult err = getError();
 
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             String ex = sw.toString();
 
-            LoggerManager.getLogger(FirebaseHelper.class).severe(ex);
-            ErrorResponseHandler.handle(err, () -> FirebaseHelper.delegate.onConnectionFailure());
+            if(FirebaseHelper.delegate != null) {
+                LoggerManager.getLogger(FirebaseHelper.class).severe(ex);
+                ErrorResponseHandler.handle(err, () -> FirebaseHelper.delegate.onConnectionFailure());
+            }
         } else {
-            LoggerManager.getLogger(FirebaseHelper.class).warning("Failed to unsubscribe from Firebird service. Maybe subscription was not performed yet.");
+            LoggerManager.getLogger(FirebaseHelper.class).warning("Websocket connection error!\n" + StringHelper.getStackTraceAsString(e));
         }
 
     }

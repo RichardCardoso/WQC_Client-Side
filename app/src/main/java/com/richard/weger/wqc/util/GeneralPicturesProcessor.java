@@ -19,7 +19,7 @@ public class GeneralPicturesProcessor extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... strings) {
         String temporaryPath = strings[0];
 
-        final String concretePath = ImageHelper.getFinalFilepath(temporaryPath);
+        final String concretePath = ImageHelper.revertTempPicName(temporaryPath, true);
         ImageHelper.compressImage(temporaryPath);
 
         String prefixedNumber = ImageHelper.getFinalFilename(concretePath);

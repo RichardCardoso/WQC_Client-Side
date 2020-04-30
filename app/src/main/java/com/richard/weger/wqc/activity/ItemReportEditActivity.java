@@ -7,12 +7,12 @@ import android.os.Parcelable;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.richard.weger.wqc.R;
@@ -68,7 +68,6 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
     Long reportId;
     ParamConfigurations conf;
     boolean canEdit = true;
-    Parcelable state;
     boolean paused = false;
     Logger logger;
     boolean onCreateChain = false;
@@ -76,6 +75,7 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
     String tempPicPath;
     private ItemReportAdapter adapter;
     boolean isWaiting = false;
+    Parcelable recylerViewState;
 
     @Override
     public void onBackPressed() {
@@ -87,14 +87,6 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
         super.onResume();
         if(!paused) {
             ConfigurationsManager.loadServerConfig(this);
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (!paused) {
-            storeCurrListPosition();
         }
     }
 
@@ -272,29 +264,31 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
 
     }
 
-    private void storeCurrListPosition(){
-        ListView list = findViewById(android.R.id.list);
-        if(list != null) {
-            state = list.onSaveInstanceState();
+    private void saveCurrentPosition() {
+        RecyclerView view = findViewById(R.id.recyclerview);
+        LinearLayoutManager mng = ((LinearLayoutManager) view.getLayoutManager());
+        if(mng != null) {
+            recylerViewState = mng.onSaveInstanceState();
         }
     }
 
-    private void restoreCurrListPosition(){
-        ListView list = findViewById(android.R.id.list);
-        if(list != null) {
-            list.onRestoreInstanceState(state);
+    private void restoreCurrentPosition() {
+        RecyclerView view = findViewById(R.id.recyclerview);
+        LinearLayoutManager mng = ((LinearLayoutManager) view.getLayoutManager());
+        if(mng != null && recylerViewState != null) {
+            mng.onRestoreInstanceState(recylerViewState);
         }
     }
 
     private void save(Item item, boolean savePicture){
         if(!isWaiting) {
+
             logger.info("Started ReportItem save request");
             isWaiting = true;
             toggleControls(false);
 
             String fileName = StringHelper.getPicturesFolderPath(project).concat("/").concat(item.getPicture().getFileName());
 
-            storeCurrListPosition();
             ItemRequestParametersResolver resolver = new ItemRequestParametersResolver(REST_ITEMSAVE_KEY, conf, false);
             resolver.postEntity(item, this);
 
@@ -314,7 +308,9 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
         logger.info("Started list's item change handler");
         toggleControls(false);
         Item item = report.getItems().get(position);
-        storeCurrListPosition();
+
+        saveCurrentPosition();
+
         paused = true;
         if (FileHelper.isValidFile(StringHelper.getPicturesFolderPath(project) + item.getPicture().getFileName())) {
             Intent intent = new Intent(getApplicationContext(), PictureViewerActivity.class);
@@ -333,10 +329,11 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
 
     @Override
     public void onCommentsChange(int position, String newContent) {
-        logger.info("Started comments change request handlerr");
         toggleControls(false);
         Item item = report.getItems().get(position);
         if(isEditable() && !newContent.equals(item.getComments())) {
+            logger.info("Started comments change request handlerr");
+            saveCurrentPosition();
             item.setComments(newContent);
             save(item, false);
         } else {
@@ -349,6 +346,7 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
         Item item = report.getItems().get(position);
         if(item.getStatus() != value && isEditable()) {
             logger.info("Started status change request handler");
+            saveCurrentPosition();
             toggleControls(false);
             item.setStatus(value);
             save(item, false);
@@ -360,6 +358,7 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
         logger.info("Started picture capture request handler");
         toggleControls(false);
         if(isEditable()) {
+            saveCurrentPosition();
             Item item = report.getItems().get(position);
             takePicture(item);
         }
@@ -374,13 +373,13 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         logger.info("Started activity result handling");
         toggleControls(false);
+        restoreCurrentPosition();
         if (resultCode == RESULT_OK && requestCode == REQUEST_IMAGE_CAPTURE_ACTION) {
             String picPath = tempPicPath;
             picPath = ImageHelper.compressImage(picPath);
             ImageHelper.putPicInfoAndTimestamp(picPath, project, ImageHelper.getPrefixedPicNumber(itemToUpdadePicture));
             save(itemToUpdadePicture, true);
         } else {
-            restoreCurrListPosition();
             toggleControls(true);
         }
     }
@@ -405,14 +404,13 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
         } catch (Exception e){
             logger.warning("Unable to disable controls for project refresh routine!");
         }
-        if(!paused) {
-            storeCurrListPosition();
-        } else {
+        if(paused) {
             paused = false;
         }
         if(ProjectHelper.shouldRefresh(report, id, parentId)) {
             logger.info("The current report was updated by another user. Triggering reload from ItemReport activity");
             ProjectHelper.projectLoad(this, false);
+            saveCurrentPosition();
             return true;
         }
         logger.info("Another report was updated by another user. There is no need to refresh the contents.");
@@ -438,6 +436,7 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
             switch (result.getRequestCode()) {
                 case REST_ITEMSAVE_KEY:
                 case REST_REPORTUPLOAD_KEY:
+                    restoreCurrentPosition();
                     break;
                 case REST_QRPROJECTLOAD_KEY:
                     logger.info("The response was got from a project load request");
@@ -454,8 +453,8 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
                     inflateActivityLayout();
                     adapter.setItemList(report.getItems());
                     adapter.notifyDataSetChanged();
-                    restoreCurrListPosition();
                     isWaiting = false;
+                    restoreCurrentPosition();
                     break;
                 case REST_PICTUREDOWNLOAD_KEY:
                     toggleControls(true);
@@ -466,6 +465,7 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
                     updatePendingItemsCount();
                     ProjectHelper.projectLoad(this);
                     Toast.makeText(this, R.string.changesSavedMessage, Toast.LENGTH_SHORT).show();
+                    restoreCurrentPosition();
                     break;
                 case REST_CONFIGLOAD_KEY:
                     ParamConfigurations c = ResultService.getSingleResult(result, ParamConfigurations.class);

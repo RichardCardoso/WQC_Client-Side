@@ -10,7 +10,7 @@ public class GeneralPictureDTO {
     private String fileName;
     private boolean processed;
     private boolean error;
-    private boolean transformed;
+    private boolean processing;
 
     public String getFileName() {
         return fileName;
@@ -26,6 +26,9 @@ public class GeneralPictureDTO {
 
     public void setProcessed(boolean processed) {
         this.processed = processed;
+        if(processed){
+            setProcessing(false);
+        }
     }
 
     public boolean isError() {
@@ -36,11 +39,11 @@ public class GeneralPictureDTO {
         this.error = error;
     }
 
-    public boolean isTransformed() {
-        return transformed;
+    public boolean isProcessing() {
+        return processing;
     }
 
-    public void setTransformed(boolean transformed) {
-        this.transformed = transformed;
+    public void setProcessing(boolean processing) {
+        this.processing = processing;
     }
 }

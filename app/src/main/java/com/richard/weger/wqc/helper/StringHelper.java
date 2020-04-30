@@ -57,7 +57,10 @@ public class StringHelper {
     }
 
     public static String getPicturesFolderPath(Project project){
-        return getProjectFolderPath(project).concat(getPicturesFolderName()).concat("/");
+        String ret = getProjectFolderPath(project).concat(getPicturesFolderName()).concat("/");
+        File f = new File(ret);
+        f.mkdirs();
+        return ret;
     }
 
     public static String getPicturesFolderPath(String qrcode){
@@ -89,15 +92,15 @@ public class StringHelper {
     }
 
     public static String getGeneralPictureFilename(Project project){
+        String ret = null;
         if(project != null){
-            return project.getReference()
+            ret = project.getReference()
                     .concat("Z").concat(String.valueOf(project.getDrawingRefs().get(0).getDnumber()))
                     .concat("T").concat(String.valueOf(project.getDrawingRefs().get(0).getParts().get(0).getNumber()))
-                    .concat("QP").concat(String.valueOf(ProjectHelper.getCurrentPicNumber(project)))
-                    .concat("_new.jpg");
-        } else {
-            return null;
+                    .concat("QP").concat(String.valueOf(ProjectHelper.getCurrentPicNumber(project)));
+            ret = ImageHelper.getTempPicName(ret);
         }
+        return ret;
     }
 
 }

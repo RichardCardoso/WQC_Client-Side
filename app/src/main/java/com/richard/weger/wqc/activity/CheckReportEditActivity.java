@@ -61,7 +61,8 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
     CheckReport report;
     Long reportId;
     ParamConfigurations conf;
-    boolean onCreateChain = false;
+    boolean resumed = false;
+    boolean reenterMarkAddMode = false;
 
     ViewPager mPager;
     CheckReportEditAdapter adapter;
@@ -77,8 +78,9 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
     public void onBackPressed(){}
 
     @Override
-    protected void onResume(){
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
+        resumed = true;
         ConfigurationsManager.loadServerConfig(this);
     }
 
@@ -86,7 +88,7 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        onCreateChain = true;
+        resumed = true;
 
         logger = LoggerManager.getLogger(CheckReportEditActivity.class);
 
@@ -100,30 +102,30 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
 
     @SuppressWarnings("unchecked")
     private void inflateActivityLayout(Project project){
-        if(onCreateChain) {
+        if(resumed) {
             logger.info("Setting content view");
             setContentView(R.layout.activity_check_report_edit);
-        }
 
-        if(DeviceHelper.isOnlyRole("TE") || report.isFinished()){
-            findViewById(R.id.btnAddMark).setVisibility(View.INVISIBLE);
-            findViewById(R.id.btnUndo).setVisibility(View.INVISIBLE);
-            (findViewById(R.id.cmbRole)).setVisibility(View.INVISIBLE);
-        }
+            if(DeviceHelper.isOnlyRole("TE") || report.isFinished()){
+                findViewById(R.id.btnAddMark).setVisibility(View.INVISIBLE);
+                findViewById(R.id.btnUndo).setVisibility(View.INVISIBLE);
+                (findViewById(R.id.cmbRole)).setVisibility(View.INVISIBLE);
+            }
 
-        if(DeviceHelper.isOnlyRole("TE")){
-            (findViewById(R.id.chkFinished)).setEnabled(false);
-            (findViewById(R.id.chkFinished)).setClickable(false);
-        }
+            if(DeviceHelper.isOnlyRole("TE")){
+                (findViewById(R.id.chkFinished)).setEnabled(false);
+                (findViewById(R.id.chkFinished)).setClickable(false);
+            }
 
-        Spinner cmbRoles = findViewById(R.id.cmbRole);
-        ArrayAdapter rolesAdapter = new ArrayAdapter(
-                this,
-                android.R.layout.simple_spinner_dropdown_item,
-                Objects.requireNonNull(DeviceHelper.getCurrentDevice().getRoles().stream().map(Role::getDescription).toArray()));
-        cmbRoles.setAdapter(rolesAdapter);
+            Spinner cmbRoles = findViewById(R.id.cmbRole);
+            if(cmbRoles != null) {
+                ArrayAdapter rolesAdapter = new ArrayAdapter(
+                    this,
+                    android.R.layout.simple_spinner_dropdown_item,
+                    Objects.requireNonNull(DeviceHelper.getCurrentDevice().getRoles().stream().map(Role::getDescription).toArray()));
+                cmbRoles.setAdapter(rolesAdapter);
+            }
 
-        if(onCreateChain) {
             adapter = new CheckReportEditAdapter(getSupportFragmentManager(),
                     report.getFileName(),
                     StringHelper.getPdfsFolderPath(project),
@@ -139,13 +141,15 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
                     onPageChanged();
                 }
             });
-            onCreateChain = false;
+
+            onPageChanged();
+            setListeners();
+
+            resumed = false;
         } else {
             adapter.setPages(report.getPages());
             adapter.notifyDataSetChanged();
         }
-        onPageChanged();
-        setListeners();
     }
 
     private void onPageChanged(){
@@ -281,6 +285,7 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
         mark.setRoleToShow(roleToShow);
 
         markList.add(mark);
+        reenterMarkAddMode = true;
         save(mark);
     }
 
@@ -380,6 +385,10 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
                     }
                     inflateActivityLayout(project);
                     notAddingMark();
+                    if(reenterMarkAddMode) {
+                        toggleMarkAdd();
+                        reenterMarkAddMode = false;
+                    }
                     isWaiting = false;
                     break;
                 case REST_CONFIGLOAD_KEY:
@@ -443,6 +452,9 @@ public class CheckReportEditActivity extends FragmentActivity implements TouchIm
                 runOnUiThread(()-> toggleControls(false));
             } catch (Exception e){
                 logger.warning("Unable to disable controls for project refresh routine!");
+            }
+            if(mode == 1) {
+                reenterMarkAddMode = true;
             }
             ProjectHelper.projectLoad(this, false);
             return true;

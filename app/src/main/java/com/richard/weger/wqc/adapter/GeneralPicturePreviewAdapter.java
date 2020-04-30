@@ -35,6 +35,14 @@ public class GeneralPicturePreviewAdapter extends RecyclerView.Adapter<GeneralPi
     private PictureTapHandler pictureTapHandler;
     private boolean canRemove;
 
+    public boolean isCanRemove() {
+        return canRemove;
+    }
+
+    public void setCanRemove(boolean canRemove) {
+        this.canRemove = canRemove;
+    }
+
     public interface PictureTapHandler {
         void onPictureTap(int position);
         void onRemoveRequest(int position);
@@ -80,8 +88,12 @@ public class GeneralPicturePreviewAdapter extends RecyclerView.Adapter<GeneralPi
 
         if(processed){
             holder.ivProcessed.setVisibility(View.VISIBLE);
+            holder.removeButton.setVisibility(View.INVISIBLE);
         } else {
             holder.ivProcessed.setVisibility(View.INVISIBLE);
+            if(files.get(position).isProcessing()) {
+                holder.removeButton.setVisibility(View.INVISIBLE);
+            }
         }
 
         holder.removeButton.setOnClickListener(v -> pictureTapHandler.onRemoveRequest(position));
