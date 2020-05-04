@@ -227,10 +227,12 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
     public void updatePendingItemsCount(){
         logger.info("Updating pending items count");
         long pendingItems = report.getItems().stream().filter(i -> i.getStatus() == ITEM_NOT_CHECKED_KEY).count();
-        ((TextView)findViewById(R.id.tvPendingItems)).setText(
-                String.format(App.getLocale(), "%s: %d",
-                        getStringResource(R.string.pendingItemsLabel),
-                        pendingItems));
+
+        String newPendingText = String.format(App.getLocale(), "%s: %d", getStringResource(R.string.pendingItemsLabel), pendingItems);
+        TextView pendingTextView = findViewById(R.id.tvPendingItems);
+        if(pendingTextView != null) {
+            pendingTextView.setText(newPendingText);
+        }
     }
 
     @Override
@@ -274,9 +276,11 @@ public class ItemReportEditActivity extends Activity implements ReportItemAction
 
     private void restoreCurrentPosition() {
         RecyclerView view = findViewById(R.id.recyclerview);
-        LinearLayoutManager mng = ((LinearLayoutManager) view.getLayoutManager());
-        if(mng != null && recylerViewState != null) {
-            mng.onRestoreInstanceState(recylerViewState);
+        if(view != null) {
+            LinearLayoutManager mng = ((LinearLayoutManager) view.getLayoutManager());
+            if (mng != null && recylerViewState != null) {
+                mng.onRestoreInstanceState(recylerViewState);
+            }
         }
     }
 
